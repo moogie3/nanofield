@@ -1,0 +1,79 @@
+"use client"
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useMemo } from "react"
+
+import SortProducts, { SortOptions } from "./sort-products"
+import CategoryFilter from "./category-filter"
+
+const CATEGORY_QUERY_KEY = "category"
+
+type RefinementListProps = {
+  sortBy: SortOptions
+  search?: boolean
+  hideCategoryFilter?: boolean
+  "data-testid"?: string
+}
+
+const RefinementList = ({
+  sortBy,
+  hideCategoryFilter = false,
+  "data-testid": dataTestId,
+}: RefinementListProps) => {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const updateQueryParams = useCallback(
+    (updater: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString())
+      updater(params)
+
+      params.delete("page")
+
+      const queryString = params.toString()
+      const currentQuery = searchParams.toString()
+      const nextPath = queryString ? `${pathname}?${queryString}` : pathname
+      const currentPath = currentQuery
+        ? `${pathname}?${currentQuery}`
+        : pathname
+
+      if (nextPath !== currentPath) {
+        router.push(nextPath)
+      }
+    },
+    [pathname, router, searchParams],
+  )
+
+  const setQueryParams = (name: string, value: string) =>
+    updateQueryParams((params) => params.set(name, value))
+
+  const selectedCategoryIds = useMemo(() => {
+    const cats = searchParams.getAll(CATEGORY_QUERY_KEY)
+    return cats.length > 0 ? cats : []
+  }, [searchParams])
+
+  const setCategoryIds = (categoryIds: string[]) =>
+    updateQueryParams((params) => {
+      params.delete(CATEGORY_QUERY_KEY)
+      categoryIds.forEach((id) => params.append(CATEGORY_QUERY_KEY, id))
+    })
+
+  return (
+    <div className="flex flex-col gap-12 py-4 mb-8 small:px-0 pl-6 small:min-w-[250px] small:ml-[1.675rem]">
+      <SortProducts
+        sortBy={sortBy}
+        setQueryParams={setQueryParams}
+        data-testid={dataTestId}
+      />
+      {!hideCategoryFilter && (
+        <CategoryFilter
+          categoryIds={selectedCategoryIds}
+          onCategoryChange={setCategoryIds}
+        />
+      )}
+    </div>
+  )
+}
+
+export default RefinementList
