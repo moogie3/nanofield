@@ -30,7 +30,7 @@ const Addresses = ({
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     cart?.shipping_address && cart?.billing_address
       ? compareAddresses(cart?.shipping_address, cart?.billing_address)
-      : true
+      : true,
   )
 
   const handleEdit = () => {
@@ -40,7 +40,7 @@ const Addresses = ({
   const [message, formAction] = useActionState(setAddresses, null)
 
   return (
-    <div className="bg-white">
+    <div className="bg-card">
       <div className="flex flex-row items-center justify-between mb-6">
         <Heading
           level="h2"

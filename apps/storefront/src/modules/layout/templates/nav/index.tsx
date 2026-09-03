@@ -7,6 +7,11 @@ import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import StickyNav from "@modules/layout/components/sticky-nav"
+import {
+  AccountNavIcon,
+  CartNavIcon,
+} from "@modules/layout/components/nav-icons"
 import { ThemeToggle } from "../../../../components/theme-toggle"
 
 export default async function Nav() {
@@ -17,58 +22,58 @@ export default async function Nav() {
   ])
 
   return (
-    <div className="sticky top-0 inset-x-0 z-50 group">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-background border-border">
-        <nav className="content-container text-ui-fg-subtle flex items-center justify-between w-full h-full text-base">
-          <div className="flex-1 basis-0 h-full flex items-center">
-            <div className="h-full">
-              <SideMenu
-                regions={regions}
-                locales={locales}
-                currentLocale={currentLocale}
-              />
-            </div>
+    <StickyNav>
+      <nav className="content-container text-ui-fg-subtle flex items-center justify-between w-full h-full text-base">
+        <div className="flex-1 basis-0 h-full flex items-center">
+          <div className="h-full">
+            <SideMenu
+              regions={regions}
+              locales={locales}
+              currentLocale={currentLocale}
+            />
           </div>
+        </div>
 
-          <div className="flex items-center h-full">
+        <div className="flex items-center h-full">
+          <LocalizedClientLink
+            href="/"
+            className="hover:text-ui-fg-base uppercase font-heading font-bold text-primary text-2xl tracking-wide"
+            data-testid="nav-store-link"
+          >
+            Nanofield
+          </LocalizedClientLink>
+        </div>
+
+        <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
+          <div className="hidden small:flex items-center gap-x-6 h-full">
             <LocalizedClientLink
-              href="/"
-              className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase font-heading text-primary"
-              data-testid="nav-store-link"
+              className="hover:text-ui-fg-base flex items-center"
+              href="/account"
+              aria-label="Account"
+              data-testid="nav-account-link"
             >
-              Nanofield
+              <AccountNavIcon />
             </LocalizedClientLink>
           </div>
-
-          <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
-            <div className="hidden small:flex items-center gap-x-6 h-full">
+          <Suspense
+            fallback={
               <LocalizedClientLink
-                className="hover:text-ui-fg-base text-base font-medium"
-                href="/account"
-                data-testid="nav-account-link"
+                className="hover:text-ui-fg-base flex items-center"
+                href="/cart"
+                aria-label="Cart"
+                data-testid="nav-cart-link"
               >
-                Account
+                <CartNavIcon />
               </LocalizedClientLink>
-            </div>
-            <Suspense
-              fallback={
-                <LocalizedClientLink
-                  className="hover:text-ui-fg-base flex gap-2 text-base font-medium"
-                  href="/cart"
-                  data-testid="nav-cart-link"
-                >
-                  Cart (0)
-                </LocalizedClientLink>
-              }
-            >
-              <CartButton />
-            </Suspense>
-            <div className="flex items-center ml-4">
-              <ThemeToggle />
-            </div>
+            }
+          >
+            <CartButton />
+          </Suspense>
+          <div className="flex items-center ml-4">
+            <ThemeToggle />
           </div>
-        </nav>
-      </header>
-    </div>
+        </div>
+      </nav>
+    </StickyNav>
   )
 }

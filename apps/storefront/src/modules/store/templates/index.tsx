@@ -10,12 +10,14 @@ import PaginatedProducts from "./paginated-products"
 const StoreTemplate = ({
   sortBy,
   page,
+  view,
   countryCode,
   optionValueIds,
   categoryIds,
 }: {
   sortBy?: SortOptions
   page?: string
+  view?: "grid" | "list"
   countryCode: string
   optionValueIds?: OptionValueIds
   categoryIds?: string[]
@@ -25,13 +27,16 @@ const StoreTemplate = ({
 
   return (
     <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
+      className="flex flex-col small:flex-row small:items-start small:gap-8 py-6 content-container"
       data-testid="category-container"
     >
       <RefinementList sortBy={sort} />
       <div className="w-full">
         <div className="mb-8">
           <h1 className="text-2xl-semi mb-2">Product Catalog</h1>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
+            ▸ ICs · Transistors · MOSFETs · Passives — 900+ parts indexed
+          </p>
           <p className="text-ui-fg-subtle text-small-regular max-w-2xl">
             Search by part number (e.g. IC-0399, TRS-0051), filter by category,
             manufacturer, or specifications. 900+ spare parts in stock —
@@ -44,6 +49,7 @@ const StoreTemplate = ({
           <PaginatedProducts
             sortBy={sort}
             page={pageNumber}
+            view={view}
             countryCode={countryCode}
             optionValueIds={optionValueIds}
             categoryIds={categoryIds}

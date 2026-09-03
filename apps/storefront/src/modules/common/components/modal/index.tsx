@@ -11,7 +11,7 @@ type ModalProps = {
   size?: "small" | "medium" | "large"
   search?: boolean
   children: React.ReactNode
-  'data-testid'?: string
+  "data-testid"?: string
 }
 
 const Modal = ({
@@ -20,7 +20,7 @@ const Modal = ({
   size = "medium",
   search = false,
   children,
-  'data-testid': dataTestId
+  "data-testid": dataTestId,
 }: ModalProps) => {
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -44,7 +44,7 @@ const Modal = ({
               {
                 "items-center": !search,
                 "items-start": search,
-              }
+              },
             )}
           >
             <Transition.Child
@@ -65,8 +65,9 @@ const Modal = ({
                     "max-w-xl": size === "medium",
                     "max-w-3xl": size === "large",
                     "bg-transparent shadow-none": search,
-                    "bg-white shadow-xl border rounded-rounded": !search,
-                  }
+                    "bg-popover shadow-xl border border-border rounded-rounded":
+                      !search,
+                  },
                 )}
               >
                 <ModalProvider close={close}>{children}</ModalProvider>

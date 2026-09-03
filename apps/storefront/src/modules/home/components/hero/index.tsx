@@ -1,19 +1,32 @@
-import { Github } from "@medusajs/icons"
-import { Button, Heading } from "@modules/common/components/ui"
+import Image from "next/image"
+import { Heading } from "@modules/common/components/ui"
+import { Button } from "@/components/ui/button"
 const Hero = () => {
   return (
-    <div className="h-[75vh] w-full border-b border-border relative bg-background">
+    <div className="h-[75vh] w-full border-b border-border relative bg-background overflow-hidden">
+      <Image
+        src="/background.jpeg"
+        alt=""
+        fill
+        priority
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-black/50" />
       <div className="absolute inset-0 z-10 flex flex-col justify-center items-center text-center small:p-32 gap-6">
         <span>
-          <Heading
-            level="h1"
-            className="text-4xl leading-10 text-primary font-heading font-bold uppercase tracking-wider mb-4"
-          >
-            Nanofield
-          </Heading>
+          <h1 className="mb-4 flex justify-center">
+            <Image
+              src="/nanofield.jpg"
+              alt="Nanofield"
+              width={640}
+              height={160}
+              priority
+              className="h-20 sm:h-28 w-auto rounded-2xl shadow-xl"
+            />
+          </h1>
           <Heading
             level="h2"
-            className="text-xl leading-8 text-ui-fg-subtle font-normal max-w-2xl mx-auto"
+            className="text-xl leading-8 text-white/80 font-normal max-w-2xl mx-auto"
           >
             Precision Electronic Components & Appliance Spare Parts.{" "}
             <br className="hidden sm:block" />
@@ -22,14 +35,13 @@ const Hero = () => {
           </Heading>
         </span>
         <div className="flex gap-4">
-          <a href="/store">
-            <Button
-              variant="secondary"
-              className="rounded-none border-primary text-primary hover:bg-primary hover:text-black transition-colors font-bold tracking-widest uppercase px-8"
-            >
-              Enter Catalog
-            </Button>
-          </a>
+          <Button
+            asChild
+            size="lg"
+            className="font-bold tracking-widest uppercase px-8"
+          >
+            <a href="/store">Enter Catalog</a>
+          </Button>
         </div>
       </div>
     </div>

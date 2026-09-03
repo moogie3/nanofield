@@ -5,6 +5,8 @@ import { useCallback, useMemo } from "react"
 
 import SortProducts, { SortOptions } from "./sort-products"
 import CategoryFilter from "./category-filter"
+import ViewToggle, { ViewMode } from "./view-toggle"
+import { Separator } from "@/components/ui/separator"
 
 const CATEGORY_QUERY_KEY = "category"
 
@@ -59,18 +61,27 @@ const RefinementList = ({
       categoryIds.forEach((id) => params.append(CATEGORY_QUERY_KEY, id))
     })
 
+  const view = (
+    searchParams.get("view") === "list" ? "list" : "grid"
+  ) as ViewMode
+
   return (
-    <div className="flex flex-col gap-12 py-4 mb-8 small:px-0 pl-6 small:min-w-[250px] small:ml-[1.675rem]">
+    <div className="flex flex-col gap-5 px-5 py-4 mb-8 w-full small:w-auto small:min-w-[220px] small:sticky small:top-24 self-start rounded-2xl border border-border bg-card">
       <SortProducts
         sortBy={sortBy}
         setQueryParams={setQueryParams}
         data-testid={dataTestId}
       />
+      <Separator />
+      <ViewToggle view={view} setQueryParams={setQueryParams} />
       {!hideCategoryFilter && (
-        <CategoryFilter
-          categoryIds={selectedCategoryIds}
-          onCategoryChange={setCategoryIds}
-        />
+        <>
+          <Separator />
+          <CategoryFilter
+            categoryIds={selectedCategoryIds}
+            onCategoryChange={setCategoryIds}
+          />
+        </>
       )}
     </div>
   )

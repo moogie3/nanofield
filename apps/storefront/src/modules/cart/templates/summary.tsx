@@ -1,6 +1,8 @@
 "use client"
 
-import { Button, Heading } from "@modules/common/components/ui"
+import { Heading } from "@modules/common/components/ui"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 import CartTotals from "@modules/common/components/cart-totals"
 import Divider from "@modules/common/components/divider"
@@ -26,20 +28,24 @@ const Summary = ({ cart }: SummaryProps) => {
   const step = getCheckoutStep(cart)
 
   return (
-    <div className="flex flex-col gap-y-4">
-      <Heading level="h2" className="text-[2rem] leading-[2.75rem]">
-        Summary
-      </Heading>
-      <DiscountCode cart={cart} />
-      <Divider />
-      <CartTotals totals={cart} />
-      <LocalizedClientLink
-        href={"/checkout?step=" + step}
-        data-testid="checkout-button"
-      >
-        <Button className="w-full h-10">Go to checkout</Button>
-      </LocalizedClientLink>
-    </div>
+    <Card>
+      <CardContent className="flex flex-col gap-y-4">
+        <Heading level="h2" className="text-[2rem] leading-[2.75rem]">
+          Summary
+        </Heading>
+        <DiscountCode cart={cart} />
+        <Divider />
+        <CartTotals totals={cart} />
+        <Button asChild size="lg" className="w-full">
+          <LocalizedClientLink
+            href={"/checkout?step=" + step}
+            data-testid="checkout-button"
+          >
+            Go to checkout
+          </LocalizedClientLink>
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 

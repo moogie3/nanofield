@@ -9,6 +9,7 @@ import { Text, clx } from "@modules/common/components/ui"
 import { Fragment } from "react"
 import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
+import { MenuNavIcon, SideMenuItemIcon } from "../nav-icons"
 import { Locale } from "@lib/data/locales"
 
 const SideMenuItems = {
@@ -37,9 +38,10 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
               <div className="relative flex h-full">
                 <Popover.Button
                   data-testid="nav-menu-button"
-                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base text-base font-medium"
+                  aria-label="Menu"
+                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
                 >
-                  Menu
+                  <MenuNavIcon />
                 </Popover.Button>
               </div>
 
@@ -77,10 +79,13 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                           <li key={name}>
                             <LocalizedClientLink
                               href={href}
-                              className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                              className="flex items-center gap-4 text-3xl leading-10 hover:text-ui-fg-disabled"
                               onClick={close}
                               data-testid={`${name.toLowerCase()}-link`}
                             >
+                              <SideMenuItemIcon
+                                name={name as keyof typeof SideMenuItems}
+                              />
                               {name}
                             </LocalizedClientLink>
                           </li>

@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { ChevronDownMini } from "@medusajs/icons"
 import clsx from "clsx"
-import { listCategories } from "@lib/data/categories"
 import { HttpTypes } from "@medusajs/types"
 
 type CategoryFilterProps = {
@@ -34,8 +33,11 @@ const CategoryFilter = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await listCategories({ limit: 200 })
-        setCategories(data || [])
+        const response = await fetch("/api/categories")
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data || [])
+        }
       } catch (error) {
         console.error("Failed to fetch categories", error)
       }

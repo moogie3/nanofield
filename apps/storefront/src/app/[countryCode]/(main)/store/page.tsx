@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 type StorePageSearchParams = Record<string, string | string[] | undefined> & {
   sortBy?: SortOptions
   page?: string
+  view?: "grid" | "list"
   optionValueIds?: string | string[]
   category?: string | string[]
 }
@@ -27,7 +28,7 @@ type Params = {
 export default async function StorePage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const { sortBy, page, category } = searchParams
+  const { sortBy, page, category, view } = searchParams
   const optionValueIds = parseOptionValueIds(searchParams)
   const categoryIds = Array.isArray(category)
     ? category
@@ -39,6 +40,7 @@ export default async function StorePage(props: Params) {
     <StoreTemplate
       sortBy={sortBy}
       page={page}
+      view={view === "list" ? "list" : "grid"}
       countryCode={params.countryCode}
       optionValueIds={optionValueIds}
       categoryIds={categoryIds}

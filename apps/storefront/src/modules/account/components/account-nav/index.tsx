@@ -1,6 +1,5 @@
 "use client"
 
-import { ArrowRightOnRectangle } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
 import { useParams, usePathname } from "next/navigation"
 
@@ -8,9 +7,13 @@ import { signout } from "@lib/data/customer"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
-import MapPin from "@modules/common/icons/map-pin"
-import Package from "@modules/common/icons/package"
-import User from "@modules/common/icons/user"
+import { HugeiconsIcon } from "@hugeicons/react"
+import {
+  FaceIdIcon,
+  Location01Icon,
+  Logout01Icon,
+  PackageIcon,
+} from "@hugeicons/core-free-icons"
 
 const AccountNav = ({
   customer,
@@ -48,12 +51,16 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/profile"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-border px-8"
                     data-testid="profile-link"
                   >
                     <>
                       <div className="flex items-center gap-x-2">
-                        <User size={20} />
+                        <HugeiconsIcon
+                          icon={FaceIdIcon}
+                          strokeWidth={2}
+                          className="h-5 w-5"
+                        />
                         <span>Profile</span>
                       </div>
                       <ChevronDown className="transform -rotate-90" />
@@ -63,12 +70,16 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-border px-8"
                     data-testid="addresses-link"
                   >
                     <>
                       <div className="flex items-center gap-x-2">
-                        <MapPin size={20} />
+                        <HugeiconsIcon
+                          icon={Location01Icon}
+                          strokeWidth={2}
+                          className="h-5 w-5"
+                        />
                         <span>Addresses</span>
                       </div>
                       <ChevronDown className="transform -rotate-90" />
@@ -78,11 +89,15 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/orders"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-border px-8"
                     data-testid="orders-link"
                   >
                     <div className="flex items-center gap-x-2">
-                      <Package size={20} />
+                      <HugeiconsIcon
+                        icon={PackageIcon}
+                        strokeWidth={2}
+                        className="h-5 w-5"
+                      />
                       <span>Orders</span>
                     </div>
                     <ChevronDown className="transform -rotate-90" />
@@ -91,12 +106,16 @@ const AccountNav = ({
                 <li>
                   <button
                     type="button"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8 w-full"
+                    className="flex items-center justify-between py-4 border-b border-border px-8 w-full"
                     onClick={handleLogout}
                     data-testid="logout-button"
                   >
                     <div className="flex items-center gap-x-2">
-                      <ArrowRightOnRectangle />
+                      <HugeiconsIcon
+                        icon={Logout01Icon}
+                        strokeWidth={2}
+                        className="h-5 w-5"
+                      />
                       <span>Log out</span>
                     </div>
                     <ChevronDown className="transform -rotate-90" />

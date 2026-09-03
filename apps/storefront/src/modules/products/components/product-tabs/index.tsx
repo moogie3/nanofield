@@ -4,7 +4,14 @@ import Back from "@modules/common/icons/back"
 import FastDelivery from "@modules/common/icons/fast-delivery"
 import Refresh from "@modules/common/icons/refresh"
 
-import Accordion from "./accordion"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { HttpTypes } from "@medusajs/types"
 
 type ProductTabsProps = {
@@ -12,15 +19,23 @@ type ProductTabsProps = {
 }
 
 const ProductTabs = ({ product }: ProductTabsProps) => {
+  const metadata = product.metadata || {}
+  // Non-semiconductor parts (e.g. tools, accessories) hide the datasheet tab.
+  // Configure via product metadata: is_semiconductor = true/false, datasheet_url = alldatasheet link.
+  const isSemiconductor = metadata.is_semiconductor !== false
   const tabs = [
     {
       label: "Specifications",
       component: <SpecificationsTab product={product} />,
     },
-    {
-      label: "Datasheet & Compliance",
-      component: <DatasheetTab product={product} />,
-    },
+    ...(isSemiconductor
+      ? [
+          {
+            label: "Datasheet & Compliance",
+            component: <DatasheetTab product={product} />,
+          },
+        ]
+      : []),
     {
       label: "Shipping & Returns",
       component: <ShippingInfoTab />,
@@ -29,16 +44,12 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
 
   return (
     <div className="w-full">
-      <Accordion type="multiple">
-        {tabs.map((tab, i) => (
-          <Accordion.Item
-            key={i}
-            title={tab.label}
-            headingSize="medium"
-            value={tab.label}
-          >
-            {tab.component}
-          </Accordion.Item>
+      <Accordion type="multiple" defaultValue={["Specifications"]}>
+        {tabs.map((tab) => (
+          <AccordionItem key={tab.label} value={tab.label}>
+            <AccordionTrigger>{tab.label}</AccordionTrigger>
+            <AccordionContent>{tab.component}</AccordionContent>
+          </AccordionItem>
         ))}
       </Accordion>
     </div>
@@ -125,6 +136,13 @@ const SpecificationsTab = ({ product }: ProductTabsProps) => {
 
 const DatasheetTab = ({ product }: ProductTabsProps) => {
   const metadata = product.metadata || {}
+  const partNumber =
+    metadata.part_number || product.title || product.handle || ""
+  const datasheetUrl =
+    metadata.datasheet_url ||
+    `https://www.alldatasheet.com/search.jsp?searchword=${encodeURIComponent(
+      String(partNumber),
+    )}`
 
   return (
     <div className="text-small-regular py-8 space-y-6">
@@ -133,31 +151,31 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
           Technical Documentation
         </h4>
         <div className="space-y-3">
-          {metadata.datasheet_url && (
-            <a
-              href={metadata.datasheet_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 p-3 border border-border rounded hover:bg-background transition-colors"
+          <a
+            href={datasheetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3 border border-border rounded hover:bg-background transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-primary flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-5 h-5 text-primary flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                />
-              </svg>
-              <span className="text-sm underline">
-                Download Datasheet (PDF)
-              </span>
-            </a>
-          )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
+            </svg>
+            <span className="text-sm underline">
+              {metadata.datasheet_url
+                ? "Open Datasheet"
+                : `Find ${partNumber} datasheet on alldatasheet.com`}
+            </span>
+          </a>
           {metadata.application_note_url && (
             <a
               href={metadata.application_note_url}
@@ -218,9 +236,13 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
       </div>
 
       <div className="border border-border rounded-lg p-6 bg-muted/50">
-        <h4 className="font-semibold text-foreground mb-4">
+        <h4 className="font-semibold text-foreground mb-1">
           Compliance & Certifications
         </h4>
+        <p className="text-xs text-muted-foreground mb-4">
+          Sourced from the manufacturer datasheet — always confirm against the
+          official datasheet linked above before production use.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             {
@@ -283,10 +305,20 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex justify-between py-2 border-b border-border/50 last:border-0"
+              className="flex justify-between items-center py-2 border-b border-border/50 last:border-0"
             >
               <span className="text-muted-foreground">{item.label}</span>
-              <span className="font-medium">{item.value}</span>
+              <Badge
+                variant={
+                  item.value === "Compliant" || item.value === "Yes"
+                    ? "default"
+                    : item.value === "Non-Compliant" || item.value === "No"
+                      ? "destructive"
+                      : "secondary"
+                }
+              >
+                {item.value}
+              </Badge>
             </div>
           ))}
         </div>
@@ -298,14 +330,11 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
         </h4>
         <div className="space-y-2">
           {metadata.cross_references ? (
-            <div>
+            <div className="flex flex-wrap gap-2">
               {metadata.cross_references.split(",").map((ref, i) => (
-                <span
-                  key={i}
-                  className="inline-block px-3 py-1 text-sm bg-primary/10 text-primary border border-primary/20 rounded mr-2 mb-2"
-                >
+                <Badge key={i} variant="secondary">
                   {ref.trim()}
-                </span>
+                </Badge>
               ))}
             </div>
           ) : (

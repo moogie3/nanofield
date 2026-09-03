@@ -4,6 +4,7 @@ import "styles/globals.css"
 import { Outfit, Manrope } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "../components/theme-provider"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const manropeHeading = Manrope({
   subsets: ["latin"],
@@ -28,7 +29,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     >
       <body className="bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <main className="relative">{props.children}</main>
+          <TooltipProvider>
+            <main className="relative">{props.children}</main>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
