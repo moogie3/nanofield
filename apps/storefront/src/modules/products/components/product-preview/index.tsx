@@ -41,6 +41,11 @@ export default async function ProductPreview({
   const previewImage = product.thumbnail || product.images?.[0]?.url
 
   if (layout === "list") {
+    const specChips = [
+      metadata.manufacturer,
+      metadata.package_case,
+      metadata.mounting_type,
+    ].filter((v): v is string => typeof v === "string" && v.length > 0)
     return (
       <HoverPreview image={previewImage} title={product.title}>
         <div
@@ -49,7 +54,7 @@ export default async function ProductPreview({
         >
           <LocalizedClientLink
             href={`/products/${product.handle}`}
-            className="relative block h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-ui-bg-subtle"
+            className="relative block h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-ui-bg-subtle dark:bg-muted"
           >
             <div className="h-full w-full [&_img]:transition-transform [&_img]:duration-500 group-hover:[&_img]:scale-110">
               <Thumbnail
@@ -57,11 +62,12 @@ export default async function ProductPreview({
                 images={product.images}
                 size="square"
                 isFeatured={isFeatured}
+                placeholderSize="card"
                 className="h-full w-full rounded-none border-0 p-0 shadow-none"
               />
             </div>
           </LocalizedClientLink>
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="truncate text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
               {partNumber}
             </span>
@@ -73,6 +79,18 @@ export default async function ProductPreview({
                 {product.title}
               </Text>
             </LocalizedClientLink>
+            {specChips.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {specChips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <div className="flex items-center gap-x-2">
@@ -98,7 +116,7 @@ export default async function ProductPreview({
       >
         <LocalizedClientLink
           href={`/products/${product.handle}`}
-          className="relative block aspect-square overflow-hidden bg-ui-bg-subtle"
+          className="relative block aspect-square overflow-hidden bg-ui-bg-subtle dark:bg-muted"
         >
           <div className="h-full w-full [&_img]:transition-transform [&_img]:duration-500 group-hover:[&_img]:scale-110">
             <Thumbnail
@@ -106,6 +124,7 @@ export default async function ProductPreview({
               images={product.images}
               size="square"
               isFeatured={isFeatured}
+              placeholderSize="card"
               className="h-full w-full rounded-none border-0 p-0 shadow-none"
             />
           </div>

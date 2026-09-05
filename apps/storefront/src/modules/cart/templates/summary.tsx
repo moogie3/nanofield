@@ -36,7 +36,11 @@ const Summary = ({ cart }: SummaryProps) => {
         <DiscountCode cart={cart} />
         <Divider />
         <CartTotals totals={cart} />
-        <Button asChild size="lg" className="w-full">
+        <Button
+          asChild
+          size="lg"
+          className="w-full bg-green-600 text-white hover:bg-green-500"
+        >
           <LocalizedClientLink
             href={"/checkout?step=" + step}
             data-testid="checkout-button"

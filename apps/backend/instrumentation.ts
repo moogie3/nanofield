@@ -7,12 +7,12 @@
 
 // // If using an exporter other than Zipkin, initialize it here.
 // const exporter = new ZipkinExporter({
-//   serviceName: 'my-medusa-project',
+//   serviceName: 'nanofield',
 // })
 
 // export function register() {
 //   registerOtel({
-//     serviceName: 'medusajs',
+//     serviceName: 'nanofield',
 //     // pass exporter
 //     exporter,
 //     instrument: {

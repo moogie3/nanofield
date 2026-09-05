@@ -37,7 +37,7 @@ export default async function Nav() {
         <div className="flex items-center h-full">
           <LocalizedClientLink
             href="/"
-            className="hover:text-ui-fg-base uppercase font-heading font-bold text-primary text-2xl tracking-wide"
+            className="nav-wordmark hover:text-ui-fg-base uppercase font-heading font-bold text-primary text-2xl"
             data-testid="nav-store-link"
           >
             Nanofield
@@ -47,7 +47,7 @@ export default async function Nav() {
         <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
           <div className="hidden small:flex items-center gap-x-6 h-full">
             <LocalizedClientLink
-              className="hover:text-ui-fg-base flex items-center"
+              className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95"
               href="/account"
               aria-label="Account"
               data-testid="nav-account-link"
@@ -58,7 +58,7 @@ export default async function Nav() {
           <Suspense
             fallback={
               <LocalizedClientLink
-                className="hover:text-ui-fg-base flex items-center"
+                className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95"
                 href="/cart"
                 aria-label="Cart"
                 data-testid="nav-cart-link"

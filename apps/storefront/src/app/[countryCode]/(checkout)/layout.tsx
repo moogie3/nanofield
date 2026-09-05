@@ -1,6 +1,6 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { Text } from "@modules/common/components/ui"
 import ChevronDown from "@modules/common/icons/chevron-down"
-import MedusaCTA from "@modules/layout/components/medusa-cta"
 
 export default function CheckoutLayout({
   children,
@@ -9,7 +9,7 @@ export default function CheckoutLayout({
 }) {
   return (
     <div className="w-full bg-background relative small:min-h-screen">
-      <div className="h-16 bg-background border-b border-border">
+      <div className="sticky top-0 z-50 h-16 border-b border-border relative bg-[color-mix(in_oklch,var(--background)_70%,transparent)] backdrop-blur-xl">
         <nav className="flex h-full items-center content-container justify-between">
           <LocalizedClientLink
             href="/cart"
@@ -26,19 +26,25 @@ export default function CheckoutLayout({
           </LocalizedClientLink>
           <LocalizedClientLink
             href="/"
-            className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase"
+            className="nav-wordmark font-heading text-2xl font-bold uppercase text-primary"
             data-testid="store-link"
           >
             Nanofield
           </LocalizedClientLink>
           <div className="flex-1 basis-0" />
         </nav>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
+        />
       </div>
       <div className="relative" data-testid="checkout-container">
         {children}
       </div>
       <div className="py-4 w-full flex items-center justify-center">
-        <MedusaCTA />
+        <Text className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-muted">
+          Nanofield · Secure checkout
+        </Text>
       </div>
     </div>
   )

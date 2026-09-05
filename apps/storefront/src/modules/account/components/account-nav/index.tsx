@@ -8,7 +8,9 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { IconSvgElement } from "@hugeicons/react"
 import {
+  DashboardSquare01Icon,
   FaceIdIcon,
   Location01Icon,
   Logout01Icon,
@@ -129,7 +131,7 @@ const AccountNav = ({
       <div className="hidden small:block" data-testid="account-nav">
         <div>
           <div className="pb-4">
-            <h3 className="text-base-semi">Account</h3>
+            <h3 className="text-xl-semi">Account</h3>
           </div>
           <div className="text-base-regular">
             <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
@@ -138,6 +140,7 @@ const AccountNav = ({
                   href="/account"
                   route={route!}
                   data-testid="overview-link"
+                  icon={DashboardSquare01Icon}
                 >
                   Overview
                 </AccountNavLink>
@@ -147,6 +150,7 @@ const AccountNav = ({
                   href="/account/profile"
                   route={route!}
                   data-testid="profile-link"
+                  icon={FaceIdIcon}
                 >
                   Profile
                 </AccountNavLink>
@@ -156,6 +160,7 @@ const AccountNav = ({
                   href="/account/addresses"
                   route={route!}
                   data-testid="addresses-link"
+                  icon={Location01Icon}
                 >
                   Addresses
                 </AccountNavLink>
@@ -165,6 +170,7 @@ const AccountNav = ({
                   href="/account/orders"
                   route={route!}
                   data-testid="orders-link"
+                  icon={PackageIcon}
                 >
                   Orders
                 </AccountNavLink>
@@ -174,8 +180,14 @@ const AccountNav = ({
                   type="button"
                   onClick={handleLogout}
                   data-testid="logout-button"
+                  className="flex items-center gap-x-2 rounded-lg px-3 py-1.5 -ml-3 text-ui-fg-subtle transition-colors hover:bg-muted hover:text-ui-fg-base"
                 >
-                  Log out
+                  <HugeiconsIcon
+                    icon={Logout01Icon}
+                    strokeWidth={2}
+                    className="h-5 w-5"
+                  />
+                  <span>Log out</span>
                 </button>
               </li>
             </ul>
@@ -190,6 +202,7 @@ type AccountNavLinkProps = {
   href: string
   route: string
   children: React.ReactNode
+  icon: IconSvgElement
   "data-testid"?: string
 }
 
@@ -197,6 +210,7 @@ const AccountNavLink = ({
   href,
   route,
   children,
+  icon,
   "data-testid": dataTestId,
 }: AccountNavLinkProps) => {
   const { countryCode }: { countryCode: string } = useParams()
@@ -205,12 +219,16 @@ const AccountNavLink = ({
   return (
     <LocalizedClientLink
       href={href}
-      className={clx("text-ui-fg-subtle hover:text-ui-fg-base", {
-        "text-ui-fg-base font-semibold": active,
-      })}
+      className={clx(
+        "flex items-center gap-x-2 rounded-lg px-3 py-1.5 -ml-3 text-ui-fg-subtle transition-colors hover:bg-muted hover:text-ui-fg-base",
+        {
+          "bg-muted text-ui-fg-base font-semibold": active,
+        }
+      )}
       data-testid={dataTestId}
     >
-      {children}
+      <HugeiconsIcon icon={icon} strokeWidth={2} className="h-5 w-5" />
+      <span>{children}</span>
     </LocalizedClientLink>
   )
 }

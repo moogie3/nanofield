@@ -24,6 +24,10 @@ export default function StickyNav({ children }: { children: React.ReactNode }) {
         )}
       >
         {children}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
+        />
       </header>
     </div>
   )

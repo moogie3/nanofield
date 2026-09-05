@@ -6,19 +6,37 @@ import {
   ChipIcon,
   CircuitBoardIcon,
   FaceIdIcon,
-  MenuCircleIcon,
   PackageIcon,
   ShoppingBag01Icon,
   UserCircleIcon,
 } from "@hugeicons/core-free-icons"
 
-export function MenuNavIcon({ className }: { className?: string }) {
+export function MenuNavIcon({
+  className,
+  open,
+}: {
+  className?: string
+  open?: boolean
+}) {
+  const bar =
+    "absolute h-0.5 w-5 rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
   return (
-    <HugeiconsIcon
-      icon={MenuCircleIcon}
-      strokeWidth={2}
-      className={className ?? "h-6 w-6"}
-    />
+    <span
+      className={`relative flex h-6 w-6 items-center justify-center transition-transform duration-300 ${
+        open ? "rotate-90 scale-110" : "rotate-0 scale-100"
+      } ${className ?? ""}`}
+    >
+      <span
+        className={`${bar} ${
+          open ? "translate-y-0 rotate-45" : "-translate-y-[4px] rotate-0"
+        }`}
+      />
+      <span
+        className={`${bar} ${
+          open ? "translate-y-0 -rotate-45" : "translate-y-[4px] rotate-0"
+        }`}
+      />
+    </span>
   )
 }
 

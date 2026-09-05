@@ -1,5 +1,6 @@
 import React, { Suspense } from "react"
 
+import DatasheetButton from "@modules/products/components/datasheet-button"
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
@@ -39,8 +40,11 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           <ProductInfo product={product} />
           <ProductTabs product={product} />
         </div>
-        <div className="block w-full relative">
+        <div className="block w-full relative small:mt-24">
           <ImageGallery images={images} />
+          <div className="mx-auto mt-4 w-full max-w-xl">
+            <DatasheetButton product={product} />
+          </div>
         </div>
         <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
           <ProductOnboardingCta />

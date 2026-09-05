@@ -27,6 +27,10 @@ coverage
 # Misc
 *.pem
 
+# Shopee Seller Center exports (importer input, not source)
+*.xlsx
+*.xls
+
 # Debug
 npm-debug.log*
 yarn-debug.log*

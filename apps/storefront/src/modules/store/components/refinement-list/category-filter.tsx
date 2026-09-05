@@ -70,6 +70,8 @@ const CategoryFilter = ({
     onCategoryChange(Array.from(new Set(nextSelections)))
   }
 
+  const showAll = categoryIds.length === 0
+
   const buildCategoryTree = (
     parentId?: string,
   ): HttpTypes.StoreProductCategory[] => {
@@ -89,7 +91,7 @@ const CategoryFilter = ({
 
     return (
       <div key={category.id} className={clsx("ml-0", level > 0 && "ml-6")}>
-        <div className="flex items-center gap-2 py-1.5">
+        <div className="flex items-center gap-2.5 py-1.5">
           {hasChildren && (
             <button
               onClick={() =>
@@ -100,7 +102,7 @@ const CategoryFilter = ({
                 )
               }
               className={clsx(
-                "flex h-5 w-5 items-center justify-center text-ui-fg-muted transition-transform duration-150",
+                "flex h-5 w-5 shrink-0 items-center justify-center text-ui-fg-muted transition-transform duration-150",
                 { "rotate-180": isOpen },
               )}
               aria-expanded={isOpen}
@@ -108,18 +110,18 @@ const CategoryFilter = ({
               <ChevronDownMini className="h-3.5 w-3.5" />
             </button>
           )}
-          {!hasChildren && <div className="h-5 w-5" />}
+          {!hasChildren && <div className="h-5 w-5 shrink-0" />}
 
-          <label className="flex items-center gap-2 cursor-pointer flex-1">
+          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
             <input
               type="checkbox"
               checked={isSelected}
               onChange={() => toggleCategory(category.id)}
-              className="h-4 w-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-background"
+              className="h-4 w-4 shrink-0 rounded border-border accent-primary focus:ring-primary focus:ring-offset-background"
             />
             <span
               className={clsx(
-                "txt-compact-small-plus truncate",
+                "txt-compact-small-plus min-w-0 truncate",
                 isSelected ? "text-ui-fg-base font-medium" : "text-ui-fg-muted",
               )}
             >
@@ -144,7 +146,23 @@ const CategoryFilter = ({
           Categories
         </span>
       </div>
-      <div className="flex flex-col gap-y-2 pr-6">
+      <div className="flex flex-col gap-y-2 pr-1">
+        <div className="flex items-center gap-2.5 py-1.5">
+          <div className="h-5 w-5 shrink-0" />
+          <button
+            type="button"
+            onClick={() => onCategoryChange([])}
+            aria-current={showAll ? "true" : undefined}
+            className={clsx(
+              "txt-compact-small-plus min-w-0 flex-1 truncate pl-6 text-left transition-colors",
+              showAll
+                ? "text-ui-fg-base font-medium"
+                : "text-ui-fg-muted hover:text-ui-fg-base",
+            )}
+          >
+            All products
+          </button>
+        </div>
         {topLevelCategories.map((category) => renderCategoryNode(category))}
       </div>
     </div>

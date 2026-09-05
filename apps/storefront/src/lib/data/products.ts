@@ -93,8 +93,9 @@ export const listProducts = async ({
 }
 
 /**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Fetches up to the whole catalog into the Next.js cache and sorts it
+ * based on the sortBy parameter. It will then return the paginated
+ * products based on the page and limit parameters.
  */
 export const listProductsWithSort = async ({
   page = 0,
@@ -129,7 +130,9 @@ export const listProductsWithSort = async ({
       ...queryParams,
       ...(optionFilters.length ? { option_value_id: optionFilters } : {}),
       ...(categoryFilters.length ? { category_id: categoryFilters } : {}),
-      limit: 100,
+      // Client-side price sorting needs the full set: fetch up to the
+      // whole catalog (Nanofield scale: low thousands) instead of paging.
+      limit: 5000,
     },
     countryCode,
   })

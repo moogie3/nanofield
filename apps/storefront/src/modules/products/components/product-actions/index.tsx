@@ -6,6 +6,8 @@ import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Tick02Icon } from "@hugeicons/core-free-icons"
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -38,6 +40,7 @@ export default function ProductActions({
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  const [added, setAdded] = useState(false)
   const countryCode = useParams().countryCode as string
 
   // If there is only 1 variant, preselect the options
@@ -133,11 +136,72 @@ export default function ProductActions({
     })
 
     setIsAdding(false)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
   }
+
+  const docMeta = (product.metadata || {}) as Record<string, unknown>
 
   return (
     <>
       <div className="flex flex-col gap-y-2" ref={actionsRef}>
+        <div className="flex flex-col gap-2">
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            {String(
+              docMeta.mpn || docMeta.part_number || product.title
+            )}
+          </span>
+          {[
+            (product.metadata as Record<string, unknown> | null)?.manufacturer,
+            (product.metadata as Record<string, unknown> | null)?.package_case,
+            (product.metadata as Record<string, unknown> | null)
+              ?.mounting_type,
+          ].some((v) => typeof v === "string" && v) && (
+            <div className="flex flex-wrap gap-1.5">
+              {(
+                [
+                  (product.metadata as Record<string, unknown> | null)
+                    ?.manufacturer,
+                  (product.metadata as Record<string, unknown> | null)
+                    ?.package_case,
+                  (product.metadata as Record<string, unknown> | null)
+                    ?.mounting_type,
+                ] as string[]
+              )
+                .filter(Boolean)
+                .map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                  >
+                    {chip}
+                  </span>
+                ))}
+            </div>
+          )}
+          {selectedVariant && (
+            <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="relative flex h-1.5 w-1.5">
+                <span
+                  className={`absolute inline-flex h-full w-full rounded-full ${
+                    inStock ? "animate-ping bg-primary opacity-60" : "bg-destructive"
+                  }`}
+                />
+                <span
+                  className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
+                    inStock ? "bg-primary" : "bg-destructive"
+                  }`}
+                />
+              </span>
+              {inStock
+                ? typeof selectedVariant.inventory_quantity === "number" &&
+                  selectedVariant.inventory_quantity > 0
+                  ? `In stock · ${selectedVariant.inventory_quantity} available`
+                  : "In stock"
+                : "Out of stock"}
+            </p>
+          )}
+        </div>
         <div>
           {(product.variants?.length ?? 0) > 1 && (
             <div className="flex flex-col gap-y-4">
@@ -172,15 +236,22 @@ export default function ProductActions({
             !isValidVariant
           }
           variant="primary"
-          className="w-full h-10"
+          className="w-full h-10 transition-transform active:scale-[0.98]"
           isLoading={isAdding}
           data-testid="add-product-button"
         >
-          {!selectedVariant
-            ? "Select variant"
-            : !inStock || !isValidVariant
-            ? "Out of stock"
-            : "Add to cart"}
+          {added ? (
+            <span className="flex items-center gap-2">
+              <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} />
+              Added to cart
+            </span>
+          ) : !selectedVariant ? (
+            "Select variant"
+          ) : !inStock || !isValidVariant ? (
+            "Out of stock"
+          ) : (
+            "Add to cart"
+          )}
         </Button>
         <MobileActions
           product={product}

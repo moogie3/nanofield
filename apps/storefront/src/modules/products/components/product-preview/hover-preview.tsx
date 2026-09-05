@@ -2,10 +2,12 @@
 
 import { useRef, useState } from "react"
 import Image from "next/image"
-import PlaceholderImage from "@modules/common/icons/placeholder-image"
+import DefaultProductImage from "@modules/products/components/default-product-image"
 
-const PANEL_WIDTH = 320
+const PANEL_WIDTH = 200
+const PANEL_HEIGHT_ESTIMATE = 260
 const CURSOR_OFFSET = 18
+const VIEWPORT_MARGIN = 16
 
 export default function HoverPreview({
   image,
@@ -41,7 +43,32 @@ export default function HoverPreview({
   const flip =
     pos !== null &&
     typeof window !== "undefined" &&
-    window.innerWidth - pos.x < PANEL_WIDTH + CURSOR_OFFSET + 8
+    window.innerWidth - pos.x < PANEL_WIDTH + CURSOR_OFFSET + VIEWPORT_MARGIN
+
+  // Clamp the floating panel inside the viewport so it never sits flush
+  // against (or overflows past) the right / bottom edge.
+  const panelLeft =
+    pos === null || typeof window === "undefined"
+      ? 0
+      : Math.min(
+          Math.max(
+            VIEWPORT_MARGIN,
+            flip
+              ? pos.x - PANEL_WIDTH - CURSOR_OFFSET
+              : pos.x + CURSOR_OFFSET
+          ),
+          window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN
+        )
+  const panelTop =
+    pos === null || typeof window === "undefined"
+      ? 0
+      : Math.min(
+          Math.max(VIEWPORT_MARGIN, pos.y - 60),
+          Math.max(
+            VIEWPORT_MARGIN,
+            window.innerHeight - PANEL_HEIGHT_ESTIMATE - VIEWPORT_MARGIN
+          )
+        )
 
   return (
     <>
@@ -54,29 +81,25 @@ export default function HoverPreview({
       </div>
       {pos && (
         <div
-          className="pointer-events-none fixed z-[60] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
+          className="bg-blueprint-tile animate-hero-pop pointer-events-none fixed z-[60] hidden overflow-hidden rounded-2xl border border-border bg-card shadow-xl small:block"
           style={{
             width: PANEL_WIDTH,
-            left: flip
-              ? pos.x - PANEL_WIDTH - CURSOR_OFFSET
-              : pos.x + CURSOR_OFFSET,
-            top: Math.max(8, pos.y - 80),
+            left: panelLeft,
+            top: panelTop,
           }}
         >
-          <div className="relative aspect-square w-full bg-ui-bg-subtle">
+          <div className="relative aspect-square w-full">
             {image ? (
               <Image
                 src={image}
                 alt={title}
                 fill
-                sizes="320px"
+                sizes="200px"
                 className="object-cover object-center"
                 draggable={false}
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <PlaceholderImage size={24} />
-              </div>
+              <DefaultProductImage size="sm" />
             )}
           </div>
         </div>

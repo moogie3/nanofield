@@ -151,6 +151,155 @@
   }
 }
 
+@layer utilities {
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-hero-rise {
+    opacity: 0;
+    animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-hero-rise {
+      opacity: 1;
+      animation: none;
+    }
+  }
+
+  @keyframes hero-sweep {
+    0% {
+      top: -2%;
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+    }
+    92% {
+      opacity: 1;
+    }
+    100% {
+      top: 102%;
+      opacity: 0;
+    }
+  }
+
+  .animate-hero-sweep {
+    animation: hero-sweep 7s linear infinite;
+  }
+
+  @keyframes hero-drift {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+      transform: translate(4px, -7px) rotate(9deg);
+    }
+    66% {
+      transform: translate(-4px, 5px) rotate(-9deg);
+    }
+  }
+
+  .animate-hero-drift {
+    animation: hero-drift 8s ease-in-out infinite;
+  }
+
+  @keyframes hero-scanline {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+
+  .animate-hero-scanline {
+    animation: hero-scanline 1.4s linear infinite;
+  }
+
+  @keyframes hero-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-hero-pop {
+    animation: hero-pop 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .bg-blueprint-tile {
+    background-image:
+      linear-gradient(to right, var(--border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .nav-wordmark {
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.02em;
+    transition: letter-spacing 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .nav-wordmark:hover {
+    letter-spacing: 0.22em;
+  }
+
+  .nav-wordmark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 42%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 58%
+    );
+    transform: translateX(-130%);
+    pointer-events: none;
+  }
+
+  .nav-wordmark:hover::after {
+    animation: wordmark-sheen 0.9s ease;
+  }
+
+  @keyframes wordmark-sheen {
+    to {
+      transform: translateX(130%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-hero-sweep,
+    .animate-hero-scanline,
+    .animate-hero-pop,
+    .animate-hero-drift {
+      animation: none;
+    }
+    .nav-wordmark,
+    .nav-wordmark:hover {
+      letter-spacing: 0.02em;
+    }
+    .nav-wordmark:hover::after {
+      animation: none;
+    }
+  }
+}
+
 @layer base {
   :root {
     --background: oklch(1 0 0);

@@ -12,26 +12,38 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { getDatasheetInfo } from "@lib/util/product-datasheet"
 import { HttpTypes } from "@medusajs/types"
 
 type ProductTabsProps = {
   product: HttpTypes.StoreProduct
 }
 
+// Typed read of the loose product metadata bag. Anything that isn't a
+// non-empty string counts as missing — never render raw `unknown` into JSX.
+const metaStr = (
+  metadata: Record<string, unknown> | null | undefined,
+  key: string,
+  fallback = "-"
+) => {
+  const value = metadata?.[key]
+  return typeof value === "string" && value ? value : fallback
+}
+
 const ProductTabs = ({ product }: ProductTabsProps) => {
-  const metadata = product.metadata || {}
-  // Non-semiconductor parts (e.g. tools, accessories) hide the datasheet tab.
-  // Configure via product metadata: is_semiconductor = true/false, datasheet_url = alldatasheet link.
-  const isSemiconductor = metadata.is_semiconductor !== false
+  // Same rule as the gallery button: explicit datasheet_url always wins,
+  // `no_datasheet` opts out (hand tools, consumables), otherwise a
+  // searchable identifier falls back to a datasheet search link.
+  const hasDatasheet = getDatasheetInfo(product) !== null
   const tabs = [
     {
       label: "Specifications",
       component: <SpecificationsTab product={product} />,
     },
-    ...(isSemiconductor
+    ...(hasDatasheet
       ? [
           {
-            label: "Datasheet & Compliance",
+            label: "Datasheet & Sourcing",
             component: <DatasheetTab product={product} />,
           },
         ]
@@ -57,40 +69,54 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
 }
 
 const SpecificationsTab = ({ product }: ProductTabsProps) => {
-  const metadata = product.metadata || {}
-
   // Extract specs from metadata - these would be populated from your import script
-  const specs = {
+  const metadata = product.metadata
+  const specs: Record<string, string> = {
     "Part Number": product.handle?.toUpperCase() || "-",
-    Manufacturer: metadata.manufacturer || "-",
-    Category: product.type?.value || metadata.category || "-",
-    "Package / Case": metadata.package_case || "-",
-    "Mounting Type": metadata.mounting_type || "-",
-    "Operating Temperature": metadata.operating_temp || "-",
-    "Voltage Rating": metadata.voltage_rating
-      ? `${metadata.voltage_rating}V`
-      : "-",
-    "Current Rating": metadata.current_rating
-      ? `${metadata.current_rating}A`
-      : "-",
-    "Power Dissipation": metadata.power_dissipation
-      ? `${metadata.power_dissipation}W`
-      : "-",
-    Frequency: metadata.frequency ? `${metadata.frequency}MHz` : "-",
-    "Gain (hFE)": metadata.gain || "-",
-    Capacitance: metadata.capacitance ? `${metadata.capacitance}pF` : "-",
-    Resistance: metadata.resistance ? `${metadata.resistance}Ω` : "-",
-    Inductance: metadata.inductance ? `${metadata.inductance}µH` : "-",
+    Manufacturer: metaStr(metadata, "manufacturer"),
+    Category: product.type?.value || metaStr(metadata, "category"),
+    "Package / Case": metaStr(metadata, "package_case"),
+    "Mounting Type": metaStr(metadata, "mounting_type"),
+    "Operating Temperature": metaStr(metadata, "operating_temp"),
+    "Voltage Rating":
+      metaStr(metadata, "voltage_rating", "") !== ""
+        ? `${metaStr(metadata, "voltage_rating")}V`
+        : "-",
+    "Current Rating":
+      metaStr(metadata, "current_rating", "") !== ""
+        ? `${metaStr(metadata, "current_rating")}A`
+        : "-",
+    "Power Dissipation":
+      metaStr(metadata, "power_dissipation", "") !== ""
+        ? `${metaStr(metadata, "power_dissipation")}W`
+        : "-",
+    Frequency:
+      metaStr(metadata, "frequency", "") !== ""
+        ? `${metaStr(metadata, "frequency")}MHz`
+        : "-",
+    "Gain (hFE)": metaStr(metadata, "gain"),
+    Capacitance:
+      metaStr(metadata, "capacitance", "") !== ""
+        ? `${metaStr(metadata, "capacitance")}pF`
+        : "-",
+    Resistance:
+      metaStr(metadata, "resistance", "") !== ""
+        ? `${metaStr(metadata, "resistance")}Ω`
+        : "-",
+    Inductance:
+      metaStr(metadata, "inductance", "") !== ""
+        ? `${metaStr(metadata, "inductance")}µH`
+        : "-",
     "RoHS Status":
-      metadata.rohs === "true"
+      metadata?.rohs === "true"
         ? "Compliant"
-        : metadata.rohs === "false"
+        : metadata?.rohs === "false"
           ? "Non-Compliant"
           : "-",
     "Lead Free":
-      metadata.lead_free === "true"
+      metadata?.lead_free === "true"
         ? "Yes"
-        : metadata.lead_free === "false"
+        : metadata?.lead_free === "false"
           ? "No"
           : "-",
     Weight: product.weight ? `${product.weight} g` : "-",
@@ -98,9 +124,9 @@ const SpecificationsTab = ({ product }: ProductTabsProps) => {
       product.length && product.width && product.height
         ? `${product.length} × ${product.width} × ${product.height} mm`
         : "-",
-    "Stock Status": metadata.stock_status || "In Stock",
-    "Moisture Sensitivity Level": metadata.msl || "-",
-    "ESD Rating": metadata.esd_rating || "-",
+    "Stock Status": metaStr(metadata, "stock_status", "In Stock"),
+    "Moisture Sensitivity Level": metaStr(metadata, "msl"),
+    "ESD Rating": metaStr(metadata, "esd_rating"),
   }
 
   // Filter out empty specs
@@ -134,48 +160,110 @@ const SpecificationsTab = ({ product }: ProductTabsProps) => {
   )
 }
 
+const triState = (value: unknown, yes = "Compliant", no = "Non-Compliant") =>
+  value === "true" ? yes : value === "false" ? no : "Unknown"
+
+const yesNoUnknown = (value: unknown) =>
+  value === "true" ? "Yes" : value === "false" ? "No" : "Unknown"
+
 const DatasheetTab = ({ product }: ProductTabsProps) => {
-  const metadata = product.metadata || {}
-  const partNumber =
-    metadata.part_number || product.title || product.handle || ""
-  const datasheetUrl =
-    metadata.datasheet_url ||
-    `https://www.alldatasheet.com/search.jsp?searchword=${encodeURIComponent(
-      String(partNumber),
-    )}`
+  const metadata = (product.metadata || {}) as Record<string, any>
+  const datasheet = getDatasheetInfo(product)
+  // Manufacturer part name first (e.g. TIP41C) — internal SKU codes mean
+  // nothing to datasheet search. Import sets metadata.mpn per product.
+  const partNumber = String(datasheet?.partLabel || product.title || "")
+  const datasheetUrl = datasheet?.href || "#"
+
+  // Only certified facts are shown — anything still unknown is hidden
+  // instead of displayed as an "Unknown" badge wall. Compliance is
+  // entered manually from manufacturer docs at import time; it is never
+  // scraped or guessed (datasheet sites block bots and carry no license
+  // for reuse).
+  const complianceItems = [
+    { label: "RoHS", value: triState(metadata.rohs) },
+    { label: "REACH", value: triState(metadata.reach) },
+    { label: "Lead Free", value: yesNoUnknown(metadata.lead_free) },
+    { label: "Halogen Free", value: yesNoUnknown(metadata.halogen_free) },
+    {
+      label: "MSL Level",
+      value:
+        typeof metadata.msl === "string" && metadata.msl ? metadata.msl : "Unknown",
+    },
+    {
+      label: "ESD Rating",
+      value:
+        typeof metadata.esd_rating === "string" && metadata.esd_rating
+          ? metadata.esd_rating
+          : "Unknown",
+    },
+    { label: "UL Recognized", value: yesNoUnknown(metadata.ul_recognized) },
+    {
+      label: "Country of Origin",
+      value:
+        product.origin_country || metadata.country_of_origin || "Unknown",
+    },
+  ].filter((item) => item.value !== "Unknown")
+
+  const mpnQuery = encodeURIComponent(String(partNumber))
+  const sources = [
+    {
+      label: metadata.datasheet_url
+        ? "Open Datasheet"
+        : `Find ${partNumber} datasheet`,
+      note: "alldatasheet.com",
+      href: datasheetUrl,
+    },
+    {
+      label: `Check ${partNumber} stock & pricing`,
+      note: "digikey.com",
+      href: `https://www.digikey.com/en/products/result?keywords=${mpnQuery}`,
+    },
+    {
+      label: `Check ${partNumber} stock & pricing`,
+      note: "mouser.com",
+      href: `https://www.mouser.com/c/?q=${mpnQuery}`,
+    },
+    {
+      label: `Check ${partNumber} stock & pricing`,
+      note: "lcsc.com",
+      href: `https://www.lcsc.com/search?q=${mpnQuery}`,
+    },
+  ]
 
   return (
     <div className="text-small-regular py-8 space-y-6">
       <div className="border border-border rounded-lg p-6 bg-muted/50">
         <h4 className="font-semibold text-foreground mb-4">
-          Technical Documentation
+          Datasheets & Distributors
         </h4>
         <div className="space-y-3">
-          <a
-            href={datasheetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 border border-border rounded hover:bg-background transition-colors"
-          >
-            <svg
-              className="w-5 h-5 text-primary flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {sources.map((source) => (
+            <a
+              key={source.note}
+              href={source.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-3 border border-border rounded hover:bg-background transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-              />
-            </svg>
-            <span className="text-sm underline">
-              {metadata.datasheet_url
-                ? "Open Datasheet"
-                : `Find ${partNumber} datasheet on alldatasheet.com`}
-            </span>
-          </a>
+              <svg
+                className="w-5 h-5 text-primary flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+              </svg>
+              <span className="text-sm underline flex-1 min-w-0 break-words">{source.label}</span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
+                {source.note}
+              </span>
+            </a>
+          ))}
           {metadata.application_note_url && (
             <a
               href={metadata.application_note_url}
@@ -239,89 +327,41 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
         <h4 className="font-semibold text-foreground mb-1">
           Compliance & Certifications
         </h4>
-        <p className="text-xs text-muted-foreground mb-4">
-          Sourced from the manufacturer datasheet — always confirm against the
-          official datasheet linked above before production use.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            {
-              label: "RoHS",
-              value:
-                metadata.rohs === "true"
-                  ? "Compliant"
-                  : metadata.rohs === "false"
-                    ? "Non-Compliant"
-                    : "Unknown",
-            },
-            {
-              label: "REACH",
-              value:
-                metadata.reach === "true"
-                  ? "Compliant"
-                  : metadata.reach === "false"
-                    ? "Non-Compliant"
-                    : "Unknown",
-            },
-            {
-              label: "Lead Free",
-              value:
-                metadata.lead_free === "true"
-                  ? "Yes"
-                  : metadata.lead_free === "false"
-                    ? "No"
-                    : "Unknown",
-            },
-            {
-              label: "Halogen Free",
-              value:
-                metadata.halogen_free === "true"
-                  ? "Yes"
-                  : metadata.halogen_free === "false"
-                    ? "No"
-                    : "Unknown",
-            },
-            { label: "MSL Level", value: metadata.msl || "Not Specified" },
-            {
-              label: "ESD Rating",
-              value: metadata.esd_rating || "Not Specified",
-            },
-            {
-              label: "UL Recognized",
-              value:
-                metadata.ul_recognized === "true"
-                  ? "Yes"
-                  : metadata.ul_recognized === "false"
-                    ? "No"
-                    : "Unknown",
-            },
-            {
-              label: "Country of Origin",
-              value:
-                product.origin_country ||
-                metadata.country_of_origin ||
-                "Unknown",
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="flex justify-between items-center py-2 border-b border-border/50 last:border-0"
-            >
-              <span className="text-muted-foreground">{item.label}</span>
-              <Badge
-                variant={
-                  item.value === "Compliant" || item.value === "Yes"
-                    ? "default"
-                    : item.value === "Non-Compliant" || item.value === "No"
-                      ? "destructive"
-                      : "secondary"
-                }
-              >
-                {item.value}
-              </Badge>
+        {complianceItems.length > 0 ? (
+          <>
+            <p className="text-xs text-muted-foreground mb-4">
+              Sourced from the manufacturer datasheet — always confirm against
+              the official datasheet linked above before production use.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {complianceItems.map((item, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between items-center py-2 border-b border-border/50 last:border-0"
+                >
+                  <span className="text-muted-foreground">{item.label}</span>
+                  <Badge
+                    variant={
+                      item.value === "Compliant" || item.value === "Yes"
+                        ? "default"
+                        : item.value === "Non-Compliant" || item.value === "No"
+                          ? "destructive"
+                          : "secondary"
+                    }
+                  >
+                    {item.value}
+                  </Badge>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Compliance data is still pending for this part. Values are added
+            from manufacturer documentation during catalog import — nothing
+            here is a guess.
+          </p>
+        )}
       </div>
 
       <div className="border border-border rounded-lg p-6 bg-muted/50">
@@ -331,7 +371,7 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
         <div className="space-y-2">
           {metadata.cross_references ? (
             <div className="flex flex-wrap gap-2">
-              {metadata.cross_references.split(",").map((ref, i) => (
+              {metadata.cross_references.split(",").map((ref: string, i: number) => (
                 <Badge key={i} variant="secondary">
                   {ref.trim()}
                 </Badge>

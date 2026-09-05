@@ -1,4 +1,4 @@
-import { Container } from "@modules/common/components/ui"
+import { Container, Heading } from "@modules/common/components/ui"
 
 import ChevronDown from "@modules/common/icons/chevron-down"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -20,11 +20,14 @@ const Overview = ({ customer, orders }: OverviewProps) => {
   return (
     <div data-testid="overview-page-wrapper">
       <div className="hidden small:block">
-        <div className="text-xl-semi flex justify-between items-center mb-4">
+        <Heading
+          level="h2"
+          className="flex justify-between items-center mb-4 text-3xl-regular"
+        >
           <span data-testid="welcome-message" data-value={customer?.first_name}>
             Hello {customer?.first_name}
           </span>
-          <span className="text-small-regular text-ui-fg-base">
+          <span className="text-small-regular font-normal text-ui-fg-base">
             Signed in as:{" "}
             <span
               className="font-semibold"
@@ -34,7 +37,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
               {customer?.email}
             </span>
           </span>
-        </div>
+        </Heading>
         <div className="flex flex-col py-8 border-t border-border">
           <div className="flex flex-col gap-y-4 h-full col-span-1 row-span-2 flex-1">
             <div className="flex items-start gap-x-16 mb-6">

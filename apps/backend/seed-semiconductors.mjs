@@ -233,17 +233,32 @@ const PARTS = [
   },
 ];
 
-const existing = await get("/admin/products?limit=100&fields=handle");
-const existingHandles = new Set(existing.products.map((p) => p.handle));
+const existing = await get("/admin/products?limit=100&fields=id,handle");
+const existingByHandle = Object.fromEntries(
+  existing.products.map((p) => [p.handle, p.id])
+);
 
-let created = 0;
-for (const part of PARTS) {
-  if (existingHandles.has(part.handle)) {
-    console.log(`skip (exists): ${part.handle}`);
-    continue;
-  }
+// Manufacturer part names used for datasheet search (internal SKU codes
+// mean nothing to alldatasheet). Real PNs where the demo part is real.
+const MPN_BY_HANDLE = {
+  "ne555p-timer-ic": "NE555P",
+  "lm7805-regulator": "LM7805",
+  "2n2222-transistor": "2N2222",
+  "bc547-transistor": "BC547",
+  "irf540n-mosfet": "IRF540N",
+  "cap-100nf-50v": "CL10B104KB8NNNC",
+  "cap-470uf-25v": "EEE-FT1E471AP",
+  "res-10k-0805": "RC0805FR-0710KL",
+  "1n4007-diode": "1N4007",
+  "ss14-schottky": "SS14",
+  "esp32-wroom-32": "ESP32-WROOM-32",
+  "oled-096-i2c": "SSD1306-OLED-096",
+};
+
+const buildMetadata = (part) => {
   const metadata = {
     part_number: part.sku,
+    mpn: MPN_BY_HANDLE[part.handle] || part.sku,
     manufacturer: part.mfr,
     package_case: part.pkg,
     mounting_type: part.mount,
@@ -254,6 +269,21 @@ for (const part of PARTS) {
   };
   if (part.voltage) metadata.voltage_rating = part.voltage;
   if (part.current) metadata.current_rating = part.current;
+  return metadata;
+};
+
+let created = 0;
+let updated = 0;
+for (const part of PARTS) {
+  const metadata = buildMetadata(part);
+  if (existingByHandle[part.handle]) {
+    await api("POST", `/admin/products/${existingByHandle[part.handle]}`, {
+      metadata,
+    });
+    updated++;
+    console.log(`updated metadata: ${part.handle}`);
+    continue;
+  }
 
   const res = await api("POST", "/admin/products", {
     title: part.title,
@@ -292,4 +322,4 @@ for (const part of PARTS) {
   created++;
   console.log(`created: ${part.handle} (${part.sku}) stock=500`);
 }
-console.log(`DONE. ${created} products created.`);
+console.log(`DONE. ${created} created, ${updated} metadata-updated.`);

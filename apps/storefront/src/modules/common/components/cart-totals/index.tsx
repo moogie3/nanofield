@@ -64,7 +64,7 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
         </div>
       </div>
       <div className="h-px w-full border-b border-border my-4" />
-      <div className="flex items-center justify-between text-ui-fg-base mb-2 txt-medium ">
+      <div className="flex items-center justify-between text-ui-fg-base mb-2 txt-medium pr-1">
         <span>Total</span>
         <span
           className="txt-xlarge-plus"

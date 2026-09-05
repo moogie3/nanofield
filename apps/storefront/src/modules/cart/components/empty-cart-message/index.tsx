@@ -11,13 +11,15 @@ const EmptyCartMessage = () => {
       className="py-48 px-2 flex flex-col justify-center items-start"
       data-testid="empty-cart-message"
     >
-      <SectionIcon icon={PackageIcon} className="h-10 w-10 text-primary mb-4" />
-      <Heading
-        level="h1"
-        className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
-      >
-        Cart
-      </Heading>
+      <div className="flex items-center gap-3">
+        <SectionIcon icon={PackageIcon} className="h-8 w-8 shrink-0 text-primary" />
+        <Heading
+          level="h1"
+          className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
+        >
+          Cart
+        </Heading>
+      </div>
       <Text className="text-base-regular mt-4 mb-6 max-w-[32rem]">
         You don&apos;t have anything in your cart. Let&apos;s change that, use
         the link below to start browsing our products.

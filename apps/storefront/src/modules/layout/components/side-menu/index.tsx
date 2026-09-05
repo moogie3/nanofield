@@ -39,9 +39,9 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                 <Popover.Button
                   data-testid="nav-menu-button"
                   aria-label="Menu"
-                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
+                  className="relative h-full flex items-center rounded-md transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] focus:outline-none hover:text-ui-fg-base hover:scale-110 active:scale-95"
                 >
-                  <MenuNavIcon />
+                  <MenuNavIcon open={open} />
                 </Popover.Button>
               </div>
 

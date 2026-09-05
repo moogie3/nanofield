@@ -1,155 +1,158 @@
 import { listCategories } from "@lib/data/categories"
-import { listCollections } from "@lib/data/collections"
 import { Text, clx } from "@modules/common/components/ui"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import MedusaCTA from "@modules/layout/components/medusa-cta"
+
+const HIDDEN_CATEGORY_MATCHERS = [
+  "shirt",
+  "pant",
+  "sweat",
+  "merch",
+  "short",
+  "collection",
+]
+
+// TODO: move these to the backend (e.g. Medusa store metadata / settings
+// module) once the admin-facing config is ready — footer reads them from here.
+const STORE_CONTACT = {
+  whatsapp: "6281234567890",
+  whatsappMessage: "Halo Nanofield, saya mau tanya stok part.",
+  address: "Jakarta, Indonesia",
+}
 
 export default async function Footer() {
-  const { collections } = await listCollections({
-    fields: "*products",
-  })
   const productCategories = await listCategories()
 
+  const catalogCategories = (productCategories ?? [])
+    .filter((c) => !c.parent_category)
+    .filter(
+      (c) =>
+        !HIDDEN_CATEGORY_MATCHERS.some((m) =>
+          c.name.toLowerCase().includes(m)
+        )
+    )
+    .slice(0, 6)
+
+  const whatsappUrl = `https://wa.me/${STORE_CONTACT.whatsapp}?text=${encodeURIComponent(
+    STORE_CONTACT.whatsappMessage
+  )}`
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    STORE_CONTACT.address
+  )}`
+
   return (
-    <footer className="border-t border-border w-full bg-background">
-      <div className="content-container flex flex-col w-full">
-        <div className="flex flex-col gap-y-6 xsmall:flex-row items-start justify-between py-40">
-          <div>
+    <footer className="relative w-full border-t border-border bg-background">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
+      />
+      <div className="content-container flex w-full flex-col">
+        <div className="flex flex-col gap-10 py-12 small:flex-row small:items-start small:justify-between">
+          <div className="max-w-sm">
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase font-heading text-primary"
+              className="font-heading text-lg font-bold uppercase tracking-wide text-primary"
             >
               Nanofield
             </LocalizedClientLink>
+            <p className="text-small-regular mt-3 text-ui-fg-subtle">
+              Precision electronic components &amp; appliance spare parts —
+              indexed by part number, backed by datasheets.
+            </p>
+            <p className="mt-4 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+              </span>
+              ICs · Transistors · MOSFETs · Passives
+            </p>
           </div>
-          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
-            {productCategories && productCategories?.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
-                  Categories
-                </span>
-                <ul
-                  className="grid grid-cols-1 gap-2"
-                  data-testid="footer-categories"
-                >
-                  {productCategories?.slice(0, 6).map((c) => {
-                    if (c.parent_category) {
-                      return
-                    }
-
-                    const children =
-                      c.category_children?.map((child) => ({
-                        name: child.name,
-                        handle: child.handle,
-                        id: child.id,
-                      })) || null
-
-                    return (
-                      <li
-                        className="flex flex-col gap-2 text-ui-fg-subtle txt-small"
-                        key={c.id}
-                      >
-                        <LocalizedClientLink
-                          className={clx(
-                            "hover:text-ui-fg-base",
-                            children && "txt-small-plus",
-                          )}
-                          href={`/categories/${c.handle}`}
-                          data-testid="category-link"
-                        >
-                          {c.name}
-                        </LocalizedClientLink>
-                        {children && (
-                          <ul className="grid grid-cols-1 ml-3 gap-2">
-                            {children &&
-                              children.map((child) => (
-                                <li key={child.id}>
-                                  <LocalizedClientLink
-                                    className="hover:text-ui-fg-base"
-                                    href={`/categories/${child.handle}`}
-                                    data-testid="category-link"
-                                  >
-                                    {child.name}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-                          </ul>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            )}
-            {collections && collections.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
-                  Collections
-                </span>
-                <ul
-                  className={clx(
-                    "grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small",
-                    {
-                      "grid-cols-2": (collections?.length || 0) > 3,
-                    },
-                  )}
-                >
-                  {collections?.slice(0, 6).map((c) => (
-                    <li key={c.id}>
-                      <LocalizedClientLink
-                        className="hover:text-ui-fg-base"
-                        href={`/collections/${c.handle}`}
-                      >
-                        {c.title}
-                      </LocalizedClientLink>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex flex-col gap-y-2">
-              <span className="txt-small-plus txt-ui-fg-base">Nanofield</span>
-              <ul className="grid grid-cols-1 gap-y-2 text-ui-fg-subtle txt-small">
+          <div className="flex flex-wrap gap-10 small:gap-12">
+            <div className="flex flex-col gap-y-3">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
+                Catalog
+              </span>
+              <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/store"
+                  >
+                    All parts
+                  </LocalizedClientLink>
+                </li>
+                {catalogCategories.map((c) => (
+                  <li key={c.id}>
+                    <LocalizedClientLink
+                      className={clx("hover:text-foreground")}
+                      href={`/categories/${c.handle}`}
+                      data-testid="category-link"
+                    >
+                      {c.name}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex flex-col gap-y-3">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
+                Account
+              </span>
+              <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/cart"
+                  >
+                    Cart
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/account"
+                  >
+                    Orders
+                  </LocalizedClientLink>
+                </li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-y-3">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
+                Contact
+              </span>
+              <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
                 <li>
                   <a
-                    href="https://github.com/medusajs"
+                    href={whatsappUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-ui-fg-base"
+                    className="hover:text-foreground"
                   >
-                    GitHub
+                    WhatsApp ↗
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href={mapsUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-ui-fg-base"
+                    className="max-w-44 hover:text-foreground"
                   >
-                    Documentation
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    Source code
+                    {STORE_CONTACT.address} ↗
                   </a>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="flex w-full mb-16 justify-between text-ui-fg-muted">
+        <div className="flex w-full flex-col gap-2 border-t border-border py-6 text-ui-fg-muted small:flex-row small:items-center small:justify-between">
           <Text className="txt-compact-small">
             © {new Date().getFullYear()} Nanofield. All rights reserved.
           </Text>
-          <MedusaCTA />
+          <Text className="font-mono text-[11px] uppercase tracking-[0.2em]">
+            Repair &amp; maintenance sourcing
+          </Text>
         </div>
       </div>
     </footer>

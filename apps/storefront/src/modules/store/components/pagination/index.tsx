@@ -35,9 +35,16 @@ export function Pagination({
   ) => (
     <button
       key={p}
-      className={clx("txt-xlarge-plus text-ui-fg-muted", {
-        "text-ui-fg-base hover:text-ui-fg-subtle": isCurrent,
-      })}
+      aria-label={`Go to page ${p}`}
+      aria-current={isCurrent ? "page" : undefined}
+      className={clx(
+        "flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium transition-colors",
+        {
+          "border-primary bg-primary text-primary-foreground": isCurrent,
+          "border-border bg-card text-ui-fg-subtle hover:border-primary hover:text-foreground":
+            !isCurrent,
+        }
+      )}
       disabled={isCurrent}
       onClick={() => handlePageChange(p)}
     >
@@ -49,7 +56,7 @@ export function Pagination({
   const renderEllipsis = (key: string) => (
     <span
       key={key}
-      className="txt-xlarge-plus text-ui-fg-muted items-center cursor-default"
+      className="flex h-9 min-w-9 items-center justify-center text-sm text-ui-fg-muted cursor-default"
     >
       ...
     </span>
@@ -106,9 +113,47 @@ export function Pagination({
   }
 
   // Render the component
+  const canPrev = page > 1
+  const canNext = page < totalPages
+
+  const navButtonClass = (enabled: boolean) =>
+    clx(
+      "flex h-9 items-center gap-1 rounded-lg border px-3 text-sm font-medium transition-colors",
+      {
+        "border-border bg-card text-ui-fg-subtle hover:border-primary hover:text-foreground":
+          enabled,
+        "cursor-not-allowed border-border bg-muted text-ui-fg-muted opacity-60":
+          !enabled,
+      }
+    )
+
   return (
-    <div className="flex justify-center w-full mt-12">
-      <div className="flex gap-3 items-end" data-testid={dataTestid}>{renderPageButtons()}</div>
-    </div>
+    <nav
+      aria-label="Product catalog pages"
+      className="mt-12 flex w-full flex-col items-center gap-3"
+    >
+      <div className="flex flex-wrap items-center justify-center gap-2" data-testid={dataTestid}>
+        <button
+          aria-label="Go to previous page"
+          className={navButtonClass(canPrev)}
+          disabled={!canPrev}
+          onClick={() => canPrev && handlePageChange(page - 1)}
+        >
+          <span aria-hidden>←</span> Prev
+        </button>
+        {renderPageButtons()}
+        <button
+          aria-label="Go to next page"
+          className={navButtonClass(canNext)}
+          disabled={!canNext}
+          onClick={() => canNext && handlePageChange(page + 1)}
+        >
+          Next <span aria-hidden>→</span>
+        </button>
+      </div>
+      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-muted">
+        Page {page} of {totalPages}
+      </p>
+    </nav>
   )
 }
