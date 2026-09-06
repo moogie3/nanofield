@@ -2,9 +2,10 @@ import { getDatasheetInfo } from "@lib/util/product-datasheet"
 import { HttpTypes } from "@medusajs/types"
 
 /**
- * "View datasheet" button. Rendered under the product image on the product
- * page. Returns null when the product has no document and no searchable
- * identifier (or is opted out via `no_datasheet`) — server-safe.
+ * Datasheet button under the product image. Returns null for hand tools,
+ * merch, and anything without a document or explicit part identifier
+ * (see `getDatasheetInfo`) — server-safe. Labels honestly: direct PDF
+ * vs. identifier search.
  */
 export default function DatasheetButton({
   product,
@@ -24,7 +25,7 @@ export default function DatasheetButton({
       rel="noreferrer"
       className="flex h-10 w-full items-center justify-center rounded-md border border-border text-sm font-medium transition-colors hover:border-primary hover:text-primary"
     >
-      View datasheet ↗
+      {info.isDirect ? "View datasheet ↗" : "Find datasheet ↗"}
     </a>
   )
 }

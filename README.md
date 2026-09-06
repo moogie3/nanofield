@@ -1,173 +1,132 @@
-<p align="center">
-  <a href="https://www.medusajs.com">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/59018053/229103275-b5e482bb-4601-46e6-8142-244f531cebdb.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    <img alt="Medusa logo" src="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    </picture>
-  </a>
-</p>
-<h1 align="center">
-  Medusa DTC Starter
-</h1>
+# Nanofield — Precision Electronic Components
 
-<h4 align="center">
-  <a href="https://docs.medusajs.com">Documentation</a> |
-  <a href="https://www.medusajs.com">Website</a>
-</h4>
+Nanofield is a standalone ecommerce store for semiconductors, electronic components, and appliance spare parts (successor to the Shopee/TikTok "Toko Sanjaya" listings). B2C first, with B2B held in reserve.
 
-<p align="center">
-  Building blocks for digital commerce
-</p>
-<p align="center">
-  <a href="https://github.com/medusajs/medusa/blob/develop/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Medusa is released under the MIT license." />
-  </a>
-  <a href="https://circleci.com/gh/medusajs/medusa">
-    <img src="https://circleci.com/gh/medusajs/medusa.svg?style=shield" alt="Current CircleCI build status." />
-  </a>
-  <a href="https://github.com/medusajs/medusa/blob/develop/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs welcome!" />
-  </a>
-    <a href="https://www.producthunt.com/posts/medusa"><img src="https://img.shields.io/badge/Product%20Hunt-%231%20Product%20of%20the%20Day-%23DA552E" alt="Product Hunt"></a>
-  <a href="https://discord.gg/xpCwq3Kfn8">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
-  </a>
-  <a href="https://twitter.com/intent/follow?screen_name=medusajs">
-    <img src="https://img.shields.io/twitter/follow/medusajs.svg?label=Follow%20@medusajs" alt="Follow @medusajs" />
-  </a>
-</p>
+Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, and a schematic-themed storefront.
 
-# Medusa DTC Starter
+Project docs:
 
-A production-ready monorepo starter for direct-to-consumer ecommerce stores powered by Medusa and Next.js. Includes a fully featured storefront with product browsing, cart, checkout, customer accounts, and order management.
-
-## Nanofield — what this repo has become
-
-This repo is the **Nanofield** store: an Indonesia-based precision electronic components & appliance spare parts shop (ex-Shopee/TikTok "Toko Sanjaya"), built on the Medusa DTC starter. Start here, then read the-project docs:
-
-- `whole.md` — whole-project state: architecture, what is built, conventions, known gotchas
+- `whole.md` — whole-project state: architecture, what is built, conventions, gotchas
 - `nanofield_ecommerce_plan.md` — business/catalog plan, decision log, import checklist
-- `AGENTS.md` — repo commands, package-manager detection, Medusa skills/MCP, code style
+- `AGENTS.md` — contributor commands, package-manager rules, code style
 
-Quick orientation:
+## Repository layout
 
-- Storefront: `apps/storefront` (Next.js, `http://localhost:8000`, default region `dk`)
-- Backend: `apps/backend` (Medusa v2, `http://localhost:9000`, admin at `/app`)
-- Package manager is **npm** in this install (`package-lock.json` at root) — use it for every command, never introduce a second lockfile
-- Highlights: unified schematic hero, Shopee Excel importer (`import-shopee.mjs` + `/app/ecomm-import`), full admin branding suite, datasheet-backed product pages, optimistic cart quantity stepper, ISR-cached catalog (5-min revalidate — **restart the storefront dev server after backend deletes to flush stale entries immediately**)
-
-## Features
-
-- All of [Medusa's commerce features](https://docs.medusajs.com/resources/commerce-modules)
-- Multi-region support with automatic country detection
-- Product catalog with variant selection
-- Cart with promotion codes
-- Multi-step checkout with shipping and payment
-- Customer accounts with order history and address management
-- Order transfer between accounts
-
-## Getting Started
-
-### Deploy with Medusa Cloud
-
-The fastest way to get started is deploying with [Medusa Cloud](https://cloud.medusajs.com):
-
-1. [Create a Medusa Cloud account](https://cloud.medusajs.com)
-2. Deploy this starter directly from your dashboard
-
-### Local Installation
-
-> **Prerequisites:
->
-> - [Node.js](https://nodejs.org/) v20+
-> - [PostgreSQL](https://www.postgresql.org/) v15+
-> - [pnpm](https://pnpm.io/) v10+
-
-1. Clone the repository and install dependencies:
-
-```bash
-git clone https://github.com/medusajs/dtc-starter.git
-cd dtc-starter
-pnpm install
+```text
+apps/backend      Medusa v2 API + admin (@nanofield/backend, :9000, admin at /app)
+apps/storefront   Next.js storefront (:8000, default region dk)
 ```
 
-2. Set up environment variables for the backend:
+## Prerequisites
+
+- Node.js v20+
+- PostgreSQL v15+ (create an empty database, e.g. `nanofield`)
+- Redis (default `redis://localhost:6379`)
+- npm 11 — this install uses npm (`package-lock.json` at root, `packageManager: npm@11.0.0`). Use npm for every command; never introduce a second lockfile.
+
+## Setup from a fresh clone
+
+```bash
+git clone <repo-url> nanofield
+cd nanofield
+npm install
+```
+
+### 1. Backend environment
 
 ```bash
 cp apps/backend/.env.template apps/backend/.env
 ```
 
-3. Set the database URL in `apps/backend.env`:
+Edit `apps/backend/.env` and set at minimum:
 
-```bash
-# Replace with actual database URL, make sure the database exists.
-DATABASE_URL=postgres://postgres:@localhost:5432/medusa-dtc-starter
-```
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | `postgres://<user>:<password>@localhost:5432/nanofield` |
+| `JWT_SECRET` / `COOKIE_SECRET` | long random strings (dev defaults in the template are NOT safe to share) |
+| `STOREFRONT_URL` | `http://localhost:8000` |
+| `REVALIDATE_SECRET` | long random string, must match the storefront's copy (enables instant catalog cache purge, see below) |
 
-4. Run migrations:
+`STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` and `REDIS_URL` already default to local values in the template.
 
-```bash
-cd apps/backend
-pnpm medusa db:migrate
-```
-
-5. Add admin user:
+### 2. Migrate the database and create an admin user
 
 ```bash
 cd apps/backend
-pnpm medusa user -e admin@test.com -p supersecret
+npx medusa db:migrate
+npx medusa user -e admin@test.com -p <choose-a-password>
+cd ../..
 ```
 
-6. Start Medusa backend:
+### 3. Start the backend
 
 ```bash
-cd apps/backend
-pnpm dev
+npm run backend:dev
 ```
 
-7. Open the admin dashboard at `localhost:9000/app` and log in. Retrieve your publishable API key at Settings > Publishable API key.
+Wait for `Medusa is ready`, then open `http://localhost:9000/app` and log in. Go to Settings and create/copy a **publishable API key** — the storefront needs it next.
 
-8. Set up environment variables for the storefront:
+### 4. Storefront environment
+
+Create `apps/storefront/.env.local` (there is no template file; these are the keys):
 
 ```bash
-cp apps/storefront/.env.template apps/storefront/.env.local
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=<key from step 3>
+NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+NEXT_PUBLIC_DEFAULT_REGION=dk
+NEXT_PUBLIC_BASE_URL=http://localhost:8000
+REVALIDATE_SECRET=<same value as backend>
 ```
 
-9. Update `apps/storefront/.env.local` with your Medusa publishable API key:
+Without the publishable key, storefront API calls fail with a publishable-key error (not an obvious 401).
+
+### 5. Start the storefront
 
 ```bash
-NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_6c3...
+npm run storefront:dev
 ```
 
-10.  Start storefront:
+Open `http://localhost:8000/dk/store`. Or run everything at once from the root with `npm run dev`.
 
-```bash
-cd apps/storefront
-pnpm dev
-```
+### 6. Load catalog data (pick one)
 
-The storefront runs on `http://localhost:8000`.
+- **Demo seed (12 semiconductor SKUs, placeholder prices)** — proves the metadata-to-UI path: with the backend running, run the seeder in `apps/backend` (see `nanofield_ecommerce_plan.md` Section 0 for script details).
+- **Real catalog (Shopee Excel exports)** — open the admin at `/app/ecomm-import`, upload the sales/basic/media workbooks, run **Preview** first (validates without writing), then **Execute**. The same pipeline is drivable from the CLI (`apps/backend/import-shopee.mjs`). Clean out demo/seed and loadtest products before the real import (see plan Section 6 for SKU collisions to resolve first).
 
-You can slo run the following command from the root to start both backend and storefront:
+## Everyday commands
 
-```bash
-pnpm dev
-```
+Run from the repo root unless noted (`<pm>` = npm here):
 
-## Configuration
+| Task | Command |
+|---|---|
+| Develop everything | `npm run dev` |
+| Backend only (:9000) | `npm run backend:dev` |
+| Storefront only (:8000) | `npm run storefront:dev` |
+| Build / start | `npm run build` / `npm run start` |
+| Lint all | `npm run lint` |
+| Backend unit tests | `cd apps/backend && npm run test:unit` |
+| Backend HTTP integration tests | `cd apps/backend && npm run test:integration:http` |
+| Generate migration for a custom module | `cd apps/backend && npx medusa db:generate <module-name>` |
+| Run migrations | `cd apps/backend && npx medusa db:migrate` |
 
-The storefront is configured via environment variables in `apps/storefront/.env.local`:
+## Catalog cache behavior (read this before reporting "stale" data)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | Publishable API key from your Medusa backend | — |
-| `NEXT_PUBLIC_MEDUSA_BACKEND_URL` | URL of your Medusa backend | `http://localhost:9000` |
-| `NEXT_PUBLIC_DEFAULT_REGION` | Default region country code | `dk` |
-| `NEXT_PUBLIC_BASE_URL` | Base URL of the storefront | `https://localhost:8000` |
-| `NEXT_PUBLIC_STRIPE_KEY` | Stripe publishable key (optional) | — |
+- The storefront caches products/categories with a 5-minute ISR window (`revalidate: 300`).
+- When `STOREFRONT_URL` + matching `REVALIDATE_SECRET` are configured, product create/update/delete events in the backend automatically purge the storefront cache via `POST /api/catalog/revalidate`. Category changes are NOT auto-purged (5-minute window applies).
+- To flush everything immediately, restart the storefront dev server.
+- Never hand-edit `package-lock.json`; never commit `.env` files (`*.xlsx` imports at root are git-ignored).
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Storefront API calls fail / empty catalog | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` missing or wrong in `apps/storefront/.env.local`; restart the storefront after changing env |
+| Admin shows a blank page on first load | clear the Vite dependency cache and reload |
+| Deleted products/categories still visible | wait out the 5-minute ISR window, check `REVALIDATE_SECRET` matches on both sides, or restart the storefront |
+| `tsc --noEmit` reports TS2786 across the storefront | pre-existing React-types noise; filter output to the files you touched |
+| Port already in use | backend needs :9000, storefront :8000 — stop the other process first |
 
 ## Resources
 
 - [Medusa Documentation](https://docs.medusajs.com)
-- [Medusa Cloud](https://cloud.medusajs.com)
+- [Medusa Admin User Guide](https://docs.medusajs.com/user-guide)

@@ -84,6 +84,49 @@ const slugify = (s: string): string =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "product"
 
+// --- SKU classification for datasheet gating ---
+// Parent SKUs follow PREFIX-NNNN (IC-0399, TRS-0051, MOD-0501, ...).
+// Only discrete/passive/IC prefixes are semiconductors with real archive
+// datasheets; module boards, transformers, PSUs, tools, solder, etc. must
+// not get semiconductor-archive search links (see storefront
+// lib/util/product-datasheet.ts). Unknown prefixes default to "false" —
+// a real document can always be attached via datasheet_url instead.
+const SEMICONDUCTOR_PREFIXES = new Set([
+  "IC",
+  "TRS",
+  "MOS",
+  "DIO",
+  "CAP",
+  "RES",
+  "IND",
+  "FUS",
+  "XTL",
+  "CRY",
+  "LED",
+])
+
+const skuPrefix = (key: string): string | null => {
+  const trimmed = key.trim()
+  if (/^shopee-/i.test(trimmed)) {
+    return null
+  }
+  const m = /^([A-Z]+)-\d/i.exec(trimmed)
+  return m ? m[1].toUpperCase() : null
+}
+
+export const classifySku = (
+  key: string
+): { partNumber: string | null; isSemiconductor: "true" | "false" } => {
+  const prefix = skuPrefix(key)
+  if (!prefix) {
+    return { partNumber: null, isSemiconductor: "false" }
+  }
+  return {
+    partNumber: key.trim(),
+    isSemiconductor: SEMICONDUCTOR_PREFIXES.has(prefix) ? "true" : "false",
+  }
+}
+
 export type SalesRow = {
   pid: string
   name: string
@@ -554,6 +597,11 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
     const existing = existingByShopeeId.get(plan.pid)
     const categoryId = await ensureCategory(plan.category)
     const imagePayload = plan.images.map((url) => ({ url }))
+    const flags = classifySku(plan.key)
+    const docMetadata: Record<string, string> = {
+      ...(flags.partNumber ? { part_number: flags.partNumber } : {}),
+      is_semiconductor: flags.isSemiconductor,
+    }
 
     if (!existing) {
       let handle = plan.handle
@@ -574,6 +622,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
         metadata: {
           shopee_product_id: plan.pid,
           shopee_parent_sku: plan.key,
+          ...docMetadata,
         },
         categories: categoryId ? [{ id: categoryId }] : undefined,
         images: imagePayload.length ? imagePayload : undefined,
@@ -603,6 +652,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
         metadata: {
           shopee_product_id: plan.pid,
           shopee_parent_sku: plan.key,
+          ...docMetadata,
         },
       })
       report.created++
@@ -619,6 +669,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
         ...((existing.metadata as Record<string, string>) || {}),
         shopee_product_id: plan.pid,
         shopee_parent_sku: plan.key,
+        ...docMetadata,
       },
     }
     if (opts.syncContent) {

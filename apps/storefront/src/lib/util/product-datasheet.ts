@@ -18,17 +18,21 @@ const metaStr = (
 
 /**
  * Single source of truth for "does this product get datasheet UI, and where
- * does it point". Category-agnostic on purpose — no hardcoded category or
- * semiconductor heuristics:
+ * does it point". Strict by default — alldatasheet is a semiconductor
+ * archive, so search-fallback links are allowlisted, not assumed:
  *
- * 1. `no_datasheet === "true"` in metadata → never. Use for hand tools,
- *    consumables (solder wire, wick), merch, or anything without documents.
- * 2. `datasheet_url` → always links it, whatever the category. A branded
- *    power module or soldering station with a real PDF keeps its button even
- *    though it is not a semiconductor.
- * 3. Otherwise `mpn` / `datasheet_search` / `part_number` → fallback to an
- *    alldatasheet search for that identifier.
- * 4. No identifiers at all → no datasheet UI (never a dead search link).
+ * 1. `no_datasheet === "true"` in metadata → never. Hand tools,
+ *    consumables (solder wire, wick), merch, anything without documents.
+ * 2. `datasheet_url` → always links it, whatever the product. A module
+ *    board, PSU, or soldering station with a real PDF keeps its button.
+ * 3. Otherwise the product must be explicitly flagged `is_semiconductor
+ *    === "true"` (or true — set by the Shopee importer from the SKU
+ *    prefix, or by hand in the admin) AND carry an identifier (`mpn` /
+ *    `datasheet_search` / `part_number`) → alldatasheet search fallback.
+ *    Transformers, module boards, power supplies, soldering irons, solder,
+ *    tools, and anything unflagged get nothing.
+ * 4. Display title/handle are NEVER used as search terms — no identifiers
+ *    means no datasheet UI (never a dead or misleading search link).
  */
 export function getDatasheetInfo(
   product: HttpTypes.StoreProduct,
@@ -40,17 +44,28 @@ export function getDatasheetInfo(
   }
 
   const directUrl = metaStr(metadata, "datasheet_url")
+
+  if (directUrl) {
+    const partLabel =
+      metaStr(metadata, "mpn") ||
+      metaStr(metadata, "datasheet_search") ||
+      metaStr(metadata, "part_number") ||
+      ""
+    return { href: directUrl, partLabel, isDirect: true }
+  }
+
+  if (
+    metadata.is_semiconductor !== "true" &&
+    metadata.is_semiconductor !== true
+  ) {
+    return null
+  }
+
   const partLabel =
     metaStr(metadata, "mpn") ||
     metaStr(metadata, "datasheet_search") ||
     metaStr(metadata, "part_number") ||
-    (typeof product.title === "string" && product.title) ||
-    (typeof product.handle === "string" && product.handle) ||
     ""
-
-  if (directUrl) {
-    return { href: directUrl, partLabel, isDirect: true }
-  }
 
   if (!partLabel) {
     return null

@@ -571,6 +571,72 @@ const HeroSchematic = () => (
     <circle className="hero-via" cx="1120" cy="494" r="3" />
     <circle className="hero-via" cx="1280" cy="30" r="4" />
 
+    {/* ── Traveling signal pulses (glow) over signature nets ── */}
+    {/* pathLength=100 normalizes each net so one dash crosses it per cycle */}
+    <g>
+      <path className="hero-pulse" pathLength={100} d="M270 80 H310 V38 H700" />
+      <path
+        className="hero-pulse-2"
+        pathLength={100}
+        style={{ animationDelay: "-2.5s" }}
+        d="M1050 100 H1090 V200 H752"
+      />
+      <path
+        className="hero-pulse-3"
+        pathLength={100}
+        style={{ animationDelay: "-4s" }}
+        d="M752 290 H820 V380 H960 V400"
+      />
+      <path
+        className="hero-pulse"
+        pathLength={100}
+        style={{ animationDelay: "-3.2s" }}
+        d="M530 350 H480 V550 H200 V530"
+      />
+      <path
+        className="hero-pulse-2"
+        pathLength={100}
+        style={{ animationDelay: "-6s" }}
+        d="M200 450 H260 L290 420 H420 V390 H530"
+      />
+      <path
+        className="hero-pulse-3"
+        pathLength={100}
+        style={{ animationDelay: "-1.5s" }}
+        d="M700 38 H800 V60 H920 V80"
+      />
+      <path
+        className="hero-pulse"
+        pathLength={100}
+        style={{ animationDelay: "-5s" }}
+        d="M996 400 V360 H880 V38"
+      />
+      <path
+        className="hero-pulse-2"
+        pathLength={100}
+        style={{ animationDelay: "-4.5s" }}
+        d="M530 380 H490 V560 H200 V510"
+      />
+      <path
+        className="hero-pulse-3"
+        pathLength={100}
+        style={{ animationDelay: "-8s" }}
+        d="M200 470 H270 L300 440 H430 V360 H530"
+      />
+      <path
+        className="hero-pulse"
+        pathLength={100}
+        style={{ animationDelay: "-1s" }}
+        d="M1286 280 H1340 V420 H1200"
+      />
+      <path
+        className="hero-pulse-2"
+        pathLength={100}
+        style={{ animationDelay: "-7s" }}
+        d="M530 250 H490 V240 H200 V270"
+      />
+    </g>
+
   </g>
 )
 

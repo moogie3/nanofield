@@ -149,7 +149,7 @@ const CategoryFilter = ({
             onClick={() => onCategoryChange([])}
             aria-current={showAll ? "true" : undefined}
             className={clsx(
-              "txt-compact-small-plus min-w-0 flex-1 truncate pl-6 text-left transition-colors",
+              "txt-compact-small-plus min-w-0 flex-1 truncate text-left transition-colors",
               showAll
                 ? "text-ui-fg-base font-medium"
                 : "text-ui-fg-muted hover:text-ui-fg-base",

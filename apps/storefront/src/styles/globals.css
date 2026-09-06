@@ -11,22 +11,19 @@
   }
   html {
     @apply font-sans;
-    transition:
-      background-color 0.5s ease,
-      color 0.5s ease;
   }
-  body,
-  header,
-  footer,
-  main,
-  nav,
-  div,
-  section,
-  article {
-    transition:
-      background-color 0.5s ease,
-      border-color 0.5s ease,
-      color 0.5s ease;
+  /* Scoped theme cross-fade: html/body only (2 elements). Never put color
+     transitions on structural selectors (div/section/...) — animating the
+     whole tree on toggle is what made the switch take ~2s. */
+  html,
+  body {
+    transition: background-color 200ms ease-out, color 200ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html,
+    body {
+      transition: none;
+    }
   }
 }
 
@@ -233,8 +230,8 @@
   }
 
   .hero-via {
-    fill: var(--primary);
-    filter: drop-shadow(0 0 4px var(--primary));
+    fill: #00e676;
+    filter: drop-shadow(0 0 7px #00e676);
     animation: hero-via-blink 2.8s ease-in-out infinite;
   }
 
@@ -254,6 +251,40 @@
     50% {
       opacity: 0.3;
     }
+  }
+
+  /* Traveling signal pulse: overlay path with normalized length
+     (pathLength=100) so one dash traverses the full net per cycle. */
+  @keyframes hero-pulse-flow {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .hero-pulse,
+  .hero-pulse-2,
+  .hero-pulse-3 {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 14 86;
+    filter: drop-shadow(0 0 6px var(--primary));
+    animation: hero-pulse-flow 6s linear infinite;
+  }
+
+  .hero-pulse-2 {
+    animation-duration: 8.5s;
+    stroke-dasharray: 10 90;
+  }
+
+  .hero-pulse-3 {
+    animation-duration: 11s;
+    stroke-dasharray: 18 82;
   }
 
   @keyframes hero-scanline {
@@ -334,6 +365,12 @@
     .animate-hero-spin-slow,
     .hero-via {
       animation: none;
+    }
+    .hero-pulse,
+    .hero-pulse-2,
+    .hero-pulse-3 {
+      animation: none;
+      opacity: 0;
     }
     .nav-wordmark,
     .nav-wordmark:hover {
@@ -427,21 +464,5 @@
   }
   html {
     @apply font-sans;
-    transition:
-      background-color 0.5s ease,
-      color 0.5s ease;
-  }
-  body,
-  header,
-  footer,
-  main,
-  nav,
-  div,
-  section,
-  article {
-    transition:
-      background-color 0.5s ease,
-      border-color 0.5s ease,
-      color 0.5s ease;
   }
 }

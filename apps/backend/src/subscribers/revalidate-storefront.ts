@@ -19,5 +19,14 @@ export default async function revalidateStorefrontHandler() {
 }
 
 export const config: SubscriberConfig = {
-  event: ["product.created", "product.updated", "product.deleted"],
+  // Literal strings: the exported ProductEvents.* constants carry a
+  // "product." prefix mismatch and do NOT trigger for categories.
+  event: [
+    "product.created",
+    "product.updated",
+    "product.deleted",
+    "product-category.created",
+    "product-category.updated",
+    "product-category.deleted",
+  ],
 }
