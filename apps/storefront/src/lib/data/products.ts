@@ -56,8 +56,13 @@ export const listProducts = async ({
     ...(await getAuthHeaders()),
   }
 
+  // force-cache + revalidate (ISR, 5 min): catalog edits/deletes in the
+  // admin become visible in the storefront within 5 minutes instead of
+  // living in the fetch cache indefinitely. Restart the dev server once to
+  // flush entries cached before this window existed.
   const next = {
     ...(await getCacheOptions("products")),
+    revalidate: 300,
   }
 
   return sdk.client

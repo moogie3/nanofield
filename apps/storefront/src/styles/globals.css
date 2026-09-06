@@ -213,6 +213,49 @@
     animation: hero-drift 8s ease-in-out infinite;
   }
 
+  @keyframes hero-spin-slow {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-hero-spin-slow {
+    animation: hero-spin-slow 16s linear infinite;
+    transform-origin: center;
+  }
+
+  .hero-tr {
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .hero-via {
+    fill: var(--primary);
+    filter: drop-shadow(0 0 4px var(--primary));
+    animation: hero-via-blink 2.8s ease-in-out infinite;
+  }
+
+  .hero-via:nth-of-type(3n) {
+    animation-delay: -0.9s;
+  }
+
+  .hero-via:nth-of-type(3n + 1) {
+    animation-delay: -1.8s;
+  }
+
+  @keyframes hero-via-blink {
+    0%,
+    100% {
+      opacity: 0.9;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+
   @keyframes hero-scanline {
     from {
       transform: translateX(-100%);
@@ -287,7 +330,9 @@
     .animate-hero-sweep,
     .animate-hero-scanline,
     .animate-hero-pop,
-    .animate-hero-drift {
+    .animate-hero-drift,
+    .animate-hero-spin-slow,
+    .hero-via {
       animation: none;
     }
     .nav-wordmark,

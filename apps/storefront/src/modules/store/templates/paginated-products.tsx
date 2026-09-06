@@ -84,6 +84,26 @@ export default async function PaginatedProducts({
 
   const layout = view === "list" ? "list" : "grid"
 
+  if (products.length === 0) {
+    return (
+      <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-border bg-card px-6 py-16 text-center">
+        <p className="font-heading text-xl font-bold text-foreground">
+          No products match these filters
+        </p>
+        <p className="text-small-regular max-w-md text-ui-fg-subtle">
+          The selected categories returned nothing — they may have been
+          removed or renamed. Clear the filters to browse the full catalog.
+        </p>
+        <a
+          href={`/${countryCode}/store`}
+          className="inline-flex h-10 items-center rounded-full bg-primary px-6 text-sm font-bold uppercase tracking-widest text-primary-foreground transition-colors hover:opacity-90"
+        >
+          Show all products
+        </a>
+      </div>
+    )
+  }
+
   return (
     <>
       <ul

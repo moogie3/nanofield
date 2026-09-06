@@ -26,6 +26,16 @@ const StoreTemplate = ({
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
+  // Remount the product grid whenever the filter signature changes so a
+  // filter reset can never reuse a stale Suspense boundary / cached render.
+  const gridKey = JSON.stringify({
+    categories: [...(categoryIds ?? [])].sort(),
+    options: optionValueIds ?? [],
+    sort,
+    page: pageNumber,
+    view: view ?? "grid",
+  })
+
   return (
     <div className="relative" data-testid="category-container">
       <PageBackdrop />
@@ -84,7 +94,7 @@ const StoreTemplate = ({
       <div className="flex flex-col small:flex-row small:items-start small:gap-8">
         <RefinementList sortBy={sort} />
         <div className="w-full">
-          <Suspense fallback={<SkeletonProductGrid />}>
+          <Suspense key={gridKey} fallback={<SkeletonProductGrid />}>
             <PaginatedProducts
               sortBy={sort}
               page={pageNumber}

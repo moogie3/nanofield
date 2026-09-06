@@ -3,8 +3,11 @@ import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions } from "./cookies"
 
 export const listCategories = async (query?: Record<string, unknown>) => {
+  // Same ISR rationale as products (5 min): the sidebar must stop showing
+  // categories deleted in the admin after at most 5 minutes.
   const next = {
     ...(await getCacheOptions("categories")),
+    revalidate: 300,
   }
 
   const limit = query?.limit || 100

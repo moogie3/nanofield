@@ -42,6 +42,21 @@
 
 A production-ready monorepo starter for direct-to-consumer ecommerce stores powered by Medusa and Next.js. Includes a fully featured storefront with product browsing, cart, checkout, customer accounts, and order management.
 
+## Nanofield — what this repo has become
+
+This repo is the **Nanofield** store: an Indonesia-based precision electronic components & appliance spare parts shop (ex-Shopee/TikTok "Toko Sanjaya"), built on the Medusa DTC starter. Start here, then read the-project docs:
+
+- `whole.md` — whole-project state: architecture, what is built, conventions, known gotchas
+- `nanofield_ecommerce_plan.md` — business/catalog plan, decision log, import checklist
+- `AGENTS.md` — repo commands, package-manager detection, Medusa skills/MCP, code style
+
+Quick orientation:
+
+- Storefront: `apps/storefront` (Next.js, `http://localhost:8000`, default region `dk`)
+- Backend: `apps/backend` (Medusa v2, `http://localhost:9000`, admin at `/app`)
+- Package manager is **npm** in this install (`package-lock.json` at root) — use it for every command, never introduce a second lockfile
+- Highlights: unified schematic hero, Shopee Excel importer (`import-shopee.mjs` + `/app/ecomm-import`), full admin branding suite, datasheet-backed product pages, optimistic cart quantity stepper, ISR-cached catalog (5-min revalidate — **restart the storefront dev server after backend deletes to flush stale entries immediately**)
+
 ## Features
 
 - All of [Medusa's commerce features](https://docs.medusajs.com/resources/commerce-modules)

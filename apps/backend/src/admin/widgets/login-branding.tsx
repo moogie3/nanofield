@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { applyLoginTiles, applyTitle, hideStockLoginHeadings, removeLoginTiles, replaceAvatarLogos } from "../lib/brand-dom"
+import { applyLoginCircuit, applyTitle, hideStockLoginHeadings, removeLoginCircuit, replaceAvatarLogos } from "../lib/brand-dom"
 
 // Login page: the stock AvatarBox artwork is swapped for the Nanofield
 // avatar in place (keeps Medusa's own avatar frame), stock headings are
@@ -13,15 +13,26 @@ const sweep = () => {
 
 const LoginBrandingWidget = () => {
   useEffect(() => {
-    applyLoginTiles()
+    applyLoginCircuit()
     sweep()
     // i18n + form mount async after us; re-sweep briefly, then stop.
     const observer = new MutationObserver(sweep)
     observer.observe(document.body, { childList: true, subtree: true })
-    const timer = setTimeout(() => observer.disconnect(), 8000)
+    // Title lives in <head>: body mutations never fire for it, so watch
+    // the title element itself (guarded assignment can't loop).
+    const titleEl = document.querySelector("title")
+    const titleObserver = new MutationObserver(applyTitle)
+    if (titleEl) {
+      titleObserver.observe(titleEl, { childList: true })
+    }
+    const timer = setTimeout(() => {
+      observer.disconnect()
+      titleObserver.disconnect()
+    }, 8000)
     return () => {
       observer.disconnect()
-      removeLoginTiles()
+      titleObserver.disconnect()
+      removeLoginCircuit()
       clearTimeout(timer)
     }
   }, [])

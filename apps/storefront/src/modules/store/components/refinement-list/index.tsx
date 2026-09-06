@@ -42,6 +42,9 @@ const RefinementList = ({
 
       if (nextPath !== currentPath) {
         router.push(nextPath)
+        // Force server components (product grid) to refetch even when the
+        // router considers the navigation a no-op for cached segments.
+        router.refresh()
       }
     },
     [pathname, router, searchParams],

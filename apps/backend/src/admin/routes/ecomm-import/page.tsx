@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
+import { ArrowUpTray } from "@medusajs/icons"
 import { Badge, Button, Container, Heading, Input, Label, Switch, Text } from "@medusajs/ui"
 
 // JSON shapes served by /admin/shopee-imports/* (mirrors the server
@@ -53,22 +54,9 @@ type ImportJob = {
 }
 
 const UploadRouteIcon = () => {
-  // 24-grid outline style matching stock sidebar icons.
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 16 V5 M7 10l5-5 5 5" />
-      <path d="M4 20 H20" />
-    </svg>
-  )
+  // Stock Medusa icon: identical weight, grid and color behavior to every
+  // other sidebar entry. Core still wraps it in the extension tile.
+  return <ArrowUpTray />
 }
 
 type Files = { sales: File | null; basic: File | null; media: File | null }
@@ -183,17 +171,19 @@ const ImportPage = () => {
         const r = await fetch(`/admin/shopee-imports/jobs/${jobId}`)
         const data = (await r.json()) as { job: ImportJob }
         if (!alive) {
-          return
+          return false
         }
         setJob(data.job)
+        return data.job.state === "running"
       } catch {
         // keep polling; transient dev reloads happen
+        return true
       }
     }
     void poll()
     const timer = setInterval(() => {
-      void poll().then(() => {
-        if (job?.state && job.state !== "running") {
+      void poll().then((running) => {
+        if (!running) {
           clearInterval(timer)
         }
       })
@@ -202,7 +192,7 @@ const ImportPage = () => {
       alive = false
       clearInterval(timer)
     }
-  }, [jobId, job?.state])
+  }, [jobId])
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
@@ -360,9 +350,7 @@ const ImportPage = () => {
                 <Text size="small" className="text-ui-fg-subtle">
                   {label}
                 </Text>
-                <Text size="xlarge" className="font-semibold">
-                  {value as number}
-                </Text>
+                <Heading level="h2">{value as number}</Heading>
               </div>
             ))}
           </div>
@@ -455,9 +443,7 @@ const ImportPage = () => {
                   <Text size="small" className="text-ui-fg-subtle">
                     {label}
                   </Text>
-                  <Text size="xlarge" className="font-semibold">
-                    {value as number}
-                  </Text>
+                  <Heading level="h2">{value as number}</Heading>
                 </div>
               ))}
             </div>

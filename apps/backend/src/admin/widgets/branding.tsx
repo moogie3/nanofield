@@ -6,6 +6,7 @@ import {
   applyFonts,
   applyTitle,
   replaceAvatarLogos,
+  scrubStaticCopy,
   swapMedusaImages,
 } from "../lib/brand-dom"
 
@@ -15,6 +16,7 @@ const applyAll = () => {
   applyFonts()
   replaceAvatarLogos()
   swapMedusaImages()
+  scrubStaticCopy()
 }
 
 // The topbar renders on every dashboard page, so this widget is the host
@@ -30,14 +32,35 @@ const BrandingWidget = () => {
     }
 
     // SPA re-renders can re-mount stock artwork; watch briefly, then stop.
+    // Route changes and popover menus (user menu) after that are covered
+    // by event-driven re-sweeps — no perpetual observer.
     const bodyObserver = new MutationObserver(applyAll)
     bodyObserver.observe(document.body, { childList: true, subtree: true })
     const stopTimer = setTimeout(() => bodyObserver.disconnect(), 8000)
+    const lateTimer = setTimeout(applyAll, 2000)
+    const onNav = () => {
+      setTimeout(applyAll, 600)
+    }
+    // Popover menus (user menu) open without route changes; re-sweep when
+    // focus moves (keyboard users included). Guarded: skips work when no
+    // menu is open.
+    const onFocus = () => {
+      if (document.querySelector('[role="menu"]')) {
+        setTimeout(applyAll, 100)
+      }
+    }
+    document.addEventListener("click", onNav, true)
+    document.addEventListener("focusin", onFocus)
+    window.addEventListener("popstate", onNav)
 
     return () => {
       titleObserver.disconnect()
       bodyObserver.disconnect()
+      document.removeEventListener("click", onNav, true)
+      document.removeEventListener("focusin", onFocus)
+      window.removeEventListener("popstate", onNav)
       clearTimeout(stopTimer)
+      clearTimeout(lateTimer)
     }
   }, [])
 

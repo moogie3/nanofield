@@ -2,7 +2,6 @@
 
 import * as Accordion from "@radix-ui/react-accordion"
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { ChevronDownMini } from "@medusajs/icons"
 import clsx from "clsx"
 import { HttpTypes } from "@medusajs/types"
@@ -21,10 +20,6 @@ const CategoryFilter = ({
   >([])
   const [openItems, setOpenItems] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
-
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     setMounted(true)
