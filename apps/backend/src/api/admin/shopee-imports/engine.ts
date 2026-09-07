@@ -29,7 +29,7 @@ export type PreviewInfo = {
   multiVariant: number
   creates: number
   updates: number
-  skipped: { pid?: string; reason: string }[]
+  skipped: { pid?: string; key?: string; reason: string }[]
   categoriesToCreate: string[]
   withDescriptions: number
   withImages: number
@@ -99,7 +99,6 @@ const SEMICONDUCTOR_PREFIXES = new Set([
   "CAP",
   "RES",
   "IND",
-  "FUS",
   "XTL",
   "CRY",
   "LED",
@@ -135,10 +134,40 @@ export type SalesRow = {
   parentSku: string
   price: number | null
   stock: number
+  weightGrams: number | null
+}
+
+// Weight column ("Berat") moves between Shopee template revisions, so it is
+// located by header name instead of a fixed index. First ~10 non-data rows
+// are scanned for a cell containing "berat" (case-insensitive).
+export const detectWeightCol = (rows: Row[]): number => {
+  for (const r of rows.slice(0, 10)) {
+    if (/^\d+$/.test(str(r[S.PRODUCT_ID]))) {
+      continue
+    }
+    const idx = r.findIndex((c) => /berat/i.test(str(c)))
+    if (idx >= 0) {
+      return idx
+    }
+  }
+  return -1
+}
+
+// Shopee writes Berat in kg in some templates, grams in others. Values
+// below 100 are treated as kg and converted; anything else is grams.
+// Zero/negative/unparseable → null (provider falls back to 500g).
+export const parseWeightGrams = (v: string | number | undefined): number | null => {
+  const n = Number(String(v ?? "").replace(",", ".").trim())
+  if (!Number.isFinite(n) || n <= 0) {
+    return null
+  }
+  return Math.round(n < 100 ? n * 1000 : n)
 }
 
 export const parseSales = (buf: Buffer): SalesRow[] => {
-  return toRows(buf)
+  const rows = toRows(buf)
+  const weightCol = detectWeightCol(rows)
+  return rows
     .filter((r) => /^\d+$/.test(str(r[S.PRODUCT_ID])))
     .map((r) => {
       const price = Math.round(Number(r[S.PRICE]))
@@ -150,6 +179,8 @@ export const parseSales = (buf: Buffer): SalesRow[] => {
         parentSku: str(r[S.PARENT_SKU]),
         price: Number.isFinite(price) && price >= 0 ? price : null,
         stock: Math.max(0, parseInt(str(r[S.STOCK]) || "0", 10) || 0),
+        weightGrams:
+          weightCol >= 0 ? parseWeightGrams(r[weightCol]) : null,
       }
     })
 }
@@ -247,6 +278,7 @@ export type VariantPlan = {
   sku: string
   price: number
   stock: number
+  weightGrams: number | null
 }
 
 export type ProductPlan = {
@@ -265,7 +297,7 @@ export const buildPlans = (
   descriptions: Map<string, string>,
   media: Map<string, MediaEntry>,
   cleanDesc: boolean
-): { plans: ProductPlan[]; skipped: { pid: string; reason: string }[] } => {
+): { plans: ProductPlan[]; skipped: { pid: string; key?: string; reason: string }[] } => {
   const groups = new Map<string, SalesRow[]>()
   for (const r of sales) {
     if (!groups.has(r.pid)) {
@@ -275,12 +307,12 @@ export const buildPlans = (
   }
 
   const plans: ProductPlan[] = []
-  const skipped: { pid: string; reason: string }[] = []
+  const skipped: { pid: string; key?: string; reason: string }[] = []
   for (const [pid, vrows] of groups) {
     const name = vrows[0].name
     const parentSku = vrows.find((r) => r.parentSku)?.parentSku || ""
     if (!name) {
-      skipped.push({ pid, reason: "empty product name" })
+      skipped.push({ pid, key: parentSku || undefined, reason: "empty product name" })
       continue
     }
     const key = parentSku || `shopee-${pid}`
@@ -302,10 +334,15 @@ export const buildPlans = (
             : `${parentSku || `shopee-${pid}`}-${i + 1}`,
         price: r.price,
         stock: r.stock,
+        weightGrams: r.weightGrams,
       })
     })
     if (badPrice) {
-      skipped.push({ pid, reason: `invalid price on ${badPrice} row(s)` })
+      skipped.push({
+        pid,
+        key: parentSku || undefined,
+        reason: `invalid price on ${badPrice} row(s)`,
+      })
       continue
     }
     const rawDesc = descriptions.get(pid) || ""
@@ -353,7 +390,7 @@ export type RunOptions = {
   baseUrl: string
   headers: FetchHeaders
   plans: ProductPlan[]
-  skipped: { pid: string; reason: string }[]
+  skipped: { pid: string; key?: string; reason: string }[]
   currency?: string
   publishNew?: boolean
   syncContent?: boolean
@@ -642,6 +679,9 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
           manage_inventory: true,
           options: { Variation: v.optionValue },
           prices: [{ currency_code: currency, amount: v.price }],
+          ...(typeof v.weightGrams === "number"
+            ? { weight: v.weightGrams }
+            : {}),
           metadata: { shopee_variation_id: v.shopeeVariationId },
         })),
       })) as { product: { id: string; handle: string } }
@@ -750,6 +790,9 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
           manage_inventory: true,
           options: { Variation: v.optionValue },
           prices: [{ currency_code: currency, amount: v.price }],
+          ...(typeof v.weightGrams === "number"
+            ? { weight: v.weightGrams }
+            : {}),
           metadata: { shopee_variation_id: v.shopeeVariationId },
         })
         await syncStock(await findInventoryItemId(v.sku), v.stock)
@@ -759,6 +802,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
         `/admin/products/${existing.id}/variants/${hit.id}`
       )) as {
         variant: {
+          weight: number | null
           prices: { id: string; currency_code: string; amount: number }[]
         }
       }
@@ -766,6 +810,15 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
       if (!samePrices(full.variant.prices || [], merged) && !dryRun) {
         await post(`/admin/products/${existing.id}/variants/${hit.id}`, {
           prices: merged,
+        })
+      }
+      if (
+        typeof v.weightGrams === "number" &&
+        full.variant.weight !== v.weightGrams &&
+        !dryRun
+      ) {
+        await post(`/admin/products/${existing.id}/variants/${hit.id}`, {
+          weight: v.weightGrams,
         })
       }
       await syncStock(await findInventoryItemId(v.sku), v.stock)

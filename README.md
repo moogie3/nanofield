@@ -14,7 +14,7 @@ Project docs:
 
 ```text
 apps/backend      Medusa v2 API + admin (@nanofield/backend, :9000, admin at /app)
-apps/storefront   Next.js storefront (:8000, default region dk)
+apps/storefront   Next.js storefront (:8000, default region id)
 ```
 
 ## Prerequisites
@@ -73,7 +73,7 @@ Create `apps/storefront/.env.local` (there is no template file; these are the ke
 ```bash
 NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=<key from step 3>
 NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
-NEXT_PUBLIC_DEFAULT_REGION=dk
+NEXT_PUBLIC_DEFAULT_REGION=id
 NEXT_PUBLIC_BASE_URL=http://localhost:8000
 REVALIDATE_SECRET=<same value as backend>
 ```

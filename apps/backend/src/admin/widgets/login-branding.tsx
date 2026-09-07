@@ -1,14 +1,17 @@
 import { useEffect } from "react"
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { applyLoginCircuit, applyTitle, hideStockLoginHeadings, removeLoginCircuit, replaceAvatarLogos } from "../lib/brand-dom"
+import { applyFonts, applyLoginCircuit, applyTitle, hideStockLoginHeadings, removeLoginCircuit, replaceAvatarLogos } from "../lib/brand-dom"
 
 // Login page: the stock AvatarBox artwork is swapped for the Nanofield
 // avatar in place (keeps Medusa's own avatar frame), stock headings are
-// hidden, and our welcome copy renders below via this widget.
+// hidden, and our welcome copy renders below via this widget. Fonts are
+// applied here too — the login page has no topbar, so the global branding
+// widget (which normally injects them) never mounts on this route.
 const sweep = () => {
   replaceAvatarLogos()
   hideStockLoginHeadings()
   applyTitle()
+  applyFonts()
 }
 
 const LoginBrandingWidget = () => {

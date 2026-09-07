@@ -7,6 +7,7 @@ import {
   runImport,
 } from "../engine"
 import { createJob, pushEvent } from "../jobs-store"
+import { feedRecipient, notifyFeed } from "../notify"
 
 type UploadedFiles = {
   sales?: { buffer: Buffer; originalname: string; size: number }[]
@@ -52,6 +53,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const headers = forwardAuth(req)
   const baseUrl = selfBaseUrl()
 
+  const recipient = feedRecipient(req)
+
   void (async () => {
     try {
       pushEvent(job, `parsed ${sales.originalname} (${sales.size} bytes)`)
@@ -81,10 +84,27 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         job,
         `finished: ${report.created} created, ${report.updated} updated, ${report.errors.length} errors`
       )
+      const drafts = options.publishNew || options.dryRun ? 0 : report.created
+      await notifyFeed(req.scope, {
+        to: recipient,
+        title: options.dryRun
+          ? `Import dry-run finished (${sales.originalname})`
+          : `Shopee import finished (${sales.originalname})`,
+        description:
+          `${report.created} created` +
+          (drafts ? ` (${drafts} as drafts)` : " (published)") +
+          `, ${report.updated} updated, ${report.stockSynced} stock synced, ` +
+          `${report.skipped.length} skipped, ${report.errors.length} errors.`,
+      })
     } catch (e) {
       job.state = "failed"
       job.error = (e as Error).message
       pushEvent(job, `FAILED: ${(e as Error).message}`)
+      await notifyFeed(req.scope, {
+        to: recipient,
+        title: `Shopee import failed (${sales.originalname})`,
+        description: (e as Error).message,
+      })
     }
   })()
 

@@ -20,7 +20,7 @@ type PreviewInfo = {
   multiVariant: number
   creates: number
   updates: number
-  skipped: { pid?: string; reason: string }[]
+  skipped: { pid?: string; key?: string; reason: string }[]
   categoriesToCreate: string[]
   withDescriptions: number
   withImages: number
@@ -243,13 +243,13 @@ const ImportPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-8">
-      <div>
+      <Container>
         <Heading level="h1">E-comm import</Heading>
         <Text className="text-ui-fg-subtle">
-          Bulk upload / bulk edit from marketplace Seller Center exports
-          (Shopee Mass Update, Tokopedia, …). Files never leave this server.
+          Bulk upload / bulk edit from Shopee Seller Center Mass Update
+          exports. Files never leave this server.
         </Text>
-      </div>
+      </Container>
 
       <Container>
         <Heading level="h2">1. Attach exports</Heading>
@@ -368,6 +368,28 @@ const ImportPage = () => {
               </div>
             </div>
           )}
+          {preview.skipped.length > 0 && (
+            <div className="mt-3">
+              <Text size="small" className="font-medium">
+                Skipped rows ({preview.skipped.length})
+              </Text>
+              <div className="mt-1 divide-y divide-ui-border-base rounded-lg border border-ui-border-base">
+                {preview.skipped.slice(0, 20).map((s, i) => (
+                  <div
+                    key={`${s.pid ?? s.key ?? i}`}
+                    className="flex items-center justify-between gap-3 px-3 py-2"
+                  >
+                    <Text size="xsmall" className="font-mono">
+                      {s.key || s.pid || "?"}
+                    </Text>
+                    <Text size="xsmall" className="text-ui-fg-subtle">
+                      {s.reason}
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mt-3">
             <Text size="small" className="font-medium">
               Sample rows
@@ -448,8 +470,33 @@ const ImportPage = () => {
               ))}
             </div>
           )}
+          {job.report && job.report.skipped.length > 0 && (
+            <div className="mt-3">
+              <Text size="small" className="font-medium">
+                Skipped ({job.report.skipped.length})
+              </Text>
+              <div className="mt-1 divide-y divide-ui-border-base rounded-lg border border-ui-border-base">
+                {job.report.skipped.slice(0, 20).map((s, i) => (
+                  <div
+                    key={`${s.pid ?? s.key ?? i}`}
+                    className="flex items-center justify-between gap-3 px-3 py-2"
+                  >
+                    <Text size="xsmall" className="font-mono">
+                      {s.key || s.pid || "?"}
+                    </Text>
+                    <Text size="xsmall" className="text-ui-fg-subtle">
+                      {s.reason}
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {job.report && job.report.errors.length > 0 && (
             <div className="mt-3">
+              <Text size="small" className="font-medium">
+                Errors ({job.report.errors.length})
+              </Text>
               {job.report.errors.slice(0, 20).map((e, i) => (
                 <Text key={i} size="small" className="text-ui-fg-error">
                   {e}
