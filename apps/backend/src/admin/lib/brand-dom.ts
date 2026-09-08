@@ -126,7 +126,7 @@ const CIRCUIT_SCENE = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
   <style>
     .nf-tr { stroke: var(--nf-circuit); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .nf-via { fill: var(--nf-circuit-strong); filter: drop-shadow(0 0 4px var(--nf-glow)); animation: nanofield-via-blink 2.8s ease-in-out infinite; }
+    .nf-via { fill: var(--nf-pulse); filter: drop-shadow(0 0 5px var(--nf-pulse-glow)); animation: nanofield-via-blink 2.8s ease-in-out infinite; }
     .nf-silk { fill: var(--nf-circuit-strong); opacity: 0.75; font-family: 'Outfit', ui-sans-serif, sans-serif; letter-spacing: 2px; }
     .nf-fid { stroke: var(--nf-circuit-strong); stroke-width: 1.5; fill: none; opacity: 0.8; }
     .nf-pad { fill: var(--nf-circuit); opacity: 0.55; }
@@ -185,6 +185,21 @@ const CIRCUIT_SCENE = `
       <path class="nf-pulse" pathLength="100" d="M200 -20 V140 L240 180 V300" style="animation-duration:6s;animation-delay:-2s" />
       <path class="nf-pulse" pathLength="100" d="M1220 240 H980 L940 280 H760" style="animation-duration:7.5s;animation-delay:-4s" />
       <path class="nf-pulse" pathLength="100" d="M420 820 V700 L460 660 V560" style="animation-duration:6.5s;animation-delay:-1s" />
+      <path class="nf-pulse" pathLength="100" d="M1020 -20 V100 L980 140 V220" style="animation-duration:6.8s;animation-delay:-2.5s" />
+      <path class="nf-pulse" pathLength="100" d="M880 820 V720" style="animation-duration:5.5s;animation-delay:-4.5s" />
+      <path class="nf-pulse" pathLength="100" d="M-20 360 H120 L150 390 H300" style="animation-duration:7.2s;animation-delay:-1.5s" />
+      <path class="nf-pulse" pathLength="100" d="M1220 420 H1100 L1070 450 H980" style="animation-duration:8.4s;animation-delay:-3.6s" />
+      <path class="nf-pulse" pathLength="100" d="M560 -20 V60 L590 90 V150" style="animation-duration:5.8s;animation-delay:-0.8s" />
+      <path class="nf-pulse" pathLength="100" d="M60 -20 V60" style="animation-duration:5.2s;animation-delay:-2.2s" />
+      <path class="nf-pulse" pathLength="100" d="M1140 -20 V50" style="animation-duration:5.2s;animation-delay:-3.3s" />
+      <path class="nf-pulse" pathLength="100" d="M-20 500 H90 L120 530 H210" style="animation-duration:7.8s;animation-delay:-5.5s" />
+      <path class="nf-pulse" pathLength="100" d="M1220 120 H1120 L1090 150 H1010" style="animation-duration:7.8s;animation-delay:-0.5s" />
+      <path class="nf-pulse" pathLength="100" d="M340 -20 V40 L370 70 V130" style="animation-duration:6.2s;animation-delay:-4.2s" />
+      <path class="nf-pulse" pathLength="100" d="M760 -20 V30" style="animation-duration:5s;animation-delay:-1.2s" />
+      <path class="nf-pulse" pathLength="100" d="M-20 60 H80 L110 90 H170" style="animation-duration:6.4s;animation-delay:-3.8s" />
+      <path class="nf-pulse" pathLength="100" d="M1220 720 H1140 L1110 690 H1050" style="animation-duration:8.8s;animation-delay:-2.8s" />
+      <path class="nf-pulse" pathLength="100" d="M260 820 V760 L290 730 H350" style="animation-duration:6.6s;animation-delay:-5.8s" />
+      <path class="nf-pulse" pathLength="100" d="M520 820 V780 H580" style="animation-duration:5.6s;animation-delay:-0.4s" />
     </g>
     <g font-size="13">
       <text class="nf-silk" x="150" y="505">U1</text>
@@ -437,15 +452,13 @@ export const applyLoginCircuit = () => {
         50% { transform: translateY(-12px) rotate(180deg); filter: drop-shadow(0 8px 14px rgba(14, 124, 140, 0.30)); }
         100% { transform: translateY(0) rotate(360deg); filter: drop-shadow(0 0 0 rgba(14, 124, 140, 0)); }
       }
-      @keyframes nanofield-via-blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-      }
-      circle.nf-via { animation: nanofield-via-blink 2.8s ease-in-out infinite; }
-      circle.nf-via:nth-of-type(3n) { animation-delay: -0.9s; }
-      circle.nf-via:nth-of-type(3n+1) { animation-delay: -1.8s; }
+
+
       .nf-pulse { stroke: var(--nf-pulse); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-dasharray: 9 91; animation: nanofield-pulse-flow 7s linear infinite; filter: drop-shadow(0 0 5px var(--nf-pulse-glow)); }
       @keyframes nanofield-pulse-flow { to { stroke-dashoffset: -100; } }
+      circle.nf-via:nth-of-type(3n) { animation-delay: -0.9s; }
+      circle.nf-via:nth-of-type(3n+1) { animation-delay: -1.8s; }
+      @keyframes nanofield-via-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
       @keyframes nanofield-avatar-float {
         0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 0 rgba(14, 124, 140, 0)); }
         50% { transform: translateY(-4px); filter: drop-shadow(0 6px 14px rgba(14, 124, 140, 0.35)); }

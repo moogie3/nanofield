@@ -71,6 +71,19 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
 const SpecificationsTab = ({ product }: ProductTabsProps) => {
   // Extract specs from metadata - these would be populated from your import script
   const metadata = product.metadata
+  // Same truth as the buy button: any purchasable variant means In Stock.
+  // An explicit metadata stock_status still wins when the importer sets one.
+  const explicitStock = metaStr(metadata, "stock_status", "")
+  const anyInStock = (product.variants || []).some(
+    (v) =>
+      v.allow_backorder ||
+      (typeof v.inventory_quantity === "number" && v.inventory_quantity > 0)
+  )
+  const stockStatus = explicitStock
+    ? explicitStock
+    : anyInStock
+      ? "In Stock"
+      : "Out of Stock"
   const specs: Record<string, string> = {
     "Part Number": product.handle?.toUpperCase() || "-",
     Manufacturer: metaStr(metadata, "manufacturer"),
@@ -124,7 +137,7 @@ const SpecificationsTab = ({ product }: ProductTabsProps) => {
       product.length && product.width && product.height
         ? `${product.length} × ${product.width} × ${product.height} mm`
         : "-",
-    "Stock Status": metaStr(metadata, "stock_status", "In Stock"),
+    "Stock Status": stockStatus,
     "Moisture Sensitivity Level": metaStr(metadata, "msl"),
     "ESD Rating": metaStr(metadata, "esd_rating"),
   }

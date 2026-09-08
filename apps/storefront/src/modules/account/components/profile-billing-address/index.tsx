@@ -91,12 +91,21 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
 
   return (
     <form action={formAction} onReset={() => clearState()} className="w-full">
-      <input type="hidden" name="addressId" value={billingAddress?.id} />
+      <input
+        type="hidden"
+        name="addressId"
+        defaultValue={billingAddress?.id}
+      />
       <AccountInfo
         label="Billing address"
         currentInfo={currentInfo}
         isSuccess={successState}
         isError={!!state.error}
+        errorMessage={
+          typeof state.error === "string" && state.error
+            ? state.error
+            : undefined
+        }
         clearState={clearState}
         data-testid="account-billing-address-editor"
       >
@@ -126,8 +135,8 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
           <Input
             label="Phone"
             name="phone"
-            type="phone"
-            autoComplete="phone"
+            type="tel"
+            autoComplete="tel"
             required
             defaultValue={billingAddress?.phone ?? customer?.phone ?? ""}
             data-testid="billing-phone-input"

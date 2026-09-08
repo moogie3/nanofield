@@ -424,11 +424,21 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
       sales_channels: { id: string }[]
     }
   ).sales_channels[0].id
-  const locationId = (
-    (await get("/admin/stock-locations?limit=10")) as {
-      stock_locations: { id: string }[]
-    }
-  ).stock_locations[0].id
+  // Stock must live where the channel sells: prefer the channel's first
+  // stock location (a global [0] once pointed at a deleted warehouse and
+  // orphaned every level). Falls back to the global list if the channel
+  // has no locations yet.
+  const channelDetail = (await get(
+    `/admin/sales-channels/${channelId}?fields=*stock_locations`
+  )) as { sales_channel: { stock_locations: { id: string }[] } }
+  const channelLocations = channelDetail.sales_channel.stock_locations || []
+  const locationId =
+    channelLocations[0]?.id ??
+    (
+      (await get("/admin/stock-locations?limit=10")) as {
+        stock_locations: { id: string }[]
+      }
+    ).stock_locations[0].id
   const shippingProfileId = (
     (await get("/admin/shipping-profiles?limit=10")) as {
       shipping_profiles: { id: string }[]

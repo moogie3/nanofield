@@ -312,8 +312,19 @@ export const addCustomerAddress = async (
       return { success: true, error: null }
     })
     .catch((err) => {
-      return { success: false, error: err.toString() }
+      return { success: false, error: friendlyCustomerError(err) }
     })
+}
+
+// Raw SDK errors ("Unauthorized", FetchError dumps) mean nothing to a
+// shopper. An expired login session is the overwhelmingly common cause, so
+// say exactly what to do instead of printing the status text.
+const friendlyCustomerError = (err: unknown): string => {
+  const text = err instanceof Error ? err.message : String(err)
+  if (/unauthorized|401/i.test(text)) {
+    return "Session expired — please log out and log back in, then retry."
+  }
+  return text
 }
 
 export const deleteCustomerAddress = async (
@@ -376,6 +387,6 @@ export const updateCustomerAddress = async (
       return { success: true, error: null }
     })
     .catch((err) => {
-      return { success: false, error: err.toString() }
+      return { success: false, error: friendlyCustomerError(err) }
     })
 }

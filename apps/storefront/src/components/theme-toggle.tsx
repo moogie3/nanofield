@@ -25,7 +25,7 @@ export function ThemeToggle() {
       <div className="relative w-5 h-5 flex items-center justify-center">
         {/* Sun icon for dark mode (click to go light) */}
         <svg
-          className="absolute h-full w-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] text-primary rotate-90 scale-0 opacity-0 dark:rotate-0 dark:scale-100 dark:opacity-100"
+          className="absolute h-full w-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] text-primary dark:text-foreground rotate-90 scale-0 opacity-0 dark:rotate-0 dark:scale-100 dark:opacity-100"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"

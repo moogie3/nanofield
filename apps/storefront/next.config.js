@@ -26,6 +26,8 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    // Thumbnails request quality 50; declare it (required from Next 16).
+    qualities: [50, 75],
     remotePatterns: [
       {
         protocol: "http",
