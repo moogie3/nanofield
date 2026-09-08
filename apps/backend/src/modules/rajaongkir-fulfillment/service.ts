@@ -12,70 +12,62 @@ import type {
   FulfillmentOption,
   FulfillmentOrderDTO,
   Logger,
+  MedusaContainer,
   ValidateFulfillmentDataContext,
 } from "@medusajs/framework/types"
+import {
+  BUILT_IN_SERVICES,
+  mergeCatalog,
+  type CourierService,
+  type ShippingServiceRow,
+} from "../rajaongkir/catalog"
 
 type RajaongkirModuleOptions = {
   apiKey?: string
   baseUrl?: string
+  // Preferred origin: numeric subdistrict id (one-time lookup). When unset,
+  // the origin text below is resolved through destination search instead.
+  originId?: number
   origin?: string
-  couriers?: string
   defaultWeightG?: number
   fallbackAmount?: number
 }
 
-type CourierService = {
-  id: string
-  courier: string
-  service: string
-  name: string
-  // When true, quote the cheapest service this courier returns instead of
-  // matching `service` exactly. Used for POS, whose Starter service codes
-  // vary by route — the option is labeled "(ekonomis)" to stay honest.
-  anyService?: boolean
+// Container keys of the catalog module service, first hit wins. Resolved
+// lazily per call — never at construct time, so provider boot never depends
+// on the catalog module, and a missing table simply yields defaults.
+const CATALOG_SERVICE_KEYS = ["rajaongkir", "rajaongkirModuleService"]
+
+type CatalogService = {
+  listShippingServices: (
+    filters?: Record<string, unknown>
+  ) => Promise<ShippingServiceRow[]>
 }
 
-// Starter-plan couriers: JNE + POS. J&T is Pro-only on RajaOngkir, so it is
-// out until a Pro upgrade (one-line addition then: base URL + jnt service).
-// The admin creates one calculated shipping option per entry below.
-const ALL_SERVICES: CourierService[] = [
-  { id: "jne-reg", courier: "jne", service: "REG", name: "JNE REG (2-3 hari)" },
-  {
-    id: "jne-oke",
-    courier: "jne",
-    service: "OKE",
-    name: "JNE OKE ekonomis (3-5 hari)",
-  },
-  { id: "jne-yes", courier: "jne", service: "YES", name: "JNE YES (1 hari)" },
-  {
-    id: "pos-eco",
-    courier: "pos",
-    service: "ECO",
-    name: "POS Indonesia (ekonomis)",
-    anyService: true,
-  },
-]
-
-type RajaCity = {
-  city_id: string
-  city_name: string
-  province: string
-  type: string
+// Destination search results: subdistrict-level entries. Only `id` is
+// structural — every other field is matched tolerantly, since Komerce may
+// rename labels without notice. Unknown shapes must fall back, never throw.
+type DestinationEntry = {
+  id: number | string
+  [key: string]: unknown
 }
 
-type RajaCost = {
-  service: string
-  cost: { value: number }[]
+type CourierQuote = {
+  code?: string
+  service?: string
+  cost?: number
+  [key: string]: unknown
 }
 
-// City list is static data: cached per process for 24h. RajaOngkir's usage
-// rules explicitly allow caching province/city, but cost quotes must be
-// requested live on every calculation — so costs are never cached.
-let cityCache: { fetchedAt: number; cities: RajaCity[] } | null = null
-const CITY_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+// Destination ids are static data: cached per process for 24h keyed by
+// normalized query (V2 best practice: cache static data, debounce search).
+// Cost quotes are always requested live — never cached.
+const destCache = new Map<string, { fetchedAt: number; entries: DestinationEntry[] }>()
+let originCache: number | null = null
+const DEST_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const REQUEST_TIMEOUT_MS = 10000
 
-const normalizeCity = (s: string): string =>
+const normalizePlace = (s: string): string =>
   s
     .toLowerCase()
     .replace(/^(kota|kab\.?|kabupaten)\s+administrasi\s+/, "")
@@ -87,13 +79,15 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
 
   protected logger_: Logger
   protected options_: RajaongkirModuleOptions
+  protected container_: MedusaContainer
 
   constructor(
-    { logger }: { logger: Logger },
+    container: MedusaContainer & { logger: Logger },
     options?: RajaongkirModuleOptions
   ) {
     super()
-    this.logger_ = logger
+    this.container_ = container
+    this.logger_ = container.logger
     this.options_ = options ?? {}
   }
 
@@ -102,7 +96,16 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
   }
 
   protected baseUrl_(): string {
-    return this.options_.baseUrl ?? "https://api.rajaongkir.com/starter"
+    return this.options_.baseUrl ?? "https://rajaongkir.komerce.id/api/v1"
+  }
+
+  protected headers_(): Record<string, string> {
+    return { key: this.apiKey_() }
+  }
+
+  protected originId_(): number | null {
+    const raw = this.options_.originId
+    return typeof raw === "number" && Number.isFinite(raw) ? raw : null
   }
 
   protected origin_(): string {
@@ -117,12 +120,26 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
     return this.options_.fallbackAmount ?? 20000
   }
 
-  protected services_(): CourierService[] {
-    const allowed = (this.options_.couriers ?? "jne,pos")
-      .split(",")
-      .map((c) => c.trim().toLowerCase())
-      .filter(Boolean)
-    return ALL_SERVICES.filter((s) => allowed.includes(s.courier))
+  // Merged catalog: built-ins overlaid with admin-managed DB rows.
+  // Falls back to built-ins when the catalog module/table is unavailable,
+  // so quoting (and boot) never depends on admin configuration existing.
+  protected async catalog_(): Promise<CourierService[]> {
+    for (const key of CATALOG_SERVICE_KEYS) {
+      try {
+        const catalog = (
+          this.container_.resolve as unknown as (
+            k: string
+          ) => CatalogService | null
+        )(key)
+        if (catalog && typeof catalog.listShippingServices === "function") {
+          const rows = await catalog.listShippingServices({})
+          return mergeCatalog(Array.isArray(rows) ? rows : []).services
+        }
+      } catch {
+        // try the next key, fall back to built-ins below
+      }
+    }
+    return [...BUILT_IN_SERVICES]
   }
 
   getIdentifier(): string {
@@ -130,7 +147,7 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
   }
 
   async getFulfillmentOptions(): Promise<FulfillmentOption[]> {
-    return this.services_().map((s) => ({
+    return (await this.catalog_()).map((s) => ({
       id: s.id,
       name: s.name,
       courier: s.courier,
@@ -147,7 +164,7 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
   }
 
   async validateOption(data: Record<string, unknown>): Promise<boolean> {
-    return this.services_().some((s) => s.id === data?.id)
+    return (await this.catalog_()).some((s) => s.id === data?.id)
   }
 
   async canCalculate(data: CreateShippingOptionDTO): Promise<boolean> {
@@ -155,7 +172,7 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
     if (!id) {
       return true
     }
-    return this.services_().some((s) => s.id === id)
+    return (await this.catalog_()).some((s) => s.id === id)
   }
 
   async calculatePrice(
@@ -168,7 +185,8 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
       is_calculated_price_tax_inclusive: false,
     }
     try {
-      const svc = this.services_().find((s) => s.id === optionData.id)
+      const services = await this.catalog_()
+      const svc = services.find((s) => s.id === optionData.id)
       if (!svc || !this.apiKey_()) {
         return fallback
       }
@@ -176,23 +194,24 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
       if (!city) {
         return fallback
       }
-      const cities = await this.listCities_()
-      const origin = this.matchCity_(cities, this.origin_())
-      const dest = this.matchCity_(
-        cities,
+      const originId = await this.resolveOrigin_()
+      const destId = await this.resolveDestination_(
         city,
         context.shipping_address?.province ?? undefined
       )
-      if (!origin || !dest) {
+      if (originId === null || destId === null) {
         return fallback
       }
-      const weight = this.cartWeightG_(context.items)
-      const amount = await this.quoteCost_(
-        svc,
-        origin.city_id,
-        dest.city_id,
-        weight
+      // One call for every enabled courier; split client-side by `code`.
+      // Keeps the free-tier 100 hits/day quota as far as possible.
+      const couriers = [...new Set(services.map((s) => s.courier))]
+      const quotes = await this.quoteCosts_(
+        originId,
+        destId,
+        this.cartWeightG_(context.items),
+        couriers
       )
+      const amount = this.pickQuote_(quotes, svc)
       if (amount === null) {
         return fallback
       }
@@ -220,9 +239,9 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
     >,
     additionalData?: Record<string, unknown>
   ): Promise<CreateFulfillmentResult> {
-    // Starter has no booking API: the AWB is booked manually in the
-    // JNE/J&T agent app, then entered as tracking number on the fulfillment.
-    const svc = this.services_().find((s) => s.id === data.id)
+    // No booking API on this tier: the AWB is booked manually in the
+    // courier agent app, then entered as tracking number on the fulfillment.
+    const svc = (await this.catalog_()).find((s) => s.id === data.id)
     return {
       data: {
         ...data,
@@ -255,86 +274,123 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
     return Math.max(1, Math.round(total))
   }
 
-  protected async listCities_(): Promise<RajaCity[]> {
-    if (cityCache && Date.now() - cityCache.fetchedAt < CITY_CACHE_TTL_MS) {
-      return cityCache.cities
+  protected async resolveOrigin_(): Promise<number | null> {
+    const pinned = this.originId_()
+    if (pinned !== null) {
+      return pinned
     }
+    if (originCache !== null) {
+      return originCache
+    }
+    const id = await this.resolveDestination_(this.origin_())
+    originCache = id
+    return id
+  }
+
+  protected async resolveDestination_(
+    city: string,
+    province?: string
+  ): Promise<number | null> {
+    const entries = await this.searchDestinations_(city)
+    if (!entries.length) {
+      return null
+    }
+    const want = normalizePlace(city)
+    const scored = entries
+      .map((e) => {
+        const haystack = Object.values(e)
+          .filter((v) => typeof v === "string")
+          .join(" ")
+          .toLowerCase()
+        if (!want || !haystack.includes(want)) {
+          return { e, score: -1 }
+        }
+        let score = 1
+        if (haystack.includes(` ${want} `) || haystack.startsWith(want)) {
+          score += 1
+        }
+        if (province) {
+          const wp = province.toLowerCase().trim()
+          if (wp && haystack.includes(wp)) {
+            score += 2
+          }
+        }
+        return { e, score }
+      })
+      .filter((s) => s.score >= 0)
+      .sort((a, b) => b.score - a.score)
+    if (!scored.length) {
+      return null
+    }
+    const id = Number(scored[0].e.id)
+    return Number.isFinite(id) ? id : null
+  }
+
+  protected async searchDestinations_(
+    query: string
+  ): Promise<DestinationEntry[]> {
+    const key = normalizePlace(query)
+    const cached = destCache.get(key)
+    if (cached && Date.now() - cached.fetchedAt < DEST_CACHE_TTL_MS) {
+      return cached.entries
+    }
+    const params = new URLSearchParams({
+      search: query,
+      limit: "5",
+      offset: "0",
+    })
     const res = await fetch(
-      `${this.baseUrl_()}/city?key=${encodeURIComponent(this.apiKey_())}`,
-      { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
+      `${this.baseUrl_()}/destination/domestic-destination?${params}`,
+      {
+        headers: this.headers_(),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      }
     )
     if (!res.ok) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `city list request failed: HTTP ${res.status}`
+        `destination search failed: HTTP ${res.status}`
       )
     }
     const json = (await res.json()) as {
-      rajaongkir: { status: { code: number }; results: RajaCity[] }
+      meta?: { message?: string; status?: string }
+      data?: DestinationEntry[]
     }
-    if (json.rajaongkir?.status?.code !== 200) {
+    if (
+      typeof json.meta?.status === "string" &&
+      !/success|ok/i.test(json.meta.status)
+    ) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `city list request failed: code ${json.rajaongkir?.status?.code}`
+        `destination search failed: ${json.meta.message ?? json.meta.status}`
       )
     }
-    cityCache = { fetchedAt: Date.now(), cities: json.rajaongkir.results }
-    return cityCache.cities
+    const entries = Array.isArray(json.data) ? json.data : []
+    destCache.set(key, { fetchedAt: Date.now(), entries })
+    return entries
   }
 
-  protected matchCity_(
-    cities: RajaCity[],
-    city: string,
-    province?: string
-  ): RajaCity | null {
-    const want = normalizeCity(city)
-    if (!want) {
-      return null
-    }
-    const byName = cities.filter((c) => {
-      const name = normalizeCity(c.city_name)
-      return name === want || name.includes(want) || want.includes(name)
-    })
-    if (!byName.length) {
-      return null
-    }
-    const exact = byName.filter((c) => normalizeCity(c.city_name) === want)
-    const pool = exact.length ? exact : byName
-    if (province) {
-      const wantProv = province.toLowerCase().trim()
-      const inProvince = pool.filter(
-        (c) =>
-          c.province.toLowerCase().includes(wantProv) ||
-          wantProv.includes(c.province.toLowerCase())
-      )
-      if (inProvince.length) {
-        return inProvince[0]
-      }
-    }
-    return pool[0]
-  }
-
-  protected async quoteCost_(
-    svc: CourierService,
-    originId: string,
-    destId: string,
-    weightG: number
-  ): Promise<number | null> {
+  protected async quoteCosts_(
+    originId: number,
+    destId: number,
+    weightG: number,
+    couriers: string[]
+  ): Promise<CourierQuote[]> {
     const body = new URLSearchParams({
-      origin: originId,
-      destination: destId,
+      origin: String(originId),
+      destination: String(destId),
       weight: String(weightG),
-      courier: svc.courier,
+      courier: couriers.join(":"),
     })
-    const res = await fetch(
-      `${this.baseUrl_()}/cost?key=${encodeURIComponent(this.apiKey_())}`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body,
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      }
-    )
+    const res = await fetch(`${this.baseUrl_()}/calculate/domestic-cost`, {
+      method: "POST",
+      headers: {
+        ...this.headers_(),
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    })
     if (!res.ok) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
@@ -342,30 +398,45 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
       )
     }
     const json = (await res.json()) as {
-      rajaongkir: {
-        status: { code: number }
-        results: { costs: RajaCost[] }[]
-      }
+      meta?: { message?: string; status?: string }
+      data?: CourierQuote[]
     }
-    if (json.rajaongkir?.status?.code !== 200) {
+    if (
+      typeof json.meta?.status === "string" &&
+      !/success|ok/i.test(json.meta.status)
+    ) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `cost request failed: code ${json.rajaongkir?.status?.code}`
+        `cost request failed: ${json.meta.message ?? json.meta.status}`
       )
     }
-    const costs = json.rajaongkir.results?.[0]?.costs ?? []
-    if (svc.anyService) {
-      const values = costs
-        .flatMap((c) => c.cost ?? [])
-        .map((c) => c.value)
-        .filter((v) => typeof v === "number")
-      return values.length ? Math.min(...values) : null
-    }
-    const match = costs.find(
-      (c) => c.service.toUpperCase() === svc.service.toUpperCase()
+    return Array.isArray(json.data) ? json.data : []
+  }
+
+  protected pickQuote_(
+    quotes: CourierQuote[],
+    svc: CourierService
+  ): number | null {
+    const mine = quotes.filter(
+      (q) =>
+        typeof q.code === "string" &&
+        q.code.toLowerCase() === svc.courier.toLowerCase() &&
+        typeof q.cost === "number"
     )
-    const value = match?.cost?.[0]?.value
-    return typeof value === "number" ? value : null
+    if (!mine.length) {
+      return null
+    }
+    if (!svc.anyService) {
+      const exact = mine.find(
+        (q) =>
+          typeof q.service === "string" &&
+          q.service.toUpperCase() === svc.service.toUpperCase()
+      )
+      if (exact && typeof exact.cost === "number") {
+        return exact.cost
+      }
+    }
+    return Math.min(...mine.map((q) => q.cost as number))
   }
 }
 

@@ -106,11 +106,18 @@ const AccountInfo = ({
         </Disclosure.Panel>
       </Disclosure>
 
+      {/*
+        Collapsed editors must clip, not spill: overflow-visible here left
+        every closed form invisible-but-clickable over the rows below it,
+        so clicks on one section's Edit toggled/submitted a neighbor's
+        form (wrong success badges). Native selects need no visible
+        overflow, so hidden is always safe.
+      */}
       <Disclosure>
         <Disclosure.Panel
           static
           className={clx(
-            "transition-[max-height,opacity] duration-300 ease-in-out overflow-visible",
+            "transition-[max-height,opacity] duration-300 ease-in-out overflow-hidden",
             {
               "max-h-[1000px] opacity-100": state,
               "max-h-0 opacity-0": !state,

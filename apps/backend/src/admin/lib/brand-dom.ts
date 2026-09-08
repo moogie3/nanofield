@@ -178,6 +178,14 @@ const CIRCUIT_SCENE = `
     <path class="nf-tr" d="M520 820 V780 H580" />
     <circle class="nf-via" cx="580" cy="780" r="4" />
     <path class="nf-tr" d="M660 110 H700 V86 H740 V110 H780 V86 H820" />
+    <g>
+      <path class="nf-pulse" pathLength="100" d="M-20 120 H260 L300 160 H520 L560 200 H820" style="animation-duration:7s" />
+      <path class="nf-pulse" pathLength="100" d="M1220 620 H1040 L1000 580 H860 L820 620 H700" style="animation-duration:9s;animation-delay:-3s" />
+      <path class="nf-pulse" pathLength="100" d="M-20 680 H180 L220 640 H420" style="animation-duration:8s;animation-delay:-5s" />
+      <path class="nf-pulse" pathLength="100" d="M200 -20 V140 L240 180 V300" style="animation-duration:6s;animation-delay:-2s" />
+      <path class="nf-pulse" pathLength="100" d="M1220 240 H980 L940 280 H760" style="animation-duration:7.5s;animation-delay:-4s" />
+      <path class="nf-pulse" pathLength="100" d="M420 820 V700 L460 660 V560" style="animation-duration:6.5s;animation-delay:-1s" />
+    </g>
     <g font-size="13">
       <text class="nf-silk" x="150" y="505">U1</text>
       <text class="nf-silk" x="700" y="175">R12</text>
@@ -405,8 +413,8 @@ export const applyLoginCircuit = () => {
     const style = document.createElement("style")
     style.id = "nanofield-login-bg-style"
     style.textContent = `
-      :root { --nf-circuit: rgba(14, 124, 140, 0.16); --nf-circuit-strong: rgba(14, 124, 140, 0.38); --nf-tile: rgba(14, 124, 140, 0.10); --nf-glow: rgba(14, 124, 140, 0.55); --nf-glyph: #8A949C; }
-      html.dark { --nf-circuit: rgba(45, 190, 210, 0.20); --nf-circuit-strong: rgba(45, 190, 210, 0.45); --nf-tile: rgba(45, 190, 210, 0.12); --nf-glow: rgba(45, 190, 210, 0.65); --nf-glyph: #C9D1D9; }
+      :root { --nf-circuit: rgba(14, 124, 140, 0.16); --nf-circuit-strong: rgba(14, 124, 140, 0.38); --nf-tile: rgba(14, 124, 140, 0.10); --nf-glow: rgba(14, 124, 140, 0.55); --nf-glyph: #8A949C; --nf-pulse: #0E7C8C; --nf-pulse-glow: rgba(14, 124, 140, 0.45); }
+      html.dark { --nf-circuit: rgba(45, 190, 210, 0.20); --nf-circuit-strong: rgba(45, 190, 210, 0.45); --nf-tile: rgba(45, 190, 210, 0.12); --nf-glow: rgba(45, 190, 210, 0.65); --nf-glyph: #C9D1D9; --nf-pulse: #2DD4BF; --nf-pulse-glow: rgba(45, 212, 191, 0.7); }
       #nanofield-login-bg {
         position: fixed; inset: 0; z-index: 0; pointer-events: none;
         background-image:
@@ -436,6 +444,8 @@ export const applyLoginCircuit = () => {
       circle.nf-via { animation: nanofield-via-blink 2.8s ease-in-out infinite; }
       circle.nf-via:nth-of-type(3n) { animation-delay: -0.9s; }
       circle.nf-via:nth-of-type(3n+1) { animation-delay: -1.8s; }
+      .nf-pulse { stroke: var(--nf-pulse); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-dasharray: 9 91; animation: nanofield-pulse-flow 7s linear infinite; filter: drop-shadow(0 0 5px var(--nf-pulse-glow)); }
+      @keyframes nanofield-pulse-flow { to { stroke-dashoffset: -100; } }
       @keyframes nanofield-avatar-float {
         0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 0 rgba(14, 124, 140, 0)); }
         50% { transform: translateY(-4px); filter: drop-shadow(0 6px 14px rgba(14, 124, 140, 0.35)); }
@@ -447,6 +457,7 @@ export const applyLoginCircuit = () => {
       div[class*="max-w-[280px]"] { position: relative; z-index: 1; }
       @media (prefers-reduced-motion: reduce) {
         #nanofield-login-bg .nf-floater, svg[data-nanofield-avatar], circle.nf-via { animation: none; }
+        #nanofield-login-bg .nf-pulse { animation: none; opacity: 0; }
       }
     `
     document.head.appendChild(style)
@@ -514,6 +525,89 @@ const STATIC_COPY: Record<string, string> = {
     "Get started with Nanofield right away.",
   "Start Medusa Admin": "Open Nanofield Admin",
   "Welcome to Medusa": "Welcome to Nanofield",
+}
+
+// Settings sidebar: air between the General / Developer / My Account
+// sections so headers read as dividers, not as another submenu row.
+// Text-anchored (labels are stable i18n keys) instead of class-anchored —
+// a Medusa upgrade that renames classes just drops the spacing, nothing
+// breaks. Only runs on /app/settings pages.
+const SETTINGS_SECTIONS = ["General", "Developer", "My Account"]
+
+export const applySettingsSpacing = () => {
+  // Inline styles, not a <style> tag: an inject-once stylesheet can go stale
+  // for the session when its selector changes (Sep 8: marks present, rule
+  // missing, no visual change). Inline margin travels with the mark itself,
+  // so marking and styling can never disagree again. Legacy tags removed.
+  document.getElementById("nanofield-settings-spacing")?.remove()
+  document.getElementById("nanofield-settings-spacing-v2")?.remove()
+  if (!window.location.pathname.startsWith("/app/settings")) {
+    return
+  }
+  // Collect headers in DOM order every sweep (cheap, settings-only pages):
+  // all but the first get divider spacing. The margin goes on the nearest
+  // block-level ancestor — vertical margins are ignored on inline boxes,
+  // which is why marking the label span itself rendered nothing.
+  const found: HTMLElement[] = []
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+  let node: Text | null
+  let guard = 0
+  while ((node = walker.nextNode() as Text | null) && guard++ < 4000) {
+    if (!SETTINGS_SECTIONS.includes((node.textContent ?? "").trim())) {
+      continue
+    }
+    let header: HTMLElement | null = node.parentElement
+    if (!header) {
+      continue
+    }
+    // Keep the mark inside the sidebar: the header must sit near submenu
+    // links, so a content heading that shares a label can never match.
+    // Then climb to the nearest block-level box so the margin applies.
+    let box: HTMLElement | null = header
+    let nearLinks = false
+    let depth = 0
+    while (box && depth++ < 8) {
+      if (box.querySelector('a[href*="/app/settings/"]')) {
+        nearLinks = true
+        break
+      }
+      box = box.parentElement
+    }
+    if (!nearLinks || !box) {
+      continue
+    }
+    let target: HTMLElement | null = header
+    depth = 0
+    while (
+      target &&
+      target !== box.parentElement &&
+      depth++ < 6 &&
+      ["INLINE", "CONTENTS"].includes(
+        (getComputedStyle(target).display || "").toUpperCase()
+      )
+    ) {
+      target = target.parentElement
+    }
+    if (target && !found.includes(target)) {
+      found.push(target)
+    }
+  }
+  // Clear stale marks (and their margins) first so a DOM reshuffle can't
+  // leave gaps behind.
+  document
+    .querySelectorAll("[data-nf-settings-header]")
+    .forEach((el) => {
+      el.removeAttribute("data-nf-settings-header")
+      ;(el as HTMLElement).style.marginTop = ""
+    })
+  found.forEach((header, i) => {
+    if (i > 0) {
+      header.setAttribute("data-nf-settings-header", "true")
+      header.style.marginTop = "20px"
+    } else {
+      header.style.marginTop = ""
+    }
+  })
 }
 
 export const scrubStaticCopy = () => {

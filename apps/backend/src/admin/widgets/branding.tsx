@@ -4,6 +4,7 @@ import { NanofieldAvatar } from "../components/nanofield-avatar"
 import {
   applyFavicon,
   applyFonts,
+  applySettingsSpacing,
   applyTitle,
   replaceAvatarLogos,
   scrubStaticCopy,
@@ -17,6 +18,7 @@ const applyAll = () => {
   replaceAvatarLogos()
   swapMedusaImages()
   scrubStaticCopy()
+  applySettingsSpacing()
 }
 
 // The topbar renders on every dashboard page, so this widget is the host

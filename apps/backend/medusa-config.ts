@@ -15,6 +15,9 @@ module.exports = defineConfig({
   },
   modules: [
     {
+      resolve: "./src/modules/rajaongkir",
+    },
+    {
       resolve: "@medusajs/medusa/fulfillment",
       options: {
         providers: [
@@ -24,8 +27,10 @@ module.exports = defineConfig({
             options: {
               apiKey: process.env.RAJAONGKIR_API_KEY,
               baseUrl: process.env.RAJAONGKIR_BASE_URL,
+              originId: process.env.RAJAONGKIR_ORIGIN_ID
+                ? Number(process.env.RAJAONGKIR_ORIGIN_ID)
+                : undefined,
               origin: process.env.RAJAONGKIR_ORIGIN,
-              couriers: process.env.RAJAONGKIR_COURIERS,
               defaultWeightG: process.env.RAJAONGKIR_DEFAULT_WEIGHT_G
                 ? Number(process.env.RAJAONGKIR_DEFAULT_WEIGHT_G)
                 : undefined,
