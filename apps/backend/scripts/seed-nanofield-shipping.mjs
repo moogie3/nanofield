@@ -179,91 +179,82 @@ if (location && !linkedIds.includes(location.id)) {
   live("channel link ok: location already on channel")
 }
 
+// Deep location read, mirroring the admin UI detail query: sets with their
+// zones and geo-zones, plus linked providers. Single source for steps 6-7.
+const TREE_FIELDS =
+  "*fulfillment_sets,*fulfillment_sets.service_zones," +
+  "*fulfillment_sets.service_zones.geo_zones,*fulfillment_providers"
+const getLocationTree = async () => {
+  const detail = await get(
+    `/admin/stock-locations/${location.id}?fields=${TREE_FIELDS}`
+  )
+  return detail.stock_location || {}
+}
+
 // --- 6. Provider links on the location ---
-for (const providerId of PROVIDERS) {
-  let linked = false
-  try {
-    const detail = await get(
-      `/admin/stock-locations/${location.id}?fields=*fulfillment_providers`
-    )
-    const providers = detail.stock_location.fulfillment_providers || []
-    linked = providers.some(
-      (p) => (p.id || p.fulfillment_provider_id) === providerId
-    )
-  } catch (e) {
-    live(
-      `could not list location providers (${(e && e.message) || e}), will attempt link`
-    )
-  }
-  if (!linked) {
-    emit(`linking provider ${providerId} to location`)
-    await post(`/admin/stock-locations/${location.id}/fulfillment-providers`, {
-      add: [providerId],
-    })
-  } else {
-    live(`provider link ok: ${providerId}`)
+{
+  const tree = await getLocationTree()
+  const linkedProviders = (tree.fulfillment_providers || [])
+    .filter(Boolean)
+    .map((p) => p.id || p.fulfillment_provider_id)
+  for (const providerId of PROVIDERS) {
+    if (!linkedProviders.includes(providerId)) {
+      emit(`linking provider ${providerId} to location`)
+      await post(
+        `/admin/stock-locations/${location.id}/fulfillment-providers`,
+        { add: [providerId] }
+      )
+    } else {
+      live(`provider link ok: ${providerId}`)
+    }
   }
 }
 
 // --- 7. Fulfillment set + service zone + id geo-zone ---
-let setId = null
-try {
-  const locDetail = await get(
-    `/admin/stock-locations/${location.id}?fields=*fulfillment_sets`
-  )
-  const sets = locDetail.stock_location.fulfillment_sets || []
-  setId = (sets.find((s) => s.name === SET_NAME) || {}).id || null
-} catch (e) {
-  throw new Error(
-    `cannot list fulfillment sets (${(e && e.message) || e}), aborting instead of risking duplicates`
-  )
+// Note: there is no GET route for a single fulfillment set, so sets and
+// zones are always read through the location tree query above.
+const findSetAndZone = async () => {
+  let tree = {}
+  try {
+    tree = await getLocationTree()
+  } catch (e) {
+    throw new Error(
+      `cannot list fulfillment sets (${(e && e.message) || e}), aborting instead of risking duplicates`
+    )
+  }
+  const sets = tree.fulfillment_sets || []
+  const set = sets.find((s) => s && s.name === SET_NAME) || null
+  const zones = (set && set.service_zones) || []
+  const zone = zones.find((z) => z && z.name === ZONE_NAME) || null
+  return { set, zone }
 }
+
+let { set, zone } = await findSetAndZone()
+let setId = (set && set.id) || null
 if (!setId) {
   emit(`no fulfillment set "${SET_NAME}", creating one`)
   await post(`/admin/stock-locations/${location.id}/fulfillment-sets`, {
     name: SET_NAME,
     type: "shipping",
   })
-  const again = await get(
-    `/admin/stock-locations/${location.id}?fields=*fulfillment_sets`
-  )
-  setId = (
-    (again.stock_location.fulfillment_sets || []).find(
-      (s) => s.name === SET_NAME
-    ) || {}
-  ).id
+  ;({ set } = await findSetAndZone())
+  setId = (set && set.id) || null
 }
 if (!setId) {
   throw new Error("fulfillment set creation could not be confirmed, aborting")
 }
 live(`fulfillment set ok: ${SET_NAME} (${setId})`)
 
-let zoneId = null
-try {
-  const setDetail = await get(
-    `/admin/fulfillment-sets/${setId}?fields=*service_zones`
-  )
-  const zones = setDetail.fulfillment_set.service_zones || []
-  const zone = zones.find((z) => z.name === ZONE_NAME)
-  if (zone) {
-    const geo = zone.geo_zones || []
-    const hasId = geo.some(
-      (g) => (g.country_code || "").toLowerCase() === "id"
+let zoneId = (zone && zone.id) || null
+if (zoneId) {
+  const geo = zone.geo_zones || []
+  if (geo.some((g) => g && (g.country_code || "").toLowerCase() === "id")) {
+    live(`service zone ok: ${ZONE_NAME} with id geo-zone`)
+  } else {
+    live(
+      `service zone "${ZONE_NAME}" exists without id geo-zone, leaving for manual manage-areas`
     )
-    if (hasId) {
-      zoneId = zone.id
-      live(`service zone ok: ${ZONE_NAME} with id geo-zone`)
-    } else {
-      live(
-        `service zone "${ZONE_NAME}" exists without id geo-zone, leaving for manual manage-areas`
-      )
-      zoneId = zone.id
-    }
   }
-} catch (e) {
-  throw new Error(
-    `cannot list service zones (${(e && e.message) || e}), aborting instead of risking duplicates`
-  )
 }
 if (!zoneId) {
   emit(`no service zone "${ZONE_NAME}", creating one with id geo-zone`)
@@ -271,14 +262,8 @@ if (!zoneId) {
     name: ZONE_NAME,
     geo_zones: [{ country_code: "id", type: "country" }],
   })
-  const again = await get(
-    `/admin/fulfillment-sets/${setId}?fields=*service_zones`
-  )
-  zoneId = (
-    ((again.fulfillment_set.service_zones || []).find(
-      (z) => z.name === ZONE_NAME
-    ) || {}).id
-  )
+  ;({ zone } = await findSetAndZone())
+  zoneId = (zone && zone.id) || null
 }
 if (!zoneId) {
   throw new Error("service zone creation could not be confirmed, aborting")
