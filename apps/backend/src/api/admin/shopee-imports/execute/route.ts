@@ -4,6 +4,7 @@ import {
   parseBasic,
   parseMedia,
   parseSales,
+  parseShip,
   runImport,
 } from "../engine"
 import { createJob, pushEvent } from "../jobs-store"
@@ -13,6 +14,7 @@ type UploadedFiles = {
   sales?: { buffer: Buffer; originalname: string; size: number }[]
   basic?: { buffer: Buffer; originalname: string; size: number }[]
   media?: { buffer: Buffer; originalname: string; size: number }[]
+  ship?: { buffer: Buffer; originalname: string; size: number }[]
 }
 
 const selfBaseUrl = () =>
@@ -62,7 +64,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         parseSales(sales.buffer),
         parseBasic(files.basic?.[0]?.buffer),
         parseMedia(files.media?.[0]?.buffer),
-        options.cleanDesc
+        options.cleanDesc,
+        parseShip(files.ship?.[0]?.buffer)
       )
       pushEvent(
         job,

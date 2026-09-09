@@ -5,7 +5,9 @@ import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
-const PRODUCT_LIMIT = 48
+// Fixed page size: 10 rows × 8-col grid. No per-page selector by decision
+// (speed + simplicity over choice).
+const PRODUCT_LIMIT = 80
 
 type PaginatedProductsParams = {
   limit: number
@@ -70,7 +72,7 @@ export default async function PaginatedProducts({
   }
 
   const {
-    response: { products, count },
+    response: { products: fetched, count },
   } = await listProductsWithSort({
     page,
     queryParams,
@@ -79,6 +81,16 @@ export default async function PaginatedProducts({
     optionValueIds,
     categoryIds: finalCategoryIds,
   })
+
+  // Search ranking wins over the sort dropdown: restore /store/search rank
+  // order (listProductsWithSort re-sorts by sortBy). Only applies when the
+  // caller passed an ordered id set (i.e. a search query).
+  const products =
+    productsIds && productsIds.length > 0
+      ? [...fetched].sort(
+          (a, b) => productsIds.indexOf(a.id) - productsIds.indexOf(b.id)
+        )
+      : fetched
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 

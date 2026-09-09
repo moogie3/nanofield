@@ -38,6 +38,12 @@ export default async function ProductPreview({
   const partNumber = String(
     metadata.part_number || firstVariant?.sku || product.handle,
   )
+  // Same truth as the buy button and specs tab: any purchasable variant.
+  const inStock = (product.variants || []).some(
+    (v) =>
+      v.allow_backorder ||
+      (typeof v.inventory_quantity === "number" && v.inventory_quantity > 0)
+  )
   const previewImage = product.thumbnail || product.images?.[0]?.url
 
   if (layout === "list") {
@@ -68,12 +74,18 @@ export default async function ProductPreview({
             </div>
           </LocalizedClientLink>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="truncate text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              {partNumber}
+            <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <span className="truncate">{partNumber}</span>
+              <span
+                title={inStock ? "In stock" : "Out of stock"}
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                  inStock ? "bg-emerald-500" : "bg-red-500"
+                }`}
+              />
             </span>
             <LocalizedClientLink href={`/products/${product.handle}`}>
               <Text
-                className="line-clamp-1 text-sm font-medium text-ui-fg-base hover:text-primary"
+                className="line-clamp-1 text-[13px] font-medium text-ui-fg-base hover:text-primary"
                 data-testid="product-title"
               >
                 {product.title}
@@ -93,8 +105,10 @@ export default async function ProductPreview({
             )}
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            <div className="flex items-center gap-x-2">
-              {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
+            <div className="flex min-w-0 items-center gap-x-2">
+              {cheapestPrice && (
+                <PreviewPrice price={cheapestPrice} className="text-[13px]" />
+              )}
             </div>
             {firstVariant?.id && countryCode && (
               <QuickAddButton
@@ -130,20 +144,28 @@ export default async function ProductPreview({
           </div>
         </LocalizedClientLink>
         <div className="flex flex-1 flex-col gap-0.5 p-3">
-          <span className="truncate text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            {partNumber}
+          <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <span className="truncate">{partNumber}</span>
+            <span
+              title={inStock ? "In stock" : "Out of stock"}
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                inStock ? "bg-emerald-500" : "bg-red-500"
+              }`}
+            />
           </span>
           <LocalizedClientLink href={`/products/${product.handle}`}>
-            <Text
-              className="line-clamp-2 min-h-10 text-sm font-medium text-ui-fg-base hover:text-primary"
-              data-testid="product-title"
-            >
+              <Text
+                className="line-clamp-2 min-h-10 text-[13px] font-medium text-ui-fg-base hover:text-primary"
+                data-testid="product-title"
+              >
               {product.title}
             </Text>
           </LocalizedClientLink>
           <div className="mt-2 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-x-2">
-              {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
+            <div className="flex min-w-0 flex-1 items-center gap-x-2">
+              {cheapestPrice && (
+                <PreviewPrice price={cheapestPrice} className="text-[13px]" />
+              )}
             </div>
             {firstVariant?.id && countryCode && (
               <QuickAddButton

@@ -5,6 +5,7 @@ type UploadedFiles = {
   sales?: { buffer: Buffer; originalname: string; size: number }[]
   basic?: { buffer: Buffer; originalname: string; size: number }[]
   media?: { buffer: Buffer; originalname: string; size: number }[]
+  ship?: { buffer: Buffer; originalname: string; size: number }[]
 }
 
 const selfBaseUrl = () =>
@@ -43,6 +44,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       salesBuf: sales.buffer,
       basicBuf: files.basic?.[0]?.buffer,
       mediaBuf: files.media?.[0]?.buffer,
+      shipBuf: files.ship?.[0]?.buffer,
       cleanDesc,
     })
     res.json({
@@ -51,6 +53,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         sales: sales.originalname,
         basic: files.basic?.[0]?.originalname || null,
         media: files.media?.[0]?.originalname || null,
+        ship: files.ship?.[0]?.originalname || null,
       },
     })
   } catch (e) {

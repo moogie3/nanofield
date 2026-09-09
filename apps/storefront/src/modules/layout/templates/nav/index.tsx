@@ -7,6 +7,7 @@ import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import SiteSearch from "@modules/layout/components/site-search"
 import StickyNav from "@modules/layout/components/sticky-nav"
 import {
   AccountNavIcon,
@@ -24,13 +25,16 @@ export default async function Nav() {
   return (
     <StickyNav>
       <nav className="content-container text-ui-fg-subtle flex items-center justify-between w-full h-full text-base">
-        <div className="flex-1 basis-0 h-full flex items-center">
+        <div className="flex-1 basis-0 h-full flex items-center gap-x-6">
           <div className="h-full">
             <SideMenu
               regions={regions}
               locales={locales}
               currentLocale={currentLocale}
             />
+          </div>
+          <div className="flex items-center h-full">
+            <SiteSearch />
           </div>
         </div>
 

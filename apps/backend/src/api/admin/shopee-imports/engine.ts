@@ -38,8 +38,12 @@ export type PreviewInfo = {
     name: string
     variants: number
     priceRange: string
+    stock: number
     action: "create" | "update"
   }[]
+  // Detected weight header text ("Berat (gr)" etc.), or null when the sheet
+  // has no Berat column — variants then fall back to 500g in quotes.
+  weightColumn: string | null
 }
 
 // --- column maps (see Shopee Mass Update templates) ---
@@ -164,13 +168,62 @@ export const parseWeightGrams = (v: string | number | undefined): number | null 
   return Math.round(n < 100 ? n * 1000 : n)
 }
 
+// Indonesian number formats: thousand dots ("15.000" = 15000, "1.234.567"),
+// comma decimals ("1,5"), currency prefixes ("Rp 15.000"). Plain Number() /
+// parseInt() silently mangle these ("15.000" -> 15), so normalize first.
+export const parseIdNumber = (v: string | number | undefined): number => {
+  if (typeof v === "number") {
+    return v
+  }
+  let s = String(v ?? "")
+    .trim()
+    .replace(/[^0-9.,-]/g, "")
+  if (!s || s === "-" || s === "." || s === ",") {
+    return NaN
+  }
+  if (/,\d{1,2}$/.test(s)) {
+    s = s.replace(/\./g, "").replace(",", ".")
+  } else if (/\.\d{3}($|\.)/.test(s)) {
+    s = s.replace(/\./g, "")
+  }
+  return Number(s)
+}
+
+// Price ("Harga") and stock ("Stok") columns move between Shopee template
+// revisions like Berat does. Exact header match wins; contains-match is the
+// fallback (avoids "Stok Aman" shadowing a real "Stok" column when both
+// exist — exact is checked across all header rows first).
+const detectLabeledCol = (rows: Row[], exact: RegExp, fuzzy: RegExp): number => {
+  const headerRows = rows
+    .slice(0, 10)
+    .filter((r) => !/^\d+$/.test(str(r[S.PRODUCT_ID])))
+  for (const r of headerRows) {
+    const idx = r.findIndex((c) => exact.test(str(c).trim()))
+    if (idx >= 0) {
+      return idx
+    }
+  }
+  for (const r of headerRows) {
+    const idx = r.findIndex((c) => fuzzy.test(str(c)))
+    if (idx >= 0) {
+      return idx
+    }
+  }
+  return -1
+}
+
 export const parseSales = (buf: Buffer): SalesRow[] => {
   const rows = toRows(buf)
   const weightCol = detectWeightCol(rows)
+  const priceCol = detectLabeledCol(rows, /^(harga|price)$/i, /harga|price/i)
+  const stockCol = detectLabeledCol(rows, /^(stok|stock)$/i, /stok|stock|jumlah|qty|quantity/i)
+  const priceIdx = priceCol >= 0 ? priceCol : S.PRICE
+  const stockIdx = stockCol >= 0 ? stockCol : S.STOCK
   return rows
     .filter((r) => /^\d+$/.test(str(r[S.PRODUCT_ID])))
     .map((r) => {
-      const price = Math.round(Number(r[S.PRICE]))
+      const price = Math.round(parseIdNumber(r[priceIdx]))
+      const stockRaw = Math.floor(parseIdNumber(r[stockIdx]))
       return {
         pid: str(r[S.PRODUCT_ID]),
         name: str(r[S.NAME]),
@@ -178,7 +231,8 @@ export const parseSales = (buf: Buffer): SalesRow[] => {
         variationName: str(r[S.VARIATION_NAME]),
         parentSku: str(r[S.PARENT_SKU]),
         price: Number.isFinite(price) && price >= 0 ? price : null,
-        stock: Math.max(0, parseInt(str(r[S.STOCK]) || "0", 10) || 0),
+        stock:
+          Number.isFinite(stockRaw) && stockRaw > 0 ? stockRaw : 0,
         weightGrams:
           weightCol >= 0 ? parseWeightGrams(r[weightCol]) : null,
       }
@@ -292,11 +346,101 @@ export type ProductPlan = {
   images: string[]
 }
 
+export type ShipWeights = {
+  byVariation: Map<string, number>
+  byProduct: Map<string, number>
+  header: string | null
+}
+
+const emptyShipWeights = (): ShipWeights => ({
+  byVariation: new Map(),
+  byProduct: new Map(),
+  header: null,
+})
+
+// Informasi Pengiriman workbook: per-variation weights in grams
+// ("Berat Produk/g"), keyed by Shopee variation id (globally unique) with a
+// pid fallback for single-row products. Columns located by header name, same
+// as the other workbooks — never by fixed index.
+export const parseShip = (buf: Buffer | undefined): ShipWeights => {
+  const out = emptyShipWeights()
+  if (!buf) {
+    return out
+  }
+  const rows = toRows(buf)
+  let weightIdx = -1
+  let pidIdx = 0
+  let vidIdx = 3
+  for (const r of rows.slice(0, 10)) {
+    const wi = r.findIndex((c) => /berat/i.test(str(c)))
+    if (wi < 0) {
+      continue
+    }
+    weightIdx = wi
+    out.header = str(r[wi])
+    r.forEach((c, i) => {
+      if (/kode produk/i.test(str(c))) {
+        pidIdx = i
+      }
+      if (/kode variasi/i.test(str(c))) {
+        vidIdx = i
+      }
+    })
+    break
+  }
+  if (weightIdx < 0) {
+    return out
+  }
+  const perPid = new Map<string, number[]>()
+  for (const r of rows) {
+    if (!/^\d+$/.test(str(r[pidIdx]))) {
+      continue
+    }
+    const grams = Math.round(parseIdNumber(r[weightIdx]))
+    if (!Number.isFinite(grams) || grams <= 0) {
+      continue
+    }
+    const vid = str(r[vidIdx])
+    const pid = str(r[pidIdx])
+    if (vid) {
+      out.byVariation.set(vid, grams)
+    }
+    const list = perPid.get(pid) || []
+    list.push(grams)
+    perPid.set(pid, list)
+  }
+  for (const [pid, list] of perPid) {
+    if (list.length === 1) {
+      out.byProduct.set(pid, list[0])
+    }
+  }
+  return out
+}
+
+const resolveWeight = (
+  r: SalesRow,
+  ship: ShipWeights
+): number | null => {
+  const vid = (r.variationId || "").trim()
+  if (vid && vid !== "0") {
+    const hit = ship.byVariation.get(vid)
+    if (typeof hit === "number") {
+      return hit
+    }
+  }
+  const solo = ship.byProduct.get(r.pid)
+  if (typeof solo === "number") {
+    return solo
+  }
+  return r.weightGrams
+}
+
 export const buildPlans = (
   sales: SalesRow[],
   descriptions: Map<string, string>,
   media: Map<string, MediaEntry>,
-  cleanDesc: boolean
+  cleanDesc: boolean,
+  ship: ShipWeights = emptyShipWeights()
 ): { plans: ProductPlan[]; skipped: { pid: string; key?: string; reason: string }[] } => {
   const groups = new Map<string, SalesRow[]>()
   for (const r of sales) {
@@ -334,7 +478,7 @@ export const buildPlans = (
             : `${parentSku || `shopee-${pid}`}-${i + 1}`,
         price: r.price,
         stock: r.stock,
-        weightGrams: r.weightGrams,
+        weightGrams: resolveWeight(r, ship),
       })
     })
     if (badPrice) {
@@ -500,6 +644,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
   type ExistingProduct = {
     id: string
     handle: string
+    status: string
     metadata: Record<string, string> | null
   }
   const existingByShopeeId = new Map<string, ExistingProduct>()
@@ -509,9 +654,9 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
     const limit = 100
     for (;;) {
       const res = (await get(
-        `/admin/products?limit=${limit}&offset=${offset}&fields=id,handle,metadata,variants.id,variants.sku`
+        `/admin/products?limit=${limit}&offset=${offset}&fields=id,handle,status,metadata,variants.id,variants.sku`
       )) as {
-        products: { id: string; handle: string; metadata: Record<string, string> | null }[]
+        products: { id: string; handle: string; status: string; metadata: Record<string, string> | null }[]
         count: number
       }
       for (const p of res.products) {
@@ -520,6 +665,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
           existingByShopeeId.set(String(p.metadata.shopee_product_id), {
             id: p.id,
             handle: p.handle,
+            status: p.status,
             metadata: p.metadata,
           })
         }
@@ -594,8 +740,17 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
       if (existing.stocked_quantity !== stock) {
         report.stockSynced++
         if (!dryRun) {
+          // This Medusa version's batch validator requires inventory_item_id
+          // + location_id on update entries, not just the level id.
           await post("/admin/inventory-items/location-levels/batch", {
-            update: [{ id: existing.id, stocked_quantity: stock }],
+            update: [
+              {
+                id: existing.id,
+                inventory_item_id: inventoryItemId,
+                location_id: locationId,
+                stocked_quantity: stock,
+              },
+            ],
           })
         }
       }
@@ -650,6 +805,11 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
       is_semiconductor: flags.isSemiconductor,
     }
 
+    // Publication follows sellable stock: zero-stock products stay draft
+    // (invisible in the storefront), restocks republish drafts — but only
+    // when importing with publish enabled, so a deliberate manual unpublish
+    // is never overridden by a publishNew=false run.
+    const totalStock = plan.variants.reduce((n, v) => n + v.stock, 0)
     if (!existing) {
       let handle = plan.handle
       if (existingHandles.has(handle)) {
@@ -664,7 +824,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
         title: plan.name,
         handle,
         description: plan.description || undefined,
-        status: opts.publishNew ? "published" : "draft",
+        status: totalStock > 0 && opts.publishNew ? "published" : "draft",
         discountable: true,
         metadata: {
           shopee_product_id: plan.pid,
@@ -699,6 +859,7 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
       existingByShopeeId.set(plan.pid, {
         id: res.product.id,
         handle,
+        status: totalStock > 0 && opts.publishNew ? "published" : "draft",
         metadata: {
           shopee_product_id: plan.pid,
           shopee_parent_sku: plan.key,
@@ -721,6 +882,11 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
         shopee_parent_sku: plan.key,
         ...docMetadata,
       },
+      ...(totalStock === 0
+        ? { status: "draft" }
+        : existing.status !== "published" && opts.publishNew
+          ? { status: "published" }
+          : {}),
     }
     if (opts.syncContent) {
       const fresh = (await get(
@@ -863,12 +1029,37 @@ export type PreviewInput = {
   salesBuf: Buffer
   basicBuf?: Buffer
   mediaBuf?: Buffer
+  shipBuf?: Buffer
   cleanDesc?: boolean
+}
+
+// Returns the exact Berat header text when the sheet has a weight column,
+// null otherwise. Preview surfaces this so a missing column is visible
+// BEFORE importing (weights silently default otherwise).
+export const detectWeightHeader = (buf: Buffer): string | null => {
+  const rows = toRows(buf)
+  const idx = detectWeightCol(rows)
+  if (idx < 0) {
+    return null
+  }
+  for (const r of rows.slice(0, 10)) {
+    if (/^\d+$/.test(str(r[S.PRODUCT_ID]))) {
+      continue
+    }
+    const cell = str(r[idx])
+    if (/berat/i.test(cell)) {
+      return cell
+    }
+  }
+  return null
 }
 
 // Preview = full parse + plan + live index, no writes. Shared by the
 // preview endpoint and dry-run mode.
 export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> => {
+  const ship = parseShip(input.shipBuf)
+  const weightColumn =
+    ship.header ?? detectWeightHeader(input.salesBuf)
   const sales = parseSales(input.salesBuf)
   const descriptions = parseBasic(input.basicBuf)
   const media = parseMedia(input.mediaBuf)
@@ -876,7 +1067,8 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
     sales,
     descriptions,
     media,
-    !!input.cleanDesc
+    !!input.cleanDesc,
+    ship
   )
 
   const get = (path: string) =>
@@ -945,6 +1137,7 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
     updates: plans.filter((p) => matched.has(p.pid)).length,
     skipped,
     categoriesToCreate,
+    weightColumn,
     withDescriptions: plans.filter((p) => p.description.length > 0).length,
     withImages: plans.filter((p) => p.images.length > 0).length,
     sample: plans.slice(0, 8).map((p) => ({
@@ -952,6 +1145,7 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
       name: p.name,
       variants: p.variants.length,
       priceRange: priceRange(p),
+      stock: p.variants.reduce((n, v) => n + v.stock, 0),
       action: (matched.has(p.pid) ? "update" : "create") as "update" | "create",
     })),
   }

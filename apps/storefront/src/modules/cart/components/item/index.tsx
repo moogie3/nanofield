@@ -21,8 +21,14 @@ type ItemProps = {
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [error, setError] = useState<string | null>(null)
 
-  // TODO: Update this to grab the actual max inventory
-  const maxQuantity = 10
+  // Real cap from the variant: + grays out exactly at available stock.
+  // Backorderable variants (or unknown quantity) keep the old cap of 10.
+  const variantQty = item.variant?.inventory_quantity
+  const maxQuantity =
+    item.variant?.allow_backorder ||
+    !(typeof variantQty === "number" && variantQty > 0)
+      ? 10
+      : variantQty
 
   return (
     <Table.Row className="w-full" data-testid="product-row">
@@ -62,12 +68,15 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             <QuantityStepper
               lineId={item.id}
               quantity={item.quantity}
-              max={Math.min(maxQuantity, 10)}
+              max={maxQuantity}
               onUpdateError={setError}
               data-testid="product-quantity-stepper"
             />
           </div>
-          <ErrorMessage error={error} data-testid="product-error-message" />
+          {/* Reserved line: the error appearing must not reflow the row. */}
+          <div className="mt-1 min-h-5">
+            <ErrorMessage error={error} data-testid="product-error-message" />
+          </div>
         </Table.Cell>
       )}
 

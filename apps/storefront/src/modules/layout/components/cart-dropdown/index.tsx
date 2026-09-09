@@ -105,7 +105,7 @@ const CartDropdown = ({
         >
           <PopoverPanel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-popover border-x border-b border-border w-[320px] text-popover-foreground"
+            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-popover border-x border-b border-border w-[420px] text-popover-foreground"
             data-testid="nav-cart-dropdown"
           >
             <div className="p-3 flex items-center justify-center">
@@ -142,7 +142,7 @@ const CartDropdown = ({
                         <div className="flex flex-col justify-between flex-1">
                           <div className="flex flex-col flex-1">
                             <div className="flex items-start justify-between gap-2">
-                              <div className="flex flex-col overflow-ellipsis whitespace-nowrap mr-2 w-[140px]">
+                              <div className="flex flex-col overflow-ellipsis whitespace-nowrap mr-2 w-[220px]">
                                 <h3 className="text-base-regular overflow-hidden text-ellipsis">
                                   <LocalizedClientLink
                                     href={`/products/${item.product_handle}`}

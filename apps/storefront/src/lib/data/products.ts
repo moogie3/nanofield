@@ -161,3 +161,26 @@ export const listProductsWithSort = async ({
     queryParams,
   }
 }
+
+// Ranked product ids for a search query (Postgres full-text + trigram,
+// typo-tolerant). Hydration through listProducts keeps pricing/region logic
+// in one place; callers reorder by these ids to preserve rank. Not cached:
+// search volume is tiny and the index changes on import.
+export const searchProductIds = async (
+  query: string,
+  limit = 100
+): Promise<string[]> => {
+  const q = query.trim()
+  if (!q) {
+    return []
+  }
+  const { ids } = await sdk.client.fetch<{ ids: string[] }>(
+    `/store/search`,
+    {
+      method: "GET",
+      query: { q, limit },
+      cache: "no-store",
+    }
+  )
+  return Array.isArray(ids) ? ids : []
+}

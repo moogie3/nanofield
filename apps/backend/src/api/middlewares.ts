@@ -5,13 +5,14 @@ import multer from "multer"
 // used because the API body limit rejects multi-MB payloads).
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024, files: 3 },
+  limits: { fileSize: 8 * 1024 * 1024, files: 4 },
 })
 
 const shopeeFiles = upload.fields([
   { name: "sales", maxCount: 1 },
   { name: "basic", maxCount: 1 },
   { name: "media", maxCount: 1 },
+  { name: "ship", maxCount: 1 },
 ])
 
 export default defineMiddlewares({

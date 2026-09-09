@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
+import SearchField from "@modules/store/components/search-field"
 
 const STATS = ["900+ parts in stock", "34 categories", "Datasheet-backed"]
 
@@ -921,6 +922,12 @@ const Hero = () => {
           by IC part number, browse datasheets, and check real-time B2B/B2C
           stock.
         </p>
+        <div
+          className="animate-hero-rise flex w-full justify-center px-4"
+          style={{ animationDelay: "230ms" }}
+        >
+          <SearchField variant="hero" />
+        </div>
         <div
           className="animate-hero-rise flex flex-wrap items-center justify-center gap-4"
           style={{ animationDelay: "270ms" }}

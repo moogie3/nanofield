@@ -1,5 +1,8 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import {
+  ContainerRegistrationKeys,
+  MedusaError,
+} from "@medusajs/framework/utils"
 
 // Postgres full-text + trigram product search (no external engine).
 // Returns ranked product ids; the storefront hydrates them through the
@@ -24,20 +27,23 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const like = `%${q}%`
   try {
     const rows = await query(trgmSql, [exact, like, q, limit])
-    const ids = rows.map((r: { id: string }) => r.id)
-    res.status(200).json({ ids, total: ids.length, q })
-  } catch (e) {
-    // TEMPORARY: surface the real error while stabilizing the route.
-    res.status(200).json({
-      ids: [],
-      total: 0,
-      q,
-      debug: String((e as Error)?.message || e).slice(0, 300),
-    })
+    res.status(200).json(toPayload(rows, q))
+  } catch {
+    const rows = await query(plainSql, [exact, like, limit])
+    res.status(200).json(toPayload(rows, q))
   }
 }
 
-type QueryFn = (sql: string, params: unknown[]) => Promise<{ id: string }[]>
+export type SearchRow = { id: string; handle: string; title: string }
+
+type QueryFn = (sql: string, params: unknown[]) => Promise<SearchRow[]>
+
+const toPayload = (rows: SearchRow[], q: string) => ({
+  ids: rows.map((r) => r.id),
+  items: rows.map((r) => ({ id: r.id, handle: r.handle, title: r.title })),
+  total: rows.length,
+  q,
+})
 
 const resolveQuery = async (req: MedusaRequest): Promise<QueryFn> => {
   const scope = req.scope as unknown as {
@@ -56,26 +62,40 @@ const resolveQuery = async (req: MedusaRequest): Promise<QueryFn> => {
   } | null
   if (manager && typeof manager.execute === "function") {
     return async (sql, params) =>
-      (await manager.execute(sql, params)) as { id: string }[]
+      (await manager.execute(sql, params)) as SearchRow[]
   }
   // Shared pg connection: Knex (.raw, ? placeholders) or raw pg Pool
   // (.query, $n placeholders).
   const conn = tryResolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as {
-    raw?: (sql: string, params?: unknown[]) => Promise<{ rows: { id: string }[] }>
-    query?: (sql: string, params?: unknown[]) => Promise<{ rows: { id: string }[] }>
+    raw?: (sql: string, params?: unknown[]) => Promise<{ rows: SearchRow[] }>
+    query?: (sql: string, params?: unknown[]) => Promise<{ rows: SearchRow[] }>
   } | null
   if (conn && typeof conn.raw === "function") {
-    const qmarks = (sql: string) => sql.replace(/\$\d+/g, "?")
-    return async (sql, params) => (await conn.raw!(qmarks(sql), params)).rows
+    // Knex binds positionally: every ? consumes the next param, so each
+    // $n occurrence must expand to its own ? with the value repeated.
+    return async (sql, params) => {
+      const ordered: unknown[] = []
+      const converted = sql.replace(
+        /\$(\d+)/g,
+        (_m, n: string) => {
+          ordered.push(params[Number(n) - 1])
+          return "?"
+        }
+      )
+      return (await conn.raw!(converted, ordered)).rows
+    }
   }
   if (conn && typeof conn.query === "function") {
     return async (sql, params) => (await conn.query!(sql, params)).rows
   }
-  throw new Error("no database connection in scope (manager/pg_connection)")
+  throw new MedusaError(
+    MedusaError.Types.UNEXPECTED_STATE,
+    "no database connection in scope (manager/pg_connection)"
+  )
 }
 
 const trgmSql = `
-SELECT p.id,
+SELECT p.id, p.handle, p.title,
   GREATEST(
     CASE WHEN EXISTS (
       SELECT 1 FROM product_variant v
@@ -110,7 +130,7 @@ LIMIT $4
 `
 
 const plainSql = `
-SELECT p.id,
+SELECT p.id, p.handle, p.title,
   GREATEST(
     CASE WHEN EXISTS (
       SELECT 1 FROM product_variant v

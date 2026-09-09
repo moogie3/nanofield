@@ -35,10 +35,10 @@ const AddressSelect = ({
   }, [addresses, addressInput])
 
   return (
-    <Listbox onChange={handleSelect} value={selectedAddress?.id}>
+    <Listbox onChange={handleSelect} value={selectedAddress?.id ?? ""}>
       <div className="relative">
         <Listbox.Button
-          className="relative w-full flex justify-between items-center px-4 py-[10px] text-left bg-popover cursor-default focus:outline-none border border-border rounded-rounded focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:ring-offset-2 focus-visible:border-border text-base-regular"
+          className="relative w-full flex justify-between items-center px-4 py-[10px] text-left bg-ui-bg-field text-ui-fg-base cursor-default focus:outline-none border border-border rounded-rounded focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:ring-offset-2 focus-visible:border-border text-base-regular"
           data-testid="shipping-address-select"
         >
           {({ open }) => (
@@ -63,7 +63,7 @@ const AddressSelect = ({
           leaveTo="opacity-0"
         >
           <Listbox.Options
-            className="absolute z-20 w-full overflow-auto text-small-regular bg-popover border border-border border-top-0 max-h-60 focus:outline-none sm:text-sm"
+            className="absolute z-20 w-full overflow-auto text-small-regular bg-ui-bg-field text-ui-fg-base border border-border border-top-0 max-h-60 focus:outline-none sm:text-sm"
             data-testid="shipping-address-options"
           >
             {addresses.map((address) => {

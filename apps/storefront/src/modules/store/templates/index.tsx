@@ -5,6 +5,7 @@ import PageBackdrop from "@modules/common/components/page-backdrop"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import SearchField from "@modules/store/components/search-field"
 
 import PaginatedProducts from "./paginated-products"
 
@@ -15,6 +16,8 @@ const StoreTemplate = ({
   countryCode,
   optionValueIds,
   categoryIds,
+  query,
+  productsIds,
 }: {
   sortBy?: SortOptions
   page?: string
@@ -22,6 +25,8 @@ const StoreTemplate = ({
   countryCode: string
   optionValueIds?: OptionValueIds
   categoryIds?: string[]
+  query?: string
+  productsIds?: string[]
 }) => {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -34,6 +39,7 @@ const StoreTemplate = ({
     sort,
     page: pageNumber,
     view: view ?? "grid",
+    q: query ?? "",
   })
 
   return (
@@ -94,6 +100,21 @@ const StoreTemplate = ({
       <div className="flex flex-col small:flex-row small:items-start small:gap-8">
         <RefinementList sortBy={sort} />
         <div className="w-full">
+          <div className="mb-4 flex flex-col gap-3 small:flex-row small:items-center small:justify-between">
+            <SearchField initialValue={query ?? ""} />
+            {query && (
+              <p className="shrink-0 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                {(productsIds ?? []).length} result
+                {(productsIds ?? []).length === 1 ? "" : "s"} for &ldquo;{query}&rdquo;{" "}
+                <a
+                  href={`/${countryCode}/store`}
+                  className="text-primary underline underline-offset-2"
+                >
+                  clear
+                </a>
+              </p>
+            )}
+          </div>
           <Suspense key={gridKey} fallback={<SkeletonProductGrid />}>
             <PaginatedProducts
               sortBy={sort}
@@ -102,6 +123,7 @@ const StoreTemplate = ({
               countryCode={countryCode}
               optionValueIds={optionValueIds}
               categoryIds={categoryIds}
+              productsIds={productsIds}
             />
           </Suspense>
         </div>

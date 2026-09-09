@@ -91,7 +91,7 @@ Open `http://localhost:8000/dk/store`. Or run everything at once from the root w
 ### 6. Load catalog data (pick one)
 
 - **Demo seed (12 semiconductor SKUs, placeholder prices)** — proves the metadata-to-UI path: with the backend running, run the seeder in `apps/backend` (see `nanofield_ecommerce_plan.md` Section 0 for script details).
-- **Real catalog (Shopee Excel exports)** — open the admin at `/app/ecomm-import`, upload the sales/basic/media workbooks, run **Preview** first (validates without writing), then **Execute**. The same pipeline is drivable from the CLI (`apps/backend/import-shopee.mjs`). Clean out demo/seed and loadtest products before the real import (see plan Section 6 for SKU collisions to resolve first).
+- **Real catalog (Shopee Excel exports)** — open the admin at `/app/ecomm-import`, upload the sales/basic/media/shipping workbooks, run **Preview** first (validates without writing), then **Execute**. The same pipeline is drivable from the CLI (`apps/backend/scripts/import-shopee.mjs`). Clean out demo/seed and loadtest products before the real import (see plan Section 6 for SKU collisions to resolve first).
 
 ## Everyday commands
 

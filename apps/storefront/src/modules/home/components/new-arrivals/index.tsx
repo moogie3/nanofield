@@ -25,7 +25,7 @@ export default async function NewArrivals({
         new Date(b.created_at ?? 0).getTime() -
         new Date(a.created_at ?? 0).getTime()
     )
-    .slice(0, 6)
+    .slice(0, 12)
 
   if (!recent.length) {
     return null
@@ -50,7 +50,7 @@ export default async function NewArrivals({
             View all →
           </LocalizedClientLink>
         </div>
-        <ul className="grid grid-cols-3 gap-x-2 gap-y-3 small:grid-cols-6 small:gap-x-3">
+        <ul className="grid grid-cols-2 gap-x-2 gap-y-3 small:grid-cols-6 small:gap-x-3">
           {recent.map((product) => {
             const metadata = (product.metadata ?? {}) as Record<string, any>
             const partNumber = String(

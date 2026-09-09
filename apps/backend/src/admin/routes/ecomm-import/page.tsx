@@ -11,6 +11,7 @@ type PreviewSample = {
   name: string
   variants: number
   priceRange: string
+  stock: number
   action: "create" | "update"
 }
 
@@ -24,6 +25,7 @@ type PreviewInfo = {
   categoriesToCreate: string[]
   withDescriptions: number
   withImages: number
+  weightColumn: string | null
   sample: PreviewSample[]
 }
 
@@ -59,7 +61,12 @@ const UploadRouteIcon = () => {
   return <ArrowUpTray />
 }
 
-type Files = { sales: File | null; basic: File | null; media: File | null }
+type Files = {
+  sales: File | null
+  basic: File | null
+  media: File | null
+  ship: File | null
+}
 
 const postFiles = async (
   path: string,
@@ -75,6 +82,9 @@ const postFiles = async (
   }
   if (files.media) {
     form.append("media", files.media)
+  }
+  if (files.ship) {
+    form.append("ship", files.ship)
   }
   for (const [k, v] of Object.entries(options)) {
     form.append(k, v)
@@ -150,7 +160,12 @@ const OptionRow = ({
 )
 
 const ImportPage = () => {
-  const [files, setFiles] = useState<Files>({ sales: null, basic: null, media: null })
+  const [files, setFiles] = useState<Files>({
+    sales: null,
+    basic: null,
+    media: null,
+    ship: null,
+  })
   const [publishNew, setPublishNew] = useState(false)
   const [syncContent, setSyncContent] = useState(false)
   const [cleanDesc, setCleanDesc] = useState(true)
@@ -276,6 +291,13 @@ const ImportPage = () => {
             file={files.media}
             onChange={(f) => setFiles((s) => ({ ...s, media: f }))}
           />
+          <FileRow
+            id="imp-ship"
+            label="Informasi Pengiriman"
+            hint="Optional. Per-variation weights in grams (Berat Produk/g) for exact shipping quotes."
+            file={files.ship}
+            onChange={(f) => setFiles((s) => ({ ...s, ship: f }))}
+          />
         </div>
       </Container>
 
@@ -392,6 +414,18 @@ const ImportPage = () => {
           )}
           <div className="mt-3">
             <Text size="small" className="font-medium">
+              Weight column:{" "}
+              {preview.weightColumn ? (
+                <Badge color="green">{preview.weightColumn}</Badge>
+              ) : (
+                <Badge color="red">
+                  not found — variants will quote at 500g
+                </Badge>
+              )}
+            </Text>
+          </div>
+          <div className="mt-3">
+            <Text size="small" className="font-medium">
               Sample rows
             </Text>
             <div className="mt-1 divide-y divide-ui-border-base rounded-lg border border-ui-border-base">
@@ -405,7 +439,7 @@ const ImportPage = () => {
                       {s.name}
                     </Text>
                     <Text size="xsmall" className="font-mono text-ui-fg-subtle">
-                      {s.key} · {s.variants} variant(s) · {s.priceRange}
+                      {s.key} · {s.variants} variant(s) · {s.priceRange} · stock {s.stock}
                     </Text>
                   </div>
                   <Badge color={s.action === "create" ? "green" : "grey"}>

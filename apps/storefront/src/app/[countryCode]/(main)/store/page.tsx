@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 
+import { searchProductIds } from "@lib/data/products"
 import { parseOptionValueIds } from "@lib/util/product-option-filters"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
@@ -16,6 +17,7 @@ type StorePageSearchParams = Record<string, string | string[] | undefined> & {
   view?: "grid" | "list"
   optionValueIds?: string | string[]
   category?: string | string[]
+  q?: string
 }
 
 type Params = {
@@ -29,12 +31,14 @@ export default async function StorePage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
   const { sortBy, page, category, view } = searchParams
+  const query = typeof searchParams.q === "string" ? searchParams.q.trim() : ""
   const optionValueIds = parseOptionValueIds(searchParams)
   const categoryIds = Array.isArray(category)
     ? category
     : category
       ? [category]
       : []
+  const productsIds = query ? await searchProductIds(query) : undefined
 
   return (
     <StoreTemplate
@@ -44,6 +48,8 @@ export default async function StorePage(props: Params) {
       countryCode={params.countryCode}
       optionValueIds={optionValueIds}
       categoryIds={categoryIds}
+      query={query || undefined}
+      productsIds={productsIds}
     />
   )
 }
