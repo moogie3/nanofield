@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import {
   buildPlans,
+  describeWorkbook,
   parseBasic,
   parseMedia,
   parseSales,
@@ -59,13 +60,45 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   void (async () => {
     try {
-      pushEvent(job, `parsed ${sales.originalname} (${sales.size} bytes)`)
+      const basic = files.basic?.[0]
+      const media = files.media?.[0]
+      const shipFile = files.ship?.[0]
+      const received = [
+        `sales=${sales.originalname} (${sales.size} bytes)`,
+        `basic=${basic ? `${basic.originalname} (${basic.size} bytes)` : "—"}`,
+        `media=${media ? `${media.originalname} (${media.size} bytes)` : "—"}`,
+        `ship=${shipFile ? `${shipFile.originalname} (${shipFile.size} bytes)` : "—"}`,
+      ].join(", ")
+      pushEvent(job, `received ${received}`)
+      const salesDiag = describeWorkbook(sales.buffer)
+      const salesRows = parseSales(sales.buffer)
+      const descriptions = parseBasic(files.basic?.[0]?.buffer)
+      const mediaMap = parseMedia(files.media?.[0]?.buffer)
+      const ship = parseShip(files.ship?.[0]?.buffer)
+      pushEvent(
+        job,
+        `parsed sales: ${salesDiag.totalRows} rows, ${salesDiag.dataRows} data rows ` +
+          `(sheets: ${salesDiag.sheets.join("|") || "?"})`
+      )
+      pushEvent(
+        job,
+        `parsed basic=${descriptions.size} descriptions, ` +
+          `media=${mediaMap.size} products, ` +
+          `ship=${ship.byVariation.size + ship.byProduct.size} weights`
+      )
+      if (!salesRows.length) {
+        pushEvent(
+          job,
+          `WARNING: 0 sales data rows — sales headers: [${salesDiag.headers.join(" | ") || "?"}]. ` +
+            `Check the Informasi Penjualan file is in the Penjualan slot (not Dasar/Media/Pengiriman).`
+        )
+      }
       const { plans, skipped } = buildPlans(
-        parseSales(sales.buffer),
-        parseBasic(files.basic?.[0]?.buffer),
-        parseMedia(files.media?.[0]?.buffer),
+        salesRows,
+        descriptions,
+        mediaMap,
         options.cleanDesc,
-        parseShip(files.ship?.[0]?.buffer)
+        ship
       )
       pushEvent(
         job,

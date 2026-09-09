@@ -44,6 +44,16 @@ export type PreviewInfo = {
   // Detected weight header text ("Berat (gr)" etc.), or null when the sheet
   // has no Berat column — variants then fall back to 500g in quotes.
   weightColumn: string | null
+  // Per-file parse diagnostics: row counts + detected headers so a 0-product
+  // preview shows WHY (wrong file in a slot, renamed template, empty export).
+  diag: {
+    sales: WorkbookDiag
+    basic: WorkbookDiag
+    media: WorkbookDiag
+    ship: WorkbookDiag & { weights: number }
+    descriptions: number
+    mediaProducts: number
+  }
 }
 
 // --- column maps (see Shopee Mass Update templates) ---
@@ -68,13 +78,33 @@ const M = {
 
 type Row = (string | number | undefined)[]
 
-const toRows = (buf: Buffer): Row[] => {
-  const wb = XLSX.read(buf, { type: "buffer" })
-  return XLSX.utils.sheet_to_json<Row>(wb.Sheets[wb.SheetNames[0]], {
-    header: 1,
-    blankrows: false,
-  }) as Row[]
+type WorkbookRead = {
+  sheetNames: string[]
+  rows: Row[]
+  totalRows: number
 }
+
+// Shopee workbooks sometimes put an instruction/cover sheet first, so every
+// parser reads ALL sheets and concatenates data rows. A pure-instruction
+// sheet contributes zero data rows, so concat is safe and fixes the silent
+// "0 products" case where SheetNames[0] was not the data sheet.
+const readWorkbook = (buf: Buffer): WorkbookRead => {
+  const wb = XLSX.read(buf, { type: "buffer" })
+  const sheetNames = wb.SheetNames || []
+  const rows: Row[] = []
+  for (const name of sheetNames) {
+    const sheetRows = XLSX.utils.sheet_to_json<Row>(wb.Sheets[name], {
+      header: 1,
+      blankrows: false,
+    }) as Row[]
+    for (const r of sheetRows) {
+      rows.push(r)
+    }
+  }
+  return { sheetNames, rows, totalRows: rows.length }
+}
+
+const toRows = (buf: Buffer): Row[] => readWorkbook(buf).rows
 
 const str = (v: string | number | undefined): string =>
   String(v ?? "").trim()
@@ -142,11 +172,11 @@ export type SalesRow = {
 }
 
 // Weight column ("Berat") moves between Shopee template revisions, so it is
-// located by header name instead of a fixed index. First ~10 non-data rows
+// located by header name instead of a fixed index. First ~12 non-data rows
 // are scanned for a cell containing "berat" (case-insensitive).
-export const detectWeightCol = (rows: Row[]): number => {
-  for (const r of rows.slice(0, 10)) {
-    if (/^\d+$/.test(str(r[S.PRODUCT_ID]))) {
+export const detectWeightCol = (rows: Row[], pidIdx = S.PRODUCT_ID): number => {
+  for (const r of rows.slice(0, 12)) {
+    if (/^\d+$/.test(str(r[pidIdx]))) {
       continue
     }
     const idx = r.findIndex((c) => /berat/i.test(str(c)))
@@ -193,10 +223,19 @@ export const parseIdNumber = (v: string | number | undefined): number => {
 // revisions like Berat does. Exact header match wins; contains-match is the
 // fallback (avoids "Stok Aman" shadowing a real "Stok" column when both
 // exist — exact is checked across all header rows first).
-const detectLabeledCol = (rows: Row[], exact: RegExp, fuzzy: RegExp): number => {
+// pidIdx is the already-detected product-id column: header rows are rows
+// whose pid cell is NOT numeric, so detection must use it instead of the
+// fixed S.PRODUCT_ID (a shifted template would otherwise treat every header
+// row as data and every data row as a header).
+const detectLabeledCol = (
+  rows: Row[],
+  exact: RegExp,
+  fuzzy: RegExp,
+  pidIdx = S.PRODUCT_ID
+): number => {
   const headerRows = rows
-    .slice(0, 10)
-    .filter((r) => !/^\d+$/.test(str(r[S.PRODUCT_ID])))
+    .slice(0, 12)
+    .filter((r) => !/^\d+$/.test(str(r[pidIdx])))
   for (const r of headerRows) {
     const idx = r.findIndex((c) => exact.test(str(c).trim()))
     if (idx >= 0) {
@@ -212,24 +251,110 @@ const detectLabeledCol = (rows: Row[], exact: RegExp, fuzzy: RegExp): number => 
   return -1
 }
 
+// Product-id column ("Kode Produk") moves too. Located by header name with
+// a fixed-index fallback; data rows are rows whose pid cell is numeric.
+const detectPidCol = (rows: Row[], fallback = 0): number => {
+  const hit = detectLabeledCol(
+    rows,
+    /^(kode produk|product id|id produk|kodeproduk)$/i,
+    /kode produk|product.?id/i,
+    fallback
+  )
+  if (hit >= 0) {
+    return hit
+  }
+  // No labeled header (or header uses an unknown wording): pick the first
+  // column in the leading rows that actually holds numeric ids.
+  for (let c = 0; c < 4; c++) {
+    if (rows.some((r) => /^\d+$/.test(str(r[c])))) {
+      return c
+    }
+  }
+  return fallback
+}
+
+const isDataRow = (r: Row, pidIdx: number): boolean =>
+  /^\d+$/.test(str(r[pidIdx]))
+
+// Header texts of the data sheet (first non-data row with the most filled
+// cells in the leading rows). Surfaced in preview so a 0-product parse shows
+// WHY — e.g. wrong file in the sales slot, or a renamed template.
+export const detectHeaders = (rows: Row[], pidIdx: number): string[] => {
+  let best: Row | null = null
+  for (const r of rows.slice(0, 12)) {
+    if (isDataRow(r, pidIdx)) {
+      continue
+    }
+    const filled = r.filter((c) => str(c).length > 0).length
+    if (filled >= 3 && (!best || filled > best.filter((c) => str(c).length > 0).length)) {
+      best = r
+    }
+  }
+  return (best || []).map((c) => str(c))
+}
+
+export type WorkbookDiag = {
+  sheets: string[]
+  totalRows: number
+  dataRows: number
+  headers: string[]
+}
+
+// Per-file diagnostics for preview + job logs. Never throws: a corrupt file
+// reports zero rows instead of killing the whole import.
+export const describeWorkbook = (buf: Buffer | undefined): WorkbookDiag => {
+  if (!buf) {
+    return { sheets: [], totalRows: 0, dataRows: 0, headers: [] }
+  }
+  try {
+    const { sheetNames, rows } = readWorkbook(buf)
+    const pidIdx = detectPidCol(rows)
+    return {
+      sheets: sheetNames,
+      totalRows: rows.length,
+      dataRows: rows.filter((r) => isDataRow(r, pidIdx)).length,
+      headers: detectHeaders(rows, pidIdx),
+    }
+  } catch {
+    return { sheets: [], totalRows: 0, dataRows: 0, headers: [] }
+  }
+}
+
 export const parseSales = (buf: Buffer): SalesRow[] => {
   const rows = toRows(buf)
+  const pidIdx = detectPidCol(rows, S.PRODUCT_ID)
+  const nameIdx =
+    detectLabeledCol(rows, /^(nama produk|product name|nama)$/i, /nama produk|product name/i, pidIdx) >= 0
+      ? detectLabeledCol(rows, /^(nama produk|product name|nama)$/i, /nama produk|product name/i, pidIdx)
+      : S.NAME
+  const varIdIdx =
+    detectLabeledCol(rows, /^(kode variasi|variation id|id variasi)$/i, /kode variasi|variation.?id/i, pidIdx) >= 0
+      ? detectLabeledCol(rows, /^(kode variasi|variation id|id variasi)$/i, /kode variasi|variation.?id/i, pidIdx)
+      : S.VARIATION_ID
+  const varNameIdx =
+    detectLabeledCol(rows, /^(nama variasi|variation name|nama varian)$/i, /nama variasi|variation name|nama varian|varian/i, pidIdx) >= 0
+      ? detectLabeledCol(rows, /^(nama variasi|variation name|nama varian)$/i, /nama variasi|variation name|nama varian|varian/i, pidIdx)
+      : S.VARIATION_NAME
+  const skuIdx =
+    detectLabeledCol(rows, /^(sku induk|parent sku|sku utama)$/i, /sku induk|parent sku/i, pidIdx) >= 0
+      ? detectLabeledCol(rows, /^(sku induk|parent sku|sku utama)$/i, /sku induk|parent sku/i, pidIdx)
+      : S.PARENT_SKU
   const weightCol = detectWeightCol(rows)
-  const priceCol = detectLabeledCol(rows, /^(harga|price)$/i, /harga|price/i)
-  const stockCol = detectLabeledCol(rows, /^(stok|stock)$/i, /stok|stock|jumlah|qty|quantity/i)
+  const priceCol = detectLabeledCol(rows, /^(harga|price)$/i, /harga|price/i, pidIdx)
+  const stockCol = detectLabeledCol(rows, /^(stok|stock)$/i, /stok|stock|jumlah|qty|quantity/i, pidIdx)
   const priceIdx = priceCol >= 0 ? priceCol : S.PRICE
   const stockIdx = stockCol >= 0 ? stockCol : S.STOCK
   return rows
-    .filter((r) => /^\d+$/.test(str(r[S.PRODUCT_ID])))
+    .filter((r) => isDataRow(r, pidIdx))
     .map((r) => {
       const price = Math.round(parseIdNumber(r[priceIdx]))
       const stockRaw = Math.floor(parseIdNumber(r[stockIdx]))
       return {
-        pid: str(r[S.PRODUCT_ID]),
-        name: str(r[S.NAME]),
-        variationId: str(r[S.VARIATION_ID]),
-        variationName: str(r[S.VARIATION_NAME]),
-        parentSku: str(r[S.PARENT_SKU]),
+        pid: str(r[pidIdx]),
+        name: str(r[nameIdx]),
+        variationId: str(r[varIdIdx]),
+        variationName: str(r[varNameIdx]),
+        parentSku: str(r[skuIdx]),
         price: Number.isFinite(price) && price >= 0 ? price : null,
         stock:
           Number.isFinite(stockRaw) && stockRaw > 0 ? stockRaw : 0,
@@ -244,11 +369,27 @@ export const parseBasic = (buf: Buffer | undefined): Map<string, string> => {
   if (!buf) {
     return map
   }
-  for (const r of toRows(buf)) {
-    if (!/^\d+$/.test(str(r[B.PRODUCT_ID]))) {
+  const rows = toRows(buf)
+  const pidIdx = detectPidCol(rows, B.PRODUCT_ID)
+  const descIdx =
+    detectLabeledCol(
+      rows,
+      /^(deskripsi produk|description|deskripsi)$/i,
+      /deskripsi|description/i,
+      pidIdx
+    ) >= 0
+      ? detectLabeledCol(
+          rows,
+          /^(deskripsi produk|description|deskripsi)$/i,
+          /deskripsi|description/i,
+          pidIdx
+        )
+      : B.DESCRIPTION
+  for (const r of rows) {
+    if (!isDataRow(r, pidIdx)) {
       continue
     }
-    map.set(str(r[B.PRODUCT_ID]), String(r[B.DESCRIPTION] ?? ""))
+    map.set(str(r[pidIdx]), String(r[descIdx] ?? ""))
   }
   return map
 }
@@ -282,26 +423,53 @@ export const parseMedia = (buf: Buffer | undefined): Map<string, MediaEntry> => 
   if (!buf) {
     return map
   }
-  for (const r of toRows(buf)) {
-    if (!/^\d+$/.test(str(r[M.PRODUCT_ID]))) {
+  const rows = toRows(buf)
+  const pidIdx = detectPidCol(rows, M.PRODUCT_ID)
+  const catIdx =
+    detectLabeledCol(rows, /^(kategori|category)$/i, /kategori|category/i, pidIdx) >= 0
+      ? detectLabeledCol(rows, /^(kategori|category)$/i, /kategori|category/i, pidIdx)
+      : M.CATEGORY
+  // Image columns: every header matching foto/photo/image/gambar/sampul/
+  // cover, plus the legacy fixed ranges as fallback. Scanning the whole row
+  // for http URLs on top makes the parser immune to template column shifts.
+  const headerRow = detectHeaders(rows, pidIdx)
+  const imageCols = new Set<number>()
+  headerRow.forEach((h, i) => {
+    if (/foto|photo|image|gambar|sampul|cover/i.test(h)) {
+      imageCols.add(i)
+    }
+  })
+  for (let c = M.COVER; c <= M.PHOTO_LAST; c++) {
+    imageCols.add(c)
+  }
+  for (let n = 0; n < 10; n++) {
+    imageCols.add(M.VAR_FIRST_VALUE + n * 2 + 1)
+  }
+  for (const r of rows) {
+    if (!isDataRow(r, pidIdx)) {
       continue
     }
     const images: string[] = []
-    for (let c = M.COVER; c <= M.PHOTO_LAST; c++) {
+    for (const c of imageCols) {
       const u = str(r[c])
       if (isHttp(u) && !images.includes(u)) {
         images.push(u)
       }
     }
-    for (let n = 0; n < 10; n++) {
-      const img = str(r[M.VAR_FIRST_VALUE + n * 2 + 1])
-      if (isHttp(img) && !images.includes(img)) {
-        images.push(img)
+    // Last resort: any http cell in the row is a product image, whatever
+    // column Shopee moved it to.
+    if (!images.length) {
+      for (const cell of r) {
+        const u = str(cell)
+        if (isHttp(u) && !images.includes(u)) {
+          images.push(u)
+        }
       }
     }
-    map.set(str(r[M.PRODUCT_ID]), {
-      category: leafCategory(str(r[M.CATEGORY])),
-      categoryPath: str(r[M.CATEGORY]),
+    const pid = str(r[pidIdx])
+    map.set(pid, {
+      category: leafCategory(str(r[catIdx])),
+      categoryPath: str(r[catIdx]),
       images,
     })
   }
@@ -369,9 +537,9 @@ export const parseShip = (buf: Buffer | undefined): ShipWeights => {
   }
   const rows = toRows(buf)
   let weightIdx = -1
-  let pidIdx = 0
+  let pidIdx = detectPidCol(rows, 0)
   let vidIdx = 3
-  for (const r of rows.slice(0, 10)) {
+  for (const r of rows.slice(0, 12)) {
     const wi = r.findIndex((c) => /berat/i.test(str(c)))
     if (wi < 0) {
       continue
@@ -379,10 +547,10 @@ export const parseShip = (buf: Buffer | undefined): ShipWeights => {
     weightIdx = wi
     out.header = str(r[wi])
     r.forEach((c, i) => {
-      if (/kode produk/i.test(str(c))) {
+      if (/kode produk|product.?id/i.test(str(c))) {
         pidIdx = i
       }
-      if (/kode variasi/i.test(str(c))) {
+      if (/kode variasi|variation.?id/i.test(str(c))) {
         vidIdx = i
       }
     })
@@ -393,7 +561,7 @@ export const parseShip = (buf: Buffer | undefined): ShipWeights => {
   }
   const perPid = new Map<string, number[]>()
   for (const r of rows) {
-    if (!/^\d+$/.test(str(r[pidIdx]))) {
+    if (!isDataRow(r, pidIdx)) {
       continue
     }
     const grams = Math.round(parseIdNumber(r[weightIdx]))
@@ -1038,12 +1206,13 @@ export type PreviewInput = {
 // BEFORE importing (weights silently default otherwise).
 export const detectWeightHeader = (buf: Buffer): string | null => {
   const rows = toRows(buf)
-  const idx = detectWeightCol(rows)
+  const pidIdx = detectPidCol(rows)
+  const idx = detectWeightCol(rows, pidIdx)
   if (idx < 0) {
     return null
   }
-  for (const r of rows.slice(0, 10)) {
-    if (/^\d+$/.test(str(r[S.PRODUCT_ID]))) {
+  for (const r of rows.slice(0, 12)) {
+    if (isDataRow(r, pidIdx)) {
       continue
     }
     const cell = str(r[idx])
@@ -1063,6 +1232,10 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
   const sales = parseSales(input.salesBuf)
   const descriptions = parseBasic(input.basicBuf)
   const media = parseMedia(input.mediaBuf)
+  const salesDiag = describeWorkbook(input.salesBuf)
+  const basicDiag = describeWorkbook(input.basicBuf)
+  const mediaDiag = describeWorkbook(input.mediaBuf)
+  const shipDiag = describeWorkbook(input.shipBuf)
   const { plans, skipped } = buildPlans(
     sales,
     descriptions,
@@ -1140,6 +1313,14 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
     weightColumn,
     withDescriptions: plans.filter((p) => p.description.length > 0).length,
     withImages: plans.filter((p) => p.images.length > 0).length,
+    diag: {
+      sales: salesDiag,
+      basic: basicDiag,
+      media: mediaDiag,
+      ship: { ...shipDiag, weights: ship.byVariation.size + ship.byProduct.size },
+      descriptions: descriptions.size,
+      mediaProducts: media.size,
+    },
     sample: plans.slice(0, 8).map((p) => ({
       key: p.key,
       name: p.name,

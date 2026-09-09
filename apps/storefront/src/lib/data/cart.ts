@@ -431,8 +431,9 @@ export async function placeOrder(cartId?: string) {
  * @param countryCode
  */
 export async function updateRegion(countryCode: string, currentPath: string) {
+  const normalizedCountry = countryCode.toLowerCase()
   const cartId = await getCartId()
-  const region = await getRegion(countryCode)
+  const region = await getRegion(normalizedCountry)
 
   if (!region) {
     throw new Error(`Region not found for country code: ${countryCode}`)
@@ -450,7 +451,9 @@ export async function updateRegion(countryCode: string, currentPath: string) {
   const productsCacheTag = await getCacheTag("products")
   revalidateTag(productsCacheTag)
 
-  redirect(`/${countryCode}${currentPath}`)
+  const suffix =
+    !currentPath || currentPath === "/" ? "" : currentPath.startsWith("/") ? currentPath : `/${currentPath}`
+  redirect(`/${normalizedCountry}${suffix}`)
 }
 
 export async function listCartOptions() {

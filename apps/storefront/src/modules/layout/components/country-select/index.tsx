@@ -29,8 +29,21 @@ type CountrySelectProps = {
 const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
   const [current, setCurrent] = useState<CountryOption | undefined>(undefined)
 
-  const { countryCode } = useParams()
-  const currentPath = usePathname().split(`/${countryCode}`)[1]
+  const params = useParams()
+  const rawCountryCode = params?.countryCode
+  const countryCode =
+    typeof rawCountryCode === "string"
+      ? rawCountryCode.toLowerCase()
+      : Array.isArray(rawCountryCode)
+        ? rawCountryCode[0]?.toLowerCase()
+        : undefined
+  const pathname = usePathname()
+  // Strip only the leading /<countryCode> segment. The old
+  // `split(`/${countryCode}`)[1]` broke when the code appeared elsewhere
+  // in the path and produced `undefined` on non-localized routes.
+  const currentPath = countryCode
+    ? pathname.replace(new RegExp(`^/${countryCode}`, "i"), "") || "/"
+    : pathname
 
   const { state, close } = toggleState
 
@@ -38,25 +51,27 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
     return regions
       ?.map((r) => {
         return r.countries?.map((c) => ({
-          country: c.iso_2 ?? "",
+          country: (c.iso_2 ?? "").toLowerCase(),
           region: r.id,
           label: c.display_name ?? "",
         }))
       })
       .flat()
-      .filter((o): o is CountryOption => !!o)
+      .filter((o): o is CountryOption => !!o?.country)
       .sort((a, b) => a.label.localeCompare(b.label))
   }, [regions])
 
   useEffect(() => {
     if (countryCode) {
-      const option = options?.find((o) => o?.country === countryCode)
+      const option = options?.find(
+        (o) => o?.country.toLowerCase() === countryCode
+      )
       setCurrent(option)
     }
   }, [options, countryCode])
 
   const handleChange = (option: CountryOption) => {
-    updateRegion(option.country, currentPath)
+    updateRegion(option.country.toLowerCase(), currentPath)
     close()
   }
 
@@ -67,7 +82,9 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
         onChange={handleChange}
         defaultValue={
           countryCode
-            ? options?.find((o) => o?.country === countryCode)
+            ? options?.find(
+                (o) => o?.country.toLowerCase() === countryCode
+              )
             : undefined
         }
       >

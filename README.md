@@ -8,6 +8,8 @@ Project docs:
 
 - `whole.md` — whole-project state: architecture, what is built, conventions, gotchas
 - `nanofield_ecommerce_plan.md` — business/catalog plan, decision log, import checklist
+- `STARTING_MANUAL.md` — fresh-clone to working-checkout manual: setup order, Definition of Ready gates, admin reference
+- `ARCHITECTURE.md` — system sketch: backend, storefront, RajaOngkir, Shopee pipeline, and how they connect
 - `AGENTS.md` — contributor commands, package-manager rules, code style
 
 ## Repository layout
@@ -50,6 +52,8 @@ Edit `apps/backend/.env` and set at minimum:
 `STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` and `REDIS_URL` already default to local values in the template.
 
 ### 2. Migrate the database and create an admin user
+
+A fresh clone ships with **no administrator account** (there is no interactive `create-medusa-app` setup to generate one). The account must be created explicitly — every backend script (catalog seed, shipping setup, Shopee importer CLI) authenticates as this user, so nothing scripted can run before this step:
 
 ```bash
 cd apps/backend

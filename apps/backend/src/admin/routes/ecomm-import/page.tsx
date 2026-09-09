@@ -15,6 +15,13 @@ type PreviewSample = {
   action: "create" | "update"
 }
 
+type WorkbookDiag = {
+  sheets: string[]
+  totalRows: number
+  dataRows: number
+  headers: string[]
+}
+
 type PreviewInfo = {
   products: number
   variants: number
@@ -27,6 +34,21 @@ type PreviewInfo = {
   withImages: number
   weightColumn: string | null
   sample: PreviewSample[]
+  diag?: {
+    sales: WorkbookDiag
+    basic: WorkbookDiag
+    media: WorkbookDiag
+    ship: WorkbookDiag & { weights: number }
+    descriptions: number
+    mediaProducts: number
+  }
+}
+
+type PreviewFiles = {
+  sales: string
+  basic: string | null
+  media: string | null
+  ship: string | null
 }
 
 type ImportReport = {
@@ -170,6 +192,7 @@ const ImportPage = () => {
   const [syncContent, setSyncContent] = useState(false)
   const [cleanDesc, setCleanDesc] = useState(true)
   const [preview, setPreview] = useState<PreviewInfo | null>(null)
+  const [previewFiles, setPreviewFiles] = useState<PreviewFiles | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
@@ -221,11 +244,13 @@ const ImportPage = () => {
     setBusy(true)
     setError(null)
     setPreview(null)
+    setPreviewFiles(null)
     try {
       const data = (await postFiles("/admin/shopee-imports/preview", files, {
         cleanDesc: String(cleanDesc),
-      })) as { preview: PreviewInfo }
+      })) as { preview: PreviewInfo; files: PreviewFiles }
       setPreview(data.preview)
+      setPreviewFiles(data.files)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -354,6 +379,55 @@ const ImportPage = () => {
       {preview && (
         <Container>
           <Heading level="h2">Preview — no writes made</Heading>
+          {previewFiles && (
+            <div className="mt-3">
+              <Text size="small" className="font-medium">
+                Files received by the server
+              </Text>
+              <div className="mt-1 divide-y divide-ui-border-base rounded-lg border border-ui-border-base">
+                {(
+                  [
+                    ["Penjualan", previewFiles.sales, preview.diag?.sales],
+                    ["Dasar", previewFiles.basic, preview.diag?.basic],
+                    ["Media", previewFiles.media, preview.diag?.media],
+                    ["Pengiriman", previewFiles.ship, preview.diag?.ship],
+                  ] as [string, string | null, WorkbookDiag | undefined][]
+                ).map(([label, name, diag]) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between gap-3 px-3 py-2"
+                  >
+                    <Text size="small" className="font-medium">
+                      {label}
+                    </Text>
+                    <Text
+                      size="xsmall"
+                      className={`font-mono ${name ? "" : "text-ui-fg-subtle"}`}
+                    >
+                      {name
+                        ? `${name} — ${diag?.dataRows ?? 0} data rows / ${diag?.totalRows ?? 0} rows`
+                        : "not attached"}
+                    </Text>
+                  </div>
+                ))}
+              </div>
+              {preview.diag && preview.products === 0 && (
+                <Text size="small" className="mt-2 text-ui-fg-error">
+                  0 products parsed. Sales headers seen: [
+                  {preview.diag.sales.headers.join(" | ") || "?"}]. Make
+                  sure the Informasi Penjualan file is in the Penjualan slot
+                  (sheets: {preview.diag.sales.sheets.join(", ") || "?"}).
+                </Text>
+              )}
+              {preview.diag && (
+                <Text size="xsmall" className="mt-2 text-ui-fg-subtle">
+                  Dasar: {preview.diag.descriptions} descriptions · Media:{" "}
+                  {preview.diag.mediaProducts} products · Pengiriman:{" "}
+                  {preview.diag.ship.weights} weights
+                </Text>
+              )}
+            </div>
+          )}
           <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
               ["Products", preview.products],

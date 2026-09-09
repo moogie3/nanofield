@@ -49,12 +49,19 @@ async function getRegionMap(cacheId: string) {
     }
 
     // Create a map of country codes to regions.
+    // Rebuild from scratch so removed countries don't linger, and
+    // normalize to lowercase since URL segments are lowercased on lookup.
+    const freshMap = new Map<string, HttpTypes.StoreRegion>()
     regions.forEach((region: HttpTypes.StoreRegion) => {
       region.countries?.forEach((c) => {
-        regionMapCache.regionMap.set(c.iso_2 ?? "", region)
+        const code = c.iso_2?.toLowerCase()
+        if (code) {
+          freshMap.set(code, region)
+        }
       })
     })
 
+    regionMapCache.regionMap = freshMap
     regionMapCache.regionMapUpdated = Date.now()
   }
 
@@ -88,8 +95,8 @@ async function getCountryCode(
     countryCode = cloudflareCountryCode
   } else if (vercelCountryCode && regionMap.has(vercelCountryCode)) {
     countryCode = vercelCountryCode
-  } else if (regionMap.has(DEFAULT_REGION)) {
-    countryCode = DEFAULT_REGION
+  } else if (regionMap.has(DEFAULT_REGION.toLowerCase())) {
+    countryCode = DEFAULT_REGION.toLowerCase()
   } else if (regionMap.keys().next().value) {
     countryCode = regionMap.keys().next().value
   }
