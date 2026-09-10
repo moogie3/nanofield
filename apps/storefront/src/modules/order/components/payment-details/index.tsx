@@ -11,6 +11,9 @@ type PaymentDetailsProps = {
 
 const PaymentDetails = ({ order }: PaymentDetailsProps) => {
   const payment = order.payment_collections?.[0].payments?.[0]
+  const info = payment ? paymentInfoMap[payment.provider_id] : undefined
+  const capturedAt = (payment as { captured_at?: string } | undefined)
+    ?.captured_at
 
   return (
     <div>
@@ -28,7 +31,7 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                 className="txt-medium text-ui-fg-subtle"
                 data-testid="payment-method"
               >
-                {paymentInfoMap[payment.provider_id].title}
+                {info?.title ?? payment.provider_id}
               </Text>
             </div>
             <div className="flex flex-col w-2/3">
@@ -36,18 +39,23 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                 Payment details
               </Text>
               <div className="flex gap-2 txt-medium text-ui-fg-subtle items-center">
-                <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
-                  {paymentInfoMap[payment.provider_id].icon}
-                </Container>
+                {info?.icon && (
+                  <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
+                    {info.icon}
+                  </Container>
+                )}
                 <Text data-testid="payment-amount">
                   {isStripeLike(payment.provider_id) && payment.data?.card_last4
                     ? `**** **** **** ${payment.data.card_last4}`
-                    : `${convertToLocale({
-                        amount: payment.amount,
-                        currency_code: order.currency_code,
-                      })} paid at ${new Date(
-                        payment.created_at ?? ""
-                      ).toLocaleString()}`}
+                    : capturedAt
+                      ? `${convertToLocale({
+                          amount: payment.amount,
+                          currency_code: order.currency_code,
+                        })} paid at ${new Date(capturedAt).toLocaleString()}`
+                      : `Awaiting payment of ${convertToLocale({
+                          amount: payment.amount,
+                          currency_code: order.currency_code,
+                        })}`}
                 </Text>
               </div>
             </div>

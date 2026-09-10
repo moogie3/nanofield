@@ -9,6 +9,18 @@ type ShippingDetailsProps = {
 }
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
+  const active = (order.fulfillments ?? []).filter((f) => !f.canceled_at)
+  const shipmentState = order.status === "canceled"
+    ? "canceled"
+    : active.some((f) => f.delivered_at)
+      ? "delivered"
+      : active.some((f) => f.shipped_at)
+        ? "shipped"
+        : active.some((f) => f.packed_at)
+          ? "packed"
+          : "preparing"
+  const courier = (order.shipping_methods?.[0] as { name?: string })?.name
+
   return (
     <div>
       <Heading level="h2" className="flex flex-row text-3xl-regular my-6">
@@ -64,6 +76,18 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
             )
           </Text>
         </div>
+      </div>
+      <div className="mt-4" data-testid="shipment-status">
+        <Text className="txt-medium-plus text-ui-fg-base mb-1">Shipment</Text>
+        <Text className="txt-medium text-ui-fg-subtle">
+          {shipmentState === "delivered" && "Delivered — enjoy your components."}
+          {shipmentState === "shipped" &&
+            `On its way${courier ? ` with ${courier}` : ""} — the AWB is booked manually, ask support for the number.`}
+          {shipmentState === "packed" && "Packed — handing over to the courier."}
+          {shipmentState === "preparing" &&
+            "Seller is preparing your shipment."}
+          {shipmentState === "canceled" && "Order canceled — no shipment."}
+        </Text>
       </div>
       <Divider className="mt-8" />
     </div>

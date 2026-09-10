@@ -43,6 +43,23 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "@medusajs/medusa/payment",
+      options: {
+        providers: [
+          {
+            resolve: "./src/modules/midtrans-payment",
+            id: "midtrans",
+            options: {
+              serverKey: process.env.MIDTRANS_SERVER_KEY,
+              clientKey: process.env.MIDTRANS_CLIENT_KEY,
+              isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
+              storefrontUrl: process.env.STOREFRONT_URL,
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "@medusajs/medusa/notification",
       options: {
         providers: [

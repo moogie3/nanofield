@@ -222,10 +222,35 @@ const findSetAndZone = async () => {
       `cannot list fulfillment sets (${(e && e.message) || e}), aborting instead of risking duplicates`
     )
   }
-  const sets = tree.fulfillment_sets || []
-  const set = sets.find((s) => s && s.name === SET_NAME) || null
+  const sets = (tree.fulfillment_sets || []).filter(Boolean)
+  // Prefer the canonical name, but reuse an existing set when an operator
+  // named it differently (e.g. "AA shipping"): any set on THIS location
+  // with the expected zone or an `id` geo-zone is the same structure.
+  // This keeps a fresh machine to a single set no matter what it is called.
+  let set = sets.find((s) => s.name === SET_NAME) || null
+  if (!set) {
+    set =
+      sets.find((s) =>
+        (s.service_zones || []).some(
+          (z) =>
+            z &&
+            (z.name === ZONE_NAME ||
+              (z.geo_zones || []).some(
+                (g) => g && (g.country_code || "").toLowerCase() === "id"
+              ))
+        )
+      ) ||
+      (sets.length === 1 ? sets[0] : null)
+  }
   const zones = (set && set.service_zones) || []
-  const zone = zones.find((z) => z && z.name === ZONE_NAME) || null
+  const zone =
+    zones.find((z) => z && z.name === ZONE_NAME) ||
+    zones.find((z) =>
+      (z.geo_zones || []).some(
+        (g) => g && (g.country_code || "").toLowerCase() === "id"
+      )
+    ) ||
+    null
   return { set, zone }
 }
 
@@ -243,7 +268,7 @@ if (!setId) {
 if (!setId) {
   throw new Error("fulfillment set creation could not be confirmed, aborting")
 }
-live(`fulfillment set ok: ${SET_NAME} (${setId})`)
+live(`fulfillment set ok: ${set?.name || SET_NAME} (${setId})`)
 
 let zoneId = (zone && zone.id) || null
 if (zoneId) {

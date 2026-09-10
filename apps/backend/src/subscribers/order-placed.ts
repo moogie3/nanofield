@@ -3,7 +3,7 @@ import type {
   SubscriberConfig,
 } from "@medusajs/framework"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { notifyFeed } from "../api/admin/shopee-imports/notify"
+import { formatIDR, notifyFeed } from "../api/admin/shopee-imports/notify"
 
 // Money-moving order events only: placed + canceled. order.updated is
 // deliberately excluded — it fires on routine touches and would bury the
@@ -38,13 +38,12 @@ export default async function orderActivityHandler({
     }
     const order = orders?.[0]
     if (order) {
-      const code = (order.currency_code || "").toUpperCase()
       title = canceled
         ? `Order #${order.display_id} canceled`
         : `New order #${order.display_id}`
       description = canceled
-        ? `Total was ${order.total} ${code}. Check payment capture/void.`
-        : `Total ${order.total} ${code}. Open Orders to fulfill.`
+        ? `Total was ${formatIDR(order.total)}. Check payment capture/void.`
+        : `Total ${formatIDR(order.total)}. Open Orders to fulfill.`
     }
   } catch {
     // fall back to the id-only text above — the bell still fires

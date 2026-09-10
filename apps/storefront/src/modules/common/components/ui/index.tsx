@@ -110,7 +110,7 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(
     return (
       <div
         ref={ref}
-        className={clsx("bg-white rounded-lg p-4", className)}
+        className={clsx("bg-white dark:bg-card rounded-lg p-4", className)}
         {...props}
       >
         {children}

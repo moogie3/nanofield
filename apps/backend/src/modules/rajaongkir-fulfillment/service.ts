@@ -160,7 +160,27 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
     data: Record<string, unknown>,
     context: ValidateFulfillmentDataContext
   ): Promise<Record<string, unknown>> {
-    return { ...data }
+    // Build the shipping-method data Medusa persists: the fulfillment-option
+    // payload ({ id, courier, service }). Without this the method data stays
+    // empty and createFulfillment can no longer stamp courier/service on the
+    // fulfillment (AWB is booked manually from exactly those fields).
+    const id =
+      (data as Record<string, unknown> | undefined)?.id ??
+      (optionData as Record<string, unknown> | undefined)?.id
+    const svc =
+      typeof id === "string"
+        ? (await this.catalog_()).find((s) => s.id === id)
+        : undefined
+    return {
+      ...data,
+      id: svc?.id ?? id,
+      courier:
+        svc?.courier ??
+        (optionData as Record<string, unknown> | undefined)?.courier,
+      service:
+        svc?.service ??
+        (optionData as Record<string, unknown> | undefined)?.service,
+    }
   }
 
   async validateOption(data: Record<string, unknown>): Promise<boolean> {
@@ -432,9 +452,14 @@ class RajaongkirFulfillmentProviderService extends AbstractFulfillmentProviderSe
           typeof q.service === "string" &&
           q.service.toUpperCase() === svc.service.toUpperCase()
       )
-      if (exact && typeof exact.cost === "number") {
-        return exact.cost
+      // Exact services must quote ONLY their own service. Falling through
+      // to the courier cheapest here would mislabel e.g. REG speed as CTC
+      // on lanes without CTC. Null lets calculatePrice use the flat
+      // fallback, which operators read as "not on this lane".
+      if (!exact || typeof exact.cost !== "number") {
+        return null
       }
+      return exact.cost
     }
     return Math.min(...mine.map((q) => q.cost as number))
   }

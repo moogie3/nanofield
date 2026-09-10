@@ -1,6 +1,6 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
+import { isManual, isMidtrans, isStripeLike } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
@@ -39,6 +39,14 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isManual(paymentSession?.provider_id):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+    case isMidtrans(paymentSession?.provider_id):
+      return (
+        <MidtransPaymentButton
+          cart={cart}
+          notReady={notReady}
+          data-testid={dataTestId}
+        />
       )
     default:
       return <Button disabled>Select a payment method</Button>
@@ -190,6 +198,55 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
       <ErrorMessage
         error={errorMessage}
         data-testid="manual-payment-error-message"
+      />
+    </>
+  )
+}
+
+// Midtrans Snap redirect flow: the order is NOT placed here. The customer
+// pays on Midtrans' page first; the return landing (/order/confirmed)
+// completes the cart once Midtrans reports settlement.
+const MidtransPaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const paymentSession = cart.payment_collection?.payment_sessions?.find(
+    (s) => isMidtrans(s.provider_id)
+  )
+  const redirectUrl = (
+    paymentSession?.data as { redirect_url?: string } | undefined
+  )?.redirect_url
+
+  const handlePayment = () => {
+    if (!redirectUrl) {
+      setErrorMessage(
+        "Payment session is not ready yet — reselect the Midtrans method and retry."
+      )
+      return
+    }
+    window.location.href = redirectUrl
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady || !redirectUrl}
+        onClick={handlePayment}
+        size="large"
+        data-testid={dataTestId}
+      >
+        Pay with Midtrans
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="midtrans-payment-error-message"
       />
     </>
   )

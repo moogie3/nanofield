@@ -2,7 +2,7 @@
 
 *Companion documents: `README.md` (commands), `whole.md` (project state), `nanofield_ecommerce_plan.md` (business plan), `AGENTS.md` (conventions). This manual addresses a single question: **in which order are components to be configured after cloning, so that shipping and checkout function correctly?***
 
-> **The governing principle is that order matters.** Nearly every instance of shipping failing to connect on a fresh clone is caused by a prerequisite created out of sequence (a region before its currency, an option before its fulfillment set, a location never linked to the channel). Parts A through H are to be followed from top to bottom; each step provides a **Verify** statement. **Part D explains each Medusa feature in setup order — its definition, its purpose, and the consequence of its absence.** **Part E defines the Definition of Ready gates for clone and production.** **Part J documents every menu, page, tab, and form of the backend administration**, both built-in and project-specific. Part I lists the exact gaps identified on the current machine, so that they may be resolved immediately.
+> **The governing principle is that order matters.** Nearly every instance of shipping failing to connect on a fresh clone is caused by a prerequisite created out of sequence (a region before its currency, an option before its fulfillment set, a location never linked to the channel). Parts A through H are to be followed from top to bottom; each step provides a **Verify** statement. **Part D explains each Medusa feature in setup order — its definition, its purpose, and the consequence of its absence.** **Part E defines the Definition of Ready gates for clone and production.** **Part J documents every menu, page, tab, and form of the backend administration**, both built-in and project-specific. This manual is universal: it contains no per-machine audit notes. On any machine, run the F0 script in `DRY_RUN=1` report mode plus the Part E Verify statements — an empty report plus passing gates means the machine matches this manual.
 
 ---
 
@@ -101,13 +101,13 @@ A region is the combination of a currency, a set of countries, and payment provi
 Each region declares which payment methods it accepts. Until the Midtrans integration (Phase 2) is delivered, both regions use **`pp_system_default`** (the built-in manual/system provider). **Consequence of absence:** region creation is rejected and checkout cannot complete payment.
 
 ### 7. Tax regions
-Per-country tax configuration (`tp_system` denotes the system tax provider). Cart totals compute tax through these records. **Consequence of absence:** total and tax computation fails for checkouts in that country. (On this machine, the seven European rows exist from the seed; the `id` row is absent — a finish-list item.)
+Per-country tax configuration (`tp_system` denotes the system tax provider). Cart totals compute tax through these records. **Consequence of absence:** total and tax computation fails for checkouts in that country. The seed creates the seven European rows; the `id` row is created in F4 (or by the F0 script).
 
 ### 8. Stock locations (with address)
 The physical premises at which inventory is held — **Pasar Jambi** (live) and the starter **European Warehouse**. The address constitutes the official pickup and returns record (city, province, and postal code matter for bookkeeping even though quotations use the environment-pinned origin identifier). **Consequence of absence:** inventory levels have no location to attach to, and nothing is sellable.
 
 ### 9. Location-to-sales-channel link
-This link connects a location's stock to a storefront surface. The importer and the bulk-stock tools resolve the destination of stock through the channel's locations, falling back to the global first location when the channel has none — which is how stock silently lands at the wrong warehouse. **Consequence of absence:** products report zero purchasable stock and no shipping options are listed — even when levels exist elsewhere. (On this machine, this link table is empty — a finish-list item.)
+This link connects a location's stock to a storefront surface. The importer and the bulk-stock tools resolve the destination of stock through the channel's locations, falling back to the global first location when the channel has none — which is how stock silently lands at the wrong warehouse. **Consequence of absence:** products report zero purchasable stock and no shipping options are listed — even when levels exist elsewhere.
 
 ### 10. Fulfillment providers
 The executable code that fulfills shipments. Two providers are relevant:
@@ -115,7 +115,7 @@ The executable code that fulfills shipments. Two providers are relevant:
 - **`rajaongkir_rajaongkir`** — the custom provider (`src/modules/rajaongkir-fulfillment/`, `identifier = "rajaongkir"`): live JNE/J&T quotations from the Komerce V2 API with a flat Rp 20.000 fallback so that checkout is never blocked. **Without the API key it remains operational — but every quotation equals the fallback price.** Uniform quotations of exactly Rp 20.000 always indicate a key problem.
 
 ### 11. Location-to-provider links
-These declare which providers are permitted to ship from a location. Pasar Jambi requires **both** `manual_manual` and `rajaongkir_rajaongkir`. **Consequence of absence:** that provider's options are never listed for carts served by the location. (On this machine, only the European Warehouse-to-manual row exists.)
+These declare which providers are permitted to ship from a location. Pasar Jambi requires **both** `manual_manual` and `rajaongkir_rajaongkir`. **Consequence of absence:** that provider's options are never listed for carts served by the location.
 
 ### 12. Fulfillment sets, service zones, and geo zones
 The delivery geography tree attached to each location:
@@ -349,6 +349,8 @@ Expected end state: all live levels at Pasar Jambi, none stranded elsewhere. Pub
 ### F11. Products: authentic catalog through the importer (or demonstration seed for verification only)
 
 - **Authentic catalog:** administration → `/app/ecomm-import`. Upload all four workbooks (sales, basic, media, and **ship/Informasi Pengiriman** — the ship file carries per-variation `Berat` weights; without it every variant falls back to 500 g and light items are over-quoted). **Preview** is always to be executed first and constitutes the formal Gate 1 sign-off (Part E, item G1.5): **Execute** follows only upon a signed-off Preview — location resolving to Pasar Jambi, genuine Stok figures, detected weight header.
+- **Slot rules (what each combination does):** the Penjualan (sales) file is mandatory — Preview and Execute both reject the run without it. Dasar and Media are optional: when omitted, existing descriptions, galleries, and category memberships are left untouched (the engine only overwrites them when the files supply replacements). A weights-only refresh is therefore run as **sales + ship** (current sales file plus the ship file): prices, stock, variants, and weights sync, while descriptions, images, and categories are preserved. An old sales file must never be used as a carrier for a new ship file — prices and stock would rewind to the old values.
+- **Options for a sales + ship run:** enable **Publish new products** so restocked drafts return to the storefront automatically (zero-stock products stay draft regardless; deliberate manual unpublishes are only overridden when this is on). Leave **Overwrite content on existing products** off — with no Dasar/Media files there is nothing to sync, and off additionally guards existing content. Re-imports never duplicate: products match by `shopee_product_id`, so the same sales file updates rows in place (new Shopee listings appear as the only creates).
 - **Demonstration verification only:** `cd apps/backend && ADMIN_EMAIL=... ADMIN_PASSWORD=... node scripts/seed-semiconductors.mjs` — twelve semiconductor SKUs, EUR/USD placeholder prices, 500 units of stock at the first location. The script is idempotent (existing handles are skipped). **Demonstration rows are to be removed before the authentic import** (handle collisions: `TRS-0051`, `IC-0399/0401`).
 - Remaining-item sweep: confirm that no `lt-XXXX` load-test, merchandise, or demonstration rows remain in the live catalog.
 
@@ -376,33 +378,31 @@ Open `http://localhost:8000/id/store` (prices exist only in IDR, therefore `/dk/
 
 1. **After creating or modifying any region or country:** restart the storefront development server. The middleware caches the country-to-region map in memory and in the fetch cache for one hour. Switching to a country unknown to the cache redirects `/<new>` to `/<fallback>/<new>` (for example `/dk/id`), which resolves to a 404 page. After restart, navigate to `/<country>` directly.
 2. After modifying environment variables: restart.
-3. After deleting products or categories in administration: product changes invalidate automatically through `POST /api/catalog/revalidate` (which requires `STOREFRONT_URL` and a matching `REVALIDATE_SECRET`); category changes take effect within the five-minute ISR window — alternatively, restart.
+3. After deleting products or categories in administration: product changes invalidate automatically through `POST /api/catalog/revalidate` (which requires `STOREFRONT_URL` and a matching `REVALIDATE_SECRET`); category changes take effect within the five-minute ISR window — alternatively, restart. Account order pages (list and details) refresh on a 60-second window: shipment and payment changes made in administration appear there within a minute, no restart needed.
 
 ---
 
 ## Part H — Checkout verification (end-to-end, approximately 15 minutes)
 
 1. Storefront → `/id/store` → add any in-stock item → cart.
-2. Check out with a **Jakarta address** (for example Menteng) and confirm that **live quotations** appear: JNE REG ≈ Rp 26.000 and J&T EZ ≈ Rp 22.000 at 1 kg (reference lane, September 8). Intra-Jambi JNE CTC ≈ Rp 10.000.
-3. **Fallback check:** when every option quotes exactly Rp 20.000, the RajaOngkir key is absent or invalid (Part B) — correct the key, restart the backend, and retry.
+2. Check out with a **Jakarta address** (for example Menteng) and confirm that **live quotations** appear: JNE REG ≈ Rp 26.000 and J&T EZ ≈ Rp 22.000 at 1 kg (reference lane, September 8). Then repeat with an **intra-Jambi address**: JNE City Courier ≈ Rp 10.000 and J&T EZ ≈ Rp 8.000 at 500 g. Both lanes are required — a single lane cannot distinguish a live quote from the fallback.
+3. **Fallback check:** when every option quotes exactly Rp 20.000, the RajaOngkir key is absent or invalid (Part B) — correct the key, restart the backend, and retry. A *single* option at Rp 20.000 while the others are live is normal: that service does not exist on the lane (JNE REG has no intra-city service, JNE CTC has no inter-city service) and the fallback marks it unavailable. Exact-service options never borrow another service's price.
 4. Place the test order; confirm that the fulfillment record is stamped `{ courier, service, manual_booking: true }` (the AWB is booked manually outside the system).
 5. Restore any artificial test stock afterwards (for example the ten test units once assigned to IC-0394).
 
 ---
 
-## Part I — Completion list for THIS machine (gaps identified by audit)
+## Part I — Verification on any machine (universal, no per-machine notes)
 
-Verified against the live development database on each audit pass; the following items are to be completed now, in order. Current findings: no duplicate regions or currencies were produced by the manual adjustments (the importer reuses a matching Indonesia/IDR region, and IDR is now correctly the default store currency). However, **European Warehouse was deleted while still holding all 1000 inventory levels**, so its stock is currently stranded, and the channel link that would redirect stock resolution to Pasar Jambi is still absent:
+This manual contains no per-machine audit list. On any machine — fresh clone, second laptop, or production — the state is derived from the gates, never from remembered findings:
 
-1. [ ] **Backend `.env`: define `RAJAONGKIR_API_KEY`** (currently empty — all quotations equal the Rp 20.000 fallback) and **`RAJAONGKIR_ORIGIN_ID=19363`**, then restart the backend.
-2. [ ] **Tax region for `id`** (provider `tp_system`) — the European tax regions exist; the Indonesian one is absent.
-3. [ ] **Link Pasar Jambi → Default Sales Channel** (`sales_channel_stock_location` is empty). This step must precede any stock synchronization, otherwise levels resolve to the deleted warehouse.
-4. [ ] **Link providers to Pasar Jambi**: `manual_manual` and `rajaongkir_rajaongkir` (`location_fulfillment_provider` holds only the European Warehouse row).
-5. [ ] **Create shipping option type `standard`** (`shipping_option_type` is empty — option creation returns 400 without it).
-6. [ ] **Create the three calculated options** JNE REG, J&T EZ, and JNE City Courier per F9 — enabling the jne-ctc service first (`shipping_option` is empty). A manual pickup option is optional.
-7. [ ] **Rebuild inventory levels at Pasar Jambi** — re-run the importer **Execute** (it synchronizes to the channel's location, which after step 3 is Pasar Jambi), then confirm with the F10 count query that all live levels reside there and none remain stranded. Do not re-link European Warehouse to achieve this.
-8. [ ] **European Warehouse is already soft-deleted; keep it that way.** Confirm the channel remains linked solely to live locations, and the deleted record is never re-linked. Its stranded level rows require no action once step 7 is verified.
-9. [ ] **Restart the storefront**, open `/id/store`, and execute the Part H Jakarta checkout.
+1. Run the F0 script in report mode. An empty report means the machine already matches Parts F2–F9:
+```bash
+DRY_RUN=1 ADMIN_EMAIL=... ADMIN_PASSWORD=... node scripts/seed-nanofield-shipping.mjs
+```
+2. Re-check each Part E Gate row with its Verify statement (key-to-channel row, `store_currency`, `region` + `region_payment_provider`, `sales_channel_stock_location`, signed-off Preview log, `tax_region`, `location_fulfillment_provider`, fulfillment set/zone/`id` geo-zone, `shipping_option_type`, calculated `shipping_option` rows, F10 level counts).
+3. Execute the Part H checkout (Jakarta reference lane + intra-Jambi lane). Two lanes are required because a single lane cannot distinguish a live quote from the flat fallback: Jakarta and Jambi must quote differently.
+4. Deleted locations stay deleted and never re-linked; stranded level rows require no action once the channel references only live locations and the F10 count confirms live levels.
 
 ---
 
@@ -417,7 +417,7 @@ The administration is served at `http://localhost:9000/app`. Section I.1 lists t
 | Nanofield | `/app/overview` | Store home and business overview. Revenue and order-count charts (daily for 30 days, monthly for 12 months, yearly) with revenue/orders/average stat cards in the most-used currency; an empty state is shown before the first sale. Purpose: daily commercial health at a glance. |
 | E-comm Import | `/app/ecomm-import` | Shopee Excel import pipeline. Forms: four workbook upload fields (sales, basic, media, ship/Informasi Pengiriman); **Preview** action (validates without writing; lists skipped rows with identifier and reason; reports the detected weight column); **Execute** action (writes the catalog); job list with per-job detail (counts, errors). Purpose: the sole entry point of the authentic catalog. |
 | Shipping Services | `/app/rajaongkir-services` | Live catalog of quotable courier services. Table columns: code, courier, service code, label, cheapest-match flag, enabled state. Actions: enable/disable toggles (built-ins `jne-reg` and `jnt-eco` can only be disabled, never deleted); creation and deletion of custom services. The F9 JNE City Courier option additionally requires `jne-ctc` to be enabled here, since option validation rejects disabled service identifiers. Changes apply to checkout immediately without deployment. Purpose: day-to-day control of which courier services are offered. |
-| Notification bell (top bar drawer) | — | Project notification center fed by the `feed` channel of the local notification provider. It records itemized completions and failures (Shopee import, bulk stock/delete, order placement/cancellation, team membership changes, product-category changes) with title and summary line. Semantics: entries persist indefinitely with pagination; unread means newer than the last drawer opening; the list refetches every 60 seconds; there is no expiry and no deletion. Deliberately silent: routine product events (covered by import summaries), order updates, and fulfillment/return/claim events. Purpose: operational awareness without log inspection. |
+| Notification bell (top bar drawer) | — | Project notification center fed by the `feed` channel of the local notification provider. It records itemized completions and failures (Shopee import, bulk stock/delete, order placement/cancellation/shipment, team membership changes, product-category changes) with title and summary line. Amounts render as `Rp 190.000` (never raw decimals). Semantics: entries persist indefinitely with pagination — history is never deleted server-side; read rows auto-hide in this browser (with a "Show read" toggle), × hides any row (per-browser, per-machine); unread means newer than the last drawer opening (blue dot on the bell); a bottom-right toast announces arrivals newer than the last visit (polls every 60 seconds). Deliberately silent: routine product events (covered by import summaries), order updates, and fulfillment/return/claim events. Purpose: operational awareness without log inspection. |
 
 ### I.2. Commerce menus (sidebar)
 

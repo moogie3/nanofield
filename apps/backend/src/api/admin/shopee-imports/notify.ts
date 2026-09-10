@@ -25,6 +25,20 @@ export const notifyFeed = async (
   }
 }
 
+// Indonesian Rupiah without decimals or float noise. Query totals arrive
+// as BigNumber decimal strings ("190000.0000000000000000") — never
+// interpolate those raw into operator-facing text.
+export const formatIDR = (
+  amount: number | string | null | undefined
+): string => {
+  const n = Math.round(Number(amount))
+  if (!Number.isFinite(n)) {
+    return "Rp 0"
+  }
+  const sign = n < 0 ? "-" : ""
+  return sign + "Rp " + Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+}
+
 // Address the notification to the admin who triggered the request so it
 // shows under their bell (the drawer also matches broadcast "").
 export const feedRecipient = (req: MedusaRequest): string => {

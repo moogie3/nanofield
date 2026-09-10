@@ -12,10 +12,15 @@ type CartTotalsProps = {
     item_subtotal?: number | null
     shipping_subtotal?: number | null
     discount_subtotal?: number | null
+    shipping_methods?: { id: string }[]
   }
+  // The cart page is pre-decision by definition: it always shows TBD so a
+  // courier picked in an earlier session never leaks a stale amount here.
+  // Everywhere else the row follows the cart (TBD until a method is chosen).
+  forceTbd?: boolean
 }
 
-const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
+const CartTotals: React.FC<CartTotalsProps> = ({ totals, forceTbd = false }) => {
   const {
     currency_code,
     total,
@@ -23,7 +28,23 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     item_subtotal,
     shipping_subtotal,
     discount_subtotal,
+    shipping_methods,
   } = totals
+
+  // No courier chosen yet (cart page, early checkout steps): show TBD
+  // instead of an amount, since nothing is decided. Once a delivery option
+  // is picked — or on the order confirmation, which always carries
+  // methods — the real amount renders.
+  const showTbd =
+    forceTbd ||
+    (Array.isArray(shipping_methods) ? shipping_methods.length === 0 : false)
+
+  // While shipping is TBD the total must not smuggle a stale shipping
+  // amount in either: items minus discount only.
+  const displayTotal =
+    showTbd && item_subtotal != null
+      ? item_subtotal - (discount_subtotal ?? 0)
+      : total
 
   return (
     <div>
@@ -36,9 +57,15 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
         </div>
         <div className="flex items-center justify-between">
           <span>Shipping</span>
-          <span data-testid="cart-shipping" data-value={shipping_subtotal || 0}>
-            {convertToLocale({ amount: shipping_subtotal ?? 0, currency_code })}
-          </span>
+          {showTbd ? (
+            <span data-testid="cart-shipping" data-value={0}>
+              TBD
+            </span>
+          ) : (
+            <span data-testid="cart-shipping" data-value={shipping_subtotal || 0}>
+              {convertToLocale({ amount: shipping_subtotal ?? 0, currency_code })}
+            </span>
+          )}
         </div>
         {!!discount_subtotal && (
           <div className="flex items-center justify-between">
@@ -69,9 +96,9 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
         <span
           className="txt-xlarge-plus"
           data-testid="cart-total"
-          data-value={total || 0}
+          data-value={displayTotal || 0}
         >
-          {convertToLocale({ amount: total ?? 0, currency_code })}
+          {convertToLocale({ amount: displayTotal ?? 0, currency_code })}
         </span>
       </div>
       <div className="h-px w-full border-b border-border mt-4" />

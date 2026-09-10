@@ -35,7 +35,7 @@ const Summary = ({ cart }: SummaryProps) => {
         </Heading>
         <DiscountCode cart={cart} />
         <Divider />
-        <CartTotals totals={cart} />
+        <CartTotals totals={cart} forceTbd />
         <Button
           asChild
           size="lg"

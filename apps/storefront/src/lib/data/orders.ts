@@ -10,23 +10,39 @@ export const retrieveOrder = async (id: string) => {
     ...(await getAuthHeaders()),
   }
 
+  // Time-capped (60s): admin-side shipment/payment changes must surface on
+  // account pages without a dev-server restart. Tags still allow instant
+  // purges from server actions.
   const next = {
     ...(await getCacheOptions("orders")),
+    revalidate: 60,
   }
 
-  return sdk.client
-    .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
-      method: "GET",
-      query: {
-        fields:
-          "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product",
-      },
-      headers,
-      next,
-      cache: "force-cache",
-    })
-    .then(({ order }) => order)
-    .catch((err) => medusaError(err))
+  // Fulfillments power the shipment status line; fall back to the base set
+  // if the backend ever rejects them so this page still renders.
+  const RICH_FIELDS =
+    "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product,*fulfillments"
+  const BASE_FIELDS =
+    "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product"
+
+  const fetchOrder = (fields: string) =>
+    sdk.client
+      .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
+        method: "GET",
+        query: {
+          fields,
+        },
+        headers,
+        next,
+        cache: "force-cache",
+      })
+      .then(({ order }) => order)
+
+  try {
+    return await fetchOrder(RICH_FIELDS)
+  } catch {
+    return await fetchOrder(BASE_FIELDS).catch((err) => medusaError(err))
+  }
 }
 
 export const listOrders = async (
@@ -38,26 +54,42 @@ export const listOrders = async (
     ...(await getAuthHeaders()),
   }
 
+  // Same 60s cap as retrieveOrder: shipment/payment state converges
+  // without restarts.
   const next = {
     ...(await getCacheOptions("orders")),
+    revalidate: 60,
   }
 
-  return sdk.client
-    .fetch<HttpTypes.StoreOrderListResponse>(`/store/orders`, {
-      method: "GET",
-      query: {
-        limit,
-        offset,
-        order: "-created_at",
-        fields: "*items,+items.metadata,*items.variant,*items.product",
-        ...filters,
-      },
-      headers,
-      next,
-      cache: "force-cache",
-    })
-    .then(({ orders }) => orders)
-    .catch((err) => medusaError(err))
+  // Rich card fields (addresses, courier, fulfillments, payments). If the
+  // backend ever rejects them, fall back to the base set so the page still
+  // renders — OrderCard degrades to neutral chips when relations are absent.
+  const RICH_FIELDS =
+    "*items,+items.metadata,*items.variant,*items.product,*shipping_address,*shipping_methods,*fulfillments,*payment_collections,*payment_collections.payments"
+  const BASE_FIELDS = "*items,+items.metadata,*items.variant,*items.product"
+
+  const fetchOrders = (fields: string) =>
+    sdk.client
+      .fetch<HttpTypes.StoreOrderListResponse>(`/store/orders`, {
+        method: "GET",
+        query: {
+          limit,
+          offset,
+          order: "-created_at",
+          fields,
+          ...filters,
+        },
+        headers,
+        next,
+        cache: "force-cache",
+      })
+      .then(({ orders }) => orders)
+
+  try {
+    return await fetchOrders(RICH_FIELDS)
+  } catch {
+    return await fetchOrders(BASE_FIELDS).catch((err) => medusaError(err))
+  }
 }
 
 export const createTransferRequest = async (
