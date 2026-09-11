@@ -13,6 +13,15 @@ const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
  */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/:countryCode/customer-service",
+        destination: "/:countryCode/faq",
+        permanent: true,
+      },
+    ]
+  },
   logging: {
     fetches: {
       fullUrl: true,
@@ -24,8 +33,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    unoptimized: true,
+  images: {    unoptimized: true,
     // Thumbnails request quality 50; declare it (required from Next 16).
     qualities: [50, 75],
     remotePatterns: [

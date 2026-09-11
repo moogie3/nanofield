@@ -21,8 +21,8 @@
 └──────────┘   │  │ Admin API +  │  │ Store API       │  │   └──────────────────┘
                │  │ custom routes│  │ (publishable    │  │
                │  │ /app/* pages │  │  key scoped)    │  │   ┌──────────────────┐
-               │  └──────────────┘  └────────┬────────┘  │──▶│  Midtrans (Phase │
-               │                             │           │   │  2, not built)   │
+               │  └──────────────┘  └────────┬────────┘  │──▶│  Midtrans (Snap  │
+               │                             │           │   │  + webhook)      │
                │  ┌──────────────────────────┴────────┐  │   └──────────────────┘
                │  │  Postgres (products, orders,      │  │
                │  │  regions, locations, levels…)     │  │
@@ -168,7 +168,7 @@ Fulfillment stamped { courier, service, manual_booking: true }
                       └── Workflows (read-only execution traces)
 ```
 
-Convention: custom pages sit pinned above core navigation; custom widgets inject into core pages (`product.list.before`, `product.details.side`); the bell drawer is fed by the local `feed` notification channel.
+Convention: custom pages sit pinned above core navigation; custom widgets inject into core pages (`product.list.before`, `product.details.side`, `order.details.side.before` — receipt printing via `GET /admin/orders/[id]/receipt`); the bell drawer is fed by the local `feed` notification channel (stock drawer — no DOM injection).
 
 ---
 
@@ -193,7 +193,6 @@ Middleware region map: in-memory + fetch cache, 1-hour TTL
 ## 7. Dormant and future — drawn dashed for a reason
 
 ```text
- - - - Midtrans payment provider (Phase 2: module + webhook + sandbox matrix)
  - - - Manual pickup option (manual provider, admin UI only)
  - - - Weight-gated cargo options (JTR above X kg via option rules)
  - - - R2 image migration (today: cf.shopee.co.id hotlinks)

@@ -4,16 +4,16 @@ import ErrorScreen from "@modules/common/components/error-screen"
 import InteractiveLink from "@modules/common/components/interactive-link"
 
 export const metadata: Metadata = {
-  title: "404",
-  description: "Something went wrong",
+  title: "403",
+  description: "Access denied",
 }
 
-export default function NotFound() {
+export default function Forbidden() {
   return (
     <ErrorScreen
-      code="404"
-      title="Page not found"
-      cause="The page you tried to access does not exist. It may have been moved, deleted, or you may have followed a broken link."
+      code="403"
+      title="Access denied"
+      cause="You don't have permission to view this page. Try logging in with a different account, or contact support if you believe this is a mistake."
       action={<InteractiveLink href="/">Go to frontpage</InteractiveLink>}
     />
   )

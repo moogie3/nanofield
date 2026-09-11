@@ -2,7 +2,7 @@
 
 Nanofield is a standalone ecommerce store for semiconductors, electronic components, and appliance spare parts (successor to the Shopee/TikTok "Toko Sanjaya" listings). B2C first, with B2B held in reserve.
 
-Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, and a schematic-themed storefront.
+Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, and a support/error page system (contact, returns, FAQ, branded error screens).
 
 Project docs:
 
@@ -48,6 +48,8 @@ Edit `apps/backend/.env` and set at minimum:
 | `JWT_SECRET` / `COOKIE_SECRET` | long random strings (dev defaults in the template are NOT safe to share) |
 | `STOREFRONT_URL` | `http://localhost:8000` |
 | `REVALIDATE_SECRET` | long random string, must match the storefront's copy (enables instant catalog cache purge, see below) |
+| `MIDTRANS_SERVER_KEY` / `MIDTRANS_CLIENT_KEY` | Sandbox keys from the Midtrans dashboard (Access Keys); `MIDTRANS_IS_PRODUCTION=false` until go-live. Register `{BACKEND_URL}/hooks/payment/midtrans` as the notification URL |
+| `STORE_NAME` / `STORE_PHONE` / `STORE_ADDRESS_1` / `STORE_CITY` / `STORE_PROVINCE` / `STORE_COUNTRY_CODE` | Sender block printed on shipping labels (no admin UI edits these yet) |
 
 `STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` and `REDIS_URL` already default to local values in the template.
 

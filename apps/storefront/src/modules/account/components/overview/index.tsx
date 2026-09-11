@@ -1,4 +1,4 @@
-import { Container, Heading } from "@modules/common/components/ui"
+import { Container, Heading, Text } from "@modules/common/components/ui"
 
 import ChevronDown from "@modules/common/icons/chevron-down"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -20,6 +20,9 @@ const Overview = ({ customer, orders }: OverviewProps) => {
   return (
     <div data-testid="overview-page-wrapper">
       <div className="hidden small:block">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-subtle">
+          Account
+        </span>
         <Heading
           level="h2"
           className="flex justify-between items-center mb-4 text-3xl-regular"
@@ -38,6 +41,10 @@ const Overview = ({ customer, orders }: OverviewProps) => {
             </span>
           </span>
         </Heading>
+        <Text className="text-base-regular mb-4 text-ui-fg-subtle">
+          Track your orders, manage your profile, and keep your addresses up
+          to date.
+        </Text>
         <div className="flex flex-col py-8 border-t border-border">
           <div className="flex flex-col gap-y-4 h-full col-span-1 row-span-2 flex-1">
             <div className="flex items-start gap-x-16 mb-6">

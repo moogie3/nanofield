@@ -1,3 +1,4 @@
+import ErrorScreen from "@modules/common/components/error-screen"
 import InteractiveLink from "@modules/common/components/interactive-link"
 import { Metadata } from "next"
 
@@ -8,12 +9,11 @@ export const metadata: Metadata = {
 
 export default async function NotFound() {
   return (
-    <div className="flex flex-col gap-4 items-center justify-center min-h-[calc(100vh-64px)]">
-      <h1 className="text-2xl-semi text-ui-fg-base">Page not found</h1>
-      <p className="text-small-regular text-ui-fg-base">
-        The page you tried to access does not exist.
-      </p>
-      <InteractiveLink href="/">Go to frontpage</InteractiveLink>
-    </div>
+    <ErrorScreen
+      code="404"
+      title="Page not found"
+      cause="The page you tried to access does not exist. It may have been moved, deleted, or you may have followed a broken link."
+      action={<InteractiveLink href="/">Go to frontpage</InteractiveLink>}
+    />
   )
 }

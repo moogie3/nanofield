@@ -1,4 +1,5 @@
 import { listCategories } from "@lib/data/categories"
+import { mapsUrl, STORE_CONTACT, whatsappUrl } from "@lib/store-contact"
 import { Text, clx } from "@modules/common/components/ui"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -12,14 +13,7 @@ const HIDDEN_CATEGORY_MATCHERS = [
   "collection",
 ]
 
-// TODO: move these to the backend (e.g. Medusa store metadata / settings
-// module) once the admin-facing config is ready — footer reads them from here.
-const STORE_CONTACT = {
-  whatsapp: "6281234567890",
-  whatsappMessage: "Halo Nanofield, saya mau tanya stok part.",
-  address: "Jakarta, Indonesia",
-}
-
+// Store contact channels live in @lib/store-contact (single source of truth).
 export default async function Footer() {
   const productCategories = await listCategories()
 
@@ -33,12 +27,8 @@ export default async function Footer() {
     )
     .slice(0, 6)
 
-  const whatsappUrl = `https://wa.me/${STORE_CONTACT.whatsapp}?text=${encodeURIComponent(
-    STORE_CONTACT.whatsappMessage
-  )}`
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    STORE_CONTACT.address
-  )}`
+  const whatsappLink = whatsappUrl()
+  const mapsLink = mapsUrl()
 
   return (
     <footer className="relative w-full border-t border-border bg-background">
@@ -119,12 +109,43 @@ export default async function Footer() {
             </div>
             <div className="flex flex-col gap-y-3">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
+                Support
+              </span>
+              <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/faq"
+                  >
+                    FAQ
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/contact"
+                  >
+                    Contact us
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/returns"
+                  >
+                    Returns & Exchanges
+                  </LocalizedClientLink>
+                </li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-y-3">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
                 Contact
               </span>
               <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
                 <li>
                   <a
-                    href={whatsappUrl}
+                    href={whatsappLink}
                     target="_blank"
                     rel="noreferrer"
                     className="hover:text-foreground"
@@ -134,7 +155,7 @@ export default async function Footer() {
                 </li>
                 <li>
                   <a
-                    href={mapsUrl}
+                    href={mapsLink}
                     target="_blank"
                     rel="noreferrer"
                     className="max-w-44 hover:text-foreground"

@@ -11,7 +11,7 @@ type OrderCardProps = {
 }
 
 const chip =
-  "inline-flex items-center rounded-full border border-border px-2 py-0.5 text-xs text-ui-fg-base"
+  "inline-flex items-center rounded-full border border-border bg-ui-bg-subtle px-3 py-1 text-xs font-medium text-ui-fg-base shadow-sm"
 
 const OrderCard = ({ order }: OrderCardProps) => {
   const numberOfLines = useMemo(() => {
@@ -62,24 +62,31 @@ const OrderCard = ({ order }: OrderCardProps) => {
 
   return (
     <div
-      className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-y-4"
+      className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-y-4 hover:shadow-[0_4px_24px_rgba(255,255,255,0.05)] transition-shadow duration-300 relative overflow-hidden"
       data-testid="order-card"
     >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-ui-bg-base/5 rounded-bl-full -z-10 pointer-events-none blur-3xl"></div>
+      
       <div>
-        <div className="uppercase text-large-semi mb-1">
-          #<span data-testid="order-display-id">{order.display_id}</span>
+        <div className="text-large-semi mb-3">
+          Order ID: <span className="font-mono text-sm" data-testid="order-raw-id">{order.id}</span>
         </div>
         <div className="flex items-center divide-x divide-border text-small-regular text-ui-fg-base">
-          <span className="pr-2" data-testid="order-created-at">
-            {new Date(order.created_at).toDateString()}
-          </span>
-          <span className="px-2" data-testid="order-amount">
+          <div className="flex flex-col pr-3 gap-y-0.5">
+            <span data-testid="order-created-at">
+              {new Date(order.created_at).toDateString()}
+            </span>
+            <span className="uppercase text-ui-fg-subtle text-[10px] font-medium" data-testid="order-display-id">
+              Order #{order.display_id}
+            </span>
+          </div>
+          <span className="px-3" data-testid="order-amount">
             {convertToLocale({
               amount: order.total,
               currency_code: order.currency_code,
             })}
           </span>
-          <span className="pl-2">{`${numberOfLines} ${
+          <span className="pl-3">{`${numberOfLines} ${
             numberOfLines > 1 ? "items" : "item"
           }`}</span>
         </div>
@@ -152,7 +159,16 @@ const OrderCard = ({ order }: OrderCardProps) => {
                   : "Tracking: seller is preparing your shipment."}
         </span>
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-between items-end mt-2">
+        <div className="flex flex-col gap-y-1">
+          <span className="text-ui-fg-subtle text-xs font-semibold uppercase tracking-wider">Scan to Track</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://nanofield.com/order/${order.id}`)}`} 
+            alt="Track Order QR" 
+            className="w-16 h-16 rounded-md border border-border p-1 bg-white" 
+          />
+        </div>
         <LocalizedClientLink href={`/account/orders/details/${order.id}`}>
           <Button data-testid="order-details-link" variant="secondary">
             See details

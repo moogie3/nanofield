@@ -15,24 +15,19 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
 
   return (
     <div>
+      <div className="flex items-center gap-x-4">
+        <Text className="text-ui-fg-interactive">
+          Order ID: <span data-testid="order-raw-id" className="font-mono text-sm">{order.id}</span>
+        </Text>
+        <Text className="text-xs text-ui-fg-subtle">
+          Order number: <span data-testid="order-id">#{order.display_id}</span>
+        </Text>
+      </div>
       <Text>
-        We have sent the order confirmation details to{" "}
-        <span
-          className="text-ui-fg-medium-plus font-semibold"
-          data-testid="order-email"
-        >
-          {order.email}
-        </span>
-        .
-      </Text>
-      <Text className="mt-2">
         Order date:{" "}
         <span data-testid="order-date">
           {new Date(order.created_at).toDateString()}
         </span>
-      </Text>
-      <Text className="mt-2 text-ui-fg-interactive">
-        Order number: <span data-testid="order-id">{order.display_id}</span>
       </Text>
 
       <div className="flex items-center text-compact-small gap-x-4 mt-4">
@@ -56,6 +51,16 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
           </>
         )}
       </div>
+      <Text className="text-ui-fg-subtle">
+        We have sent the order confirmation details to{" "}
+        <span
+          className="text-ui-fg-medium-plus font-semibold"
+          data-testid="order-email"
+        >
+          {order.email}
+        </span>
+        .
+      </Text>
     </div>
   )
 }

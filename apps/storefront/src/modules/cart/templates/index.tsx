@@ -4,6 +4,7 @@ import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
 import Divider from "@modules/common/components/divider"
 import PageBackdrop from "@modules/common/components/page-backdrop"
+import PageHeader from "@modules/common/components/page-header"
 import { HttpTypes } from "@medusajs/types"
 
 const CartTemplate = ({
@@ -18,26 +19,35 @@ const CartTemplate = ({
       <PageBackdrop />
       <div className="content-container relative" data-testid="cart-container">
         {cart?.items?.length ? (
-          <div className="grid grid-cols-1 small:grid-cols-[1fr_360px] gap-x-8 gap-y-8">
-            <div className="flex flex-col bg-card border border-border rounded-2xl p-6 gap-y-6">
-              {!customer && (
-                <>
-                  <SignInPrompt />
-                  <Divider />
-                </>
-              )}
-              <ItemsTemplate cart={cart} />
+          <>
+            <div className="mb-8">
+              <PageHeader
+                eyebrow="Shop"
+                title="Cart"
+                subtitle="Review the parts in your cart. Shipping and taxes are calculated at checkout."
+              />
             </div>
-            <div className="relative">
-              <div className="flex flex-col gap-y-8 sticky top-12">
-                {cart && cart.region && (
+            <div className="grid grid-cols-1 small:grid-cols-[1fr_360px] gap-x-8 gap-y-8">
+              <div className="flex flex-col bg-card border border-border rounded-2xl p-6 gap-y-6">
+                {!customer && (
                   <>
-                    <Summary cart={cart} />
+                    <SignInPrompt />
+                    <Divider />
                   </>
                 )}
+                <ItemsTemplate cart={cart} />
+              </div>
+              <div className="relative">
+                <div className="flex flex-col gap-y-8 sticky top-12">
+                  {cart && cart.region && (
+                    <>
+                      <Summary cart={cart} />
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </>
         ) : (
           <div>
             <EmptyCartMessage />

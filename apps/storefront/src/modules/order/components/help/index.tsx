@@ -1,5 +1,5 @@
 import { Heading } from "@modules/common/components/ui"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import InteractiveLink from "@modules/common/components/interactive-link"
 import React from "react"
 
 const Help = () => {
@@ -9,12 +9,12 @@ const Help = () => {
       <div className="text-base-regular my-2">
         <ul className="gap-y-2 flex flex-col">
           <li>
-            <LocalizedClientLink href="/contact">Contact</LocalizedClientLink>
+            <InteractiveLink href="/contact">Contact</InteractiveLink>
           </li>
           <li>
-            <LocalizedClientLink href="/contact">
+            <InteractiveLink href="/returns">
               Returns & Exchanges
-            </LocalizedClientLink>
+            </InteractiveLink>
           </li>
         </ul>
       </div>

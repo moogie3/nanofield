@@ -11,10 +11,13 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   CreditCardIcon,
+  CustomerService01Icon,
   FaceIdIcon,
+  HelpCircleIcon,
   House02Icon,
   Location01Icon,
   Package02Icon,
+  ReturnRequestIcon,
   ShoppingBag01Icon,
   Store02Icon,
   UserCircleIcon,
@@ -31,6 +34,13 @@ const PAGES = [
   { label: "Orders", href: "/account/orders", icon: Package02Icon },
   { label: "Addresses", href: "/account/addresses", icon: Location01Icon },
   { label: "Profile", href: "/account/profile", icon: FaceIdIcon },
+  { label: "FAQ", href: "/faq", icon: HelpCircleIcon },
+  { label: "Contact us", href: "/contact", icon: CustomerService01Icon },
+  {
+    label: "Returns & Exchanges",
+    href: "/returns",
+    icon: ReturnRequestIcon,
+  },
 ]
 
 const BACKEND_URL =

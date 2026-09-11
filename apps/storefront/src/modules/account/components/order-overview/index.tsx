@@ -6,7 +6,15 @@ import OrderCard from "../order-card"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 
-const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
+const OrderOverview = ({
+  orders,
+  hasMore,
+  nextLimit,
+}: {
+  orders: HttpTypes.StoreOrder[]
+  hasMore?: boolean
+  nextLimit?: number
+}) => {
   if (orders?.length) {
     return (
       <div className="flex flex-col gap-y-8 w-full">
@@ -18,6 +26,18 @@ const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
             <OrderCard order={o} />
           </div>
         ))}
+        {hasMore && nextLimit && (
+          <div className="flex justify-center pt-2">
+            <LocalizedClientLink
+              href={`/account/orders?limit=${nextLimit}`}
+              passHref
+            >
+              <Button data-testid="show-more-orders-button" variant="secondary">
+                Show more orders
+              </Button>
+            </LocalizedClientLink>
+          </div>
+        )}
       </div>
     )
   }

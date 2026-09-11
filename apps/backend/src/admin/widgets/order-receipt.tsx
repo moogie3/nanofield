@@ -19,6 +19,10 @@ const OrderReceiptWidget = () => {
   const order = data?.order
   const isPaid = order?.payment_status === "captured" || order?.payment_status === "paid"
 
+  // Assuming storefront order tracking URL format
+  const trackingUrl = `https://nanofield.com/order/${id}`
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(trackingUrl)}`
+
   const handlePrint = async () => {
     if (!id) return
     setIsPrinting(true)
@@ -52,16 +56,35 @@ const OrderReceiptWidget = () => {
       iframeDoc.write(html as string)
       iframeDoc.close()
 
-      // Wait for resources to load, then print
-      setTimeout(() => {
-        iframe.contentWindow?.focus()
-        iframe.contentWindow?.print()
-        // Cleanup after print dialog closes
-        setTimeout(() => {
-          document.body.removeChild(iframe)
-          setIsPrinting(false)
-        }, 1000)
-      }, 500)
+      // Wait for fonts and images to load before opening print dialog
+      const contentWindow = iframe.contentWindow
+      if (contentWindow) {
+        contentWindow.document.fonts.ready.then(() => {
+          // Wait for all images (like the QR code) to finish downloading
+          const images = Array.from(contentWindow.document.images)
+          const imagePromises = images.map(img => {
+            if (img.complete) return Promise.resolve()
+            return new Promise(resolve => {
+              img.onload = resolve
+              img.onerror = resolve
+            })
+          })
+
+          Promise.all(imagePromises).then(() => {
+            setTimeout(() => {
+              contentWindow.focus()
+              contentWindow.print()
+              // Cleanup after print dialog closes
+              setTimeout(() => {
+                if (document.body.contains(iframe)) {
+                  document.body.removeChild(iframe)
+                }
+                setIsPrinting(false)
+              }, 1000)
+            }, 100) // Small padding after load
+          })
+        })
+      }
     } catch (e) {
       toast.error("Failed to load receipt", {
         description: (e as Error).message,
@@ -80,13 +103,13 @@ const OrderReceiptWidget = () => {
 
   return (
     <Container className="p-4 border border-ui-border-base rounded-lg bg-ui-bg-base mt-4 shadow-sm">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <Heading level="h2" className="text-ui-fg-base mb-1">
             Order Receipt
           </Heading>
           <Text className="text-ui-fg-subtle text-sm">
-            Print a packing slip / receipt for this captured order.
+            Print a shipping label for this captured order.
           </Text>
         </div>
         <Button 
@@ -96,6 +119,16 @@ const OrderReceiptWidget = () => {
         >
           Print Receipt
         </Button>
+      </div>
+      
+      <div className="flex items-center gap-4 p-3 bg-ui-bg-subtle rounded-md border border-ui-border-base">
+        <img src={qrCodeUrl} alt="Order QR Code" className="w-16 h-16 rounded-md" />
+        <div>
+          <Text className="text-ui-fg-base text-sm font-medium mb-0.5">Tracking QR Code</Text>
+          <Text className="text-ui-fg-subtle text-xs">
+            Scan to view this order on the storefront. This code will also be printed on the shipping label.
+          </Text>
+        </div>
       </div>
     </Container>
   )
