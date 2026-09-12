@@ -45,6 +45,7 @@ Configure at minimum the following variables (the full list with comments is fou
 | `MIDTRANS_SERVER_KEY` / `MIDTRANS_CLIENT_KEY` | Sandbox keys from the Midtrans dashboard → Settings → Access Keys (server key authorizes status reads/refunds; client key is served to the storefront Snap flow) |
 | `MIDTRANS_IS_PRODUCTION` | `false` for testing; flip to `true` only at go-live together with the live keys. Register `{BACKEND_URL}/hooks/payment/midtrans` as the notification URL in the Midtrans dashboard per environment |
 | `STORE_NAME` / `STORE_PHONE` / `STORE_ADDRESS_1` / `STORE_CITY` / `STORE_PROVINCE` / `STORE_COUNTRY_CODE` | Sender block printed as Pengirim on every shipping label (`GET /admin/orders/[id]/receipt`). No admin UI edits these yet — change them here |
+| `TRACKING_SYNC_ENABLED` / `TRACKING_SYNC_CRON` / `TRACKING_SYNC_MAX_PER_RUN` / `TRACKING_SYNC_MIN_AGE_HOURS` | Auto-delivery sync job (`tracking-sync`, defaults `true` / every 6h / 5 per run / 6h min age). Shares the 100 hits/day RajaOngkir quota with checkout quotes — keep the cap small |
 
 `STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` / `REDIS_URL` already default to local values in the template.
 

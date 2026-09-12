@@ -2,7 +2,8 @@ import { Metadata } from "next"
 
 import OrderOverview from "@modules/account/components/order-overview"
 import PageHeader from "@modules/common/components/page-header"
-import { notFound } from "next/navigation"
+import { HttpTypes } from "@medusajs/types"
+import { notFound, redirect } from "next/navigation"
 import { listOrders } from "@lib/data/orders"
 import Divider from "@modules/common/components/divider"
 import TransferRequestForm from "@modules/account/components/transfer-request-form"
@@ -16,16 +17,31 @@ const PAGE_SIZE = 5
 const MAX_LIMIT = 50
 
 export default async function Orders(props: {
+  params: Promise<{ countryCode: string }>
   searchParams: Promise<{ limit?: string }>
 }) {
+  const params = await props.params
   const searchParams = await props.searchParams
   const limit = Math.min(
     Math.max(parseInt(searchParams.limit || "", 10) || PAGE_SIZE, PAGE_SIZE),
     MAX_LIMIT
   )
 
-  // Fetch one extra to know whether a "Show more" button is needed.
-  const fetched = await listOrders(limit + 1, 0)
+  // Fetch one extra to know whether a "Show more" button is needed. An
+  // expired session throws here — send the shopper to log in again instead
+  // of crashing into the error screen.
+  let fetched: HttpTypes.StoreOrder[] | null | undefined
+  try {
+    fetched = await listOrders(limit + 1, 0)
+  } catch (e) {
+    if (
+      e instanceof Error &&
+      /unauthorized|401|expired|session|log ?in/i.test(e.message)
+    ) {
+      redirect(`/${params.countryCode}/account`)
+    }
+    notFound()
+  }
 
   if (!fetched) {
     notFound()

@@ -35,7 +35,7 @@ export function generateReceiptHtml(order: any): string {
   }
 
   const trackingUrl = `https://nanofield.com/order/${order.id}`
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=4&data=${encodeURIComponent(trackingUrl)}`
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=12&data=${encodeURIComponent(trackingUrl)}`
 
   return `<!DOCTYPE html>
 <html lang="id">
@@ -63,9 +63,8 @@ export function generateReceiptHtml(order: any): string {
       .store-title { font-size: 24pt !important; }
       .address-header { font-size: 11pt !important; }
       .sender-row { gap: 3mm !important; }
-      .qr-box { width: 30mm !important; flex-basis: 30mm !important; }
-      .qr-box img { width: 26mm !important; height: 26mm !important; }
-      .qr-box span { font-size: 8pt !important; }
+      .qr-plain img { width: 100% !important; max-width: 40mm !important; }
+      .qr-plain span { font-size: 8pt !important; }
       .footer { font-size: 9pt !important; }
     }
     * {
@@ -118,30 +117,28 @@ export function generateReceiptHtml(order: any): string {
       margin-bottom: 16px;
     }
     .sender-row .address-block {
-      flex: 1;
+      flex: 1 1 50%;
       min-width: 0;
       margin-bottom: 0;
     }
-    .qr-box {
-      flex: 0 0 150px;
-      width: 150px;
-      border: 2px solid #000;
-      border-radius: 8px;
-      overflow: hidden;
+    .qr-plain {
+      flex: 1 1 50%;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 8px;
+      padding: 4px 0 4px 8px;
       background: #fff;
     }
-    .qr-box img {
-      width: 126px;
-      height: 126px;
+    .qr-plain img {
+      width: 100%;
+      max-width: 220px;
+      height: auto;
+      aspect-ratio: 1 / 1;
       display: block;
-      image-rendering: pixelated;
     }
-    .qr-box span {
+    .qr-plain span {
       font-family: 'Outfit', 'Manrope', sans-serif !important;
       font-size: 10px;
       font-weight: 800;
@@ -197,7 +194,7 @@ export function generateReceiptHtml(order: any): string {
           "Pengirim",
           true
         )}
-        <div class="qr-box">
+        <div class="qr-plain">
           <img src="${qrCodeUrl}" alt="Scan to track order" />
           <span>Scan to track</span>
         </div>

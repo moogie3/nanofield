@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import "styles/globals.css"
 import { Outfit, Manrope } from "next/font/google"
 import { cn } from "@/lib/utils"
+import ConsoleSilencer from "@modules/common/components/console-silencer"
 import { ThemeProvider } from "../components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
@@ -28,6 +29,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       className={cn("font-sans", outfit.variable, manropeHeading.variable)}
     >
       <body className="bg-background text-foreground">
+        <ConsoleSilencer />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TooltipProvider>
             <main className="relative">{props.children}</main>
