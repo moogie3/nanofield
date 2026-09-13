@@ -15,8 +15,8 @@
 //   DRY_RUN=1 ADMIN_EMAIL=... ADMIN_PASSWORD=... node seed-nanofield-shipping.mjs
 //     -> report only, no writes.
 //
-// Matches the working state documented in whole.md and the procedure in
-// STARTING_MANUAL.md (Part F). Manual setup and this script never conflict:
+// Matches the working state documented in docs/whole.md and the procedure in
+// docs/STARTING_MANUAL.md (Part F). Manual setup and this script never conflict:
 // existing matching records are reused, never duplicated.
 const BASE = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 const DRY_RUN = process.env.DRY_RUN === "1"

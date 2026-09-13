@@ -1,5 +1,5 @@
 # Nanofield — Whole-Project State
-*Last updated: September 11, 2026. Companion docs: `nanofield_ecommerce_plan.md` (business/catalog plan), `AGENTS.md` (commands + conventions).*
+*Last updated: September 11, 2026. Companion docs: `nanofield_ecommerce_plan.md` (business/catalog plan), `../AGENTS.md` (commands + conventions).*
 
 ## Objective
 Standalone brand store for an Indonesia-based semiconductor / electronic-component and appliance-spare-part retailer (ex-Shopee/TikTok "Toko Sanjaya"), relaunched as **Nanofield**. B2C first; B2B held in reserve via Medusa's dormant B2B modules.

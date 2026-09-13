@@ -4,12 +4,13 @@ Nanofield is a standalone ecommerce store for semiconductors, electronic compone
 
 Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, and a support/error page system (contact, returns, FAQ, branded error screens).
 
-Project docs:
+Project docs (all in `docs/`):
 
-- `whole.md` — whole-project state: architecture, what is built, conventions, gotchas
-- `nanofield_ecommerce_plan.md` — business/catalog plan, decision log, import checklist
-- `STARTING_MANUAL.md` — fresh-clone to working-checkout manual: setup order, Definition of Ready gates, admin reference
-- `ARCHITECTURE.md` — system sketch: backend, storefront, RajaOngkir, Shopee pipeline, and how they connect
+- `docs/whole.md` — whole-project state: architecture, what is built, conventions, gotchas
+- `docs/nanofield_ecommerce_plan.md` — business/catalog plan, decision log, import checklist
+- `docs/STARTING_MANUAL.md` — fresh-clone to working-checkout manual: setup order, Definition of Ready gates, admin reference
+- `docs/ARCHITECTURE.md` — system sketch: backend, storefront, RajaOngkir, Shopee pipeline, and how they connect
+- `docs/catalog-consistency-phases.md` — catalog consistency plan: Variation, categories, specs/datasheet, search + filter parity
 - `AGENTS.md` — contributor commands, package-manager rules, code style
 
 ## Repository layout
@@ -96,7 +97,7 @@ Open `http://localhost:8000/dk/store`. Or run everything at once from the root w
 
 ### 6. Load catalog data (pick one)
 
-- **Demo seed (12 semiconductor SKUs, placeholder prices)** — proves the metadata-to-UI path: with the backend running, run the seeder in `apps/backend` (see `nanofield_ecommerce_plan.md` Section 0 for script details).
+- **Demo seed (12 semiconductor SKUs, placeholder prices)** — proves the metadata-to-UI path: with the backend running, run the seeder in `apps/backend` (see `docs/nanofield_ecommerce_plan.md` Section 0 for script details).
 - **Real catalog (Shopee Excel exports)** — open the admin at `/app/ecomm-import`, upload the sales/basic/media/shipping workbooks, run **Preview** first (validates without writing), then **Execute**. The same pipeline is drivable from the CLI (`apps/backend/scripts/import-shopee.mjs`). Clean out demo/seed and loadtest products before the real import (see plan Section 6 for SKU collisions to resolve first).
 
 ## Everyday commands
