@@ -1,6 +1,6 @@
 # Nanofield — Precision Electronic Components
 
-Nanofield is a standalone ecommerce store for semiconductors, electronic components, and appliance spare parts (successor to the Shopee/TikTok "Toko Sanjaya" listings). B2C first, with B2B held in reserve.
+Nanofield is a standalone ecommerce store for semiconductors, electronic components, and appliance spare parts. B2C first, with B2B held in reserve.
 
 Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, and a support/error page system (contact, returns, FAQ, branded error screens).
 
