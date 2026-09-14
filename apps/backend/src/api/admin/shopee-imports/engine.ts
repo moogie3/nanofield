@@ -3,6 +3,13 @@
 // /admin/shopee-imports API routes; the old CLI is now a thin client that
 // uploads through those routes, so there is exactly one implementation.
 import { MedusaError } from "@medusajs/framework/utils"
+import { canonicalCategory } from "./category-map"
+import {
+  deriveHasDatasheet,
+  deriveSpecs,
+  familyForCategory,
+} from "./specs"
+import { extractMpn, resolveDatasheetUrl } from "./datasheets"
 import XLSX from "xlsx"
 
 export type ImportOptions = {
@@ -44,6 +51,16 @@ export type PreviewInfo = {
   // Detected weight header text ("Berat (gr)" etc.), or null when the sheet
   // has no Berat column — variants then fall back to 500g in quotes.
   weightColumn: string | null
+  // Phase 1: plan variants whose raw Shopee label differs from the normalized
+  // option value (whitespace/empty cleanup). Surfaced as a preview badge.
+  variantsRenamed: number
+  // Phase 2: plans whose Shopee leaf mapped to a different canonical
+  // category. Surfaced as a preview badge.
+  categoriesRemapped: number
+  // Phase 3: plans with >=1 derived spec axis, and plans flagged
+  // has_datasheet at plan time. Surfaced as preview badges.
+  specsWithValues: number
+  specsWithDatasheet: number
   // Per-file parse diagnostics: row counts + detected headers so a 0-product
   // preview shows WHY (wrong file in a slot, renamed template, empty export).
   diag: {
@@ -117,6 +134,18 @@ const slugify = (s: string): string =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "product"
+
+// Phase 1 (catalog-consistency): deterministic option values. Trim, collapse
+// inner whitespace, empty -> "Default". Seller case is PRESERVED — the Sep 12
+// audit found zero case splits in the live catalog, so lowercasing would only
+// destroy information (10A, 2 x 1.5). Applied at plan time (buildPlans) and
+// at update time (knownValues comparison in upsertOne).
+export const normalizeOptionValue = (raw: unknown): string => {
+  const cleaned =
+    typeof raw === "string" ? raw : raw === null || raw === undefined ? "" : String(raw)
+  const collapsed = cleaned.trim().replace(/\s+/g, " ")
+  return collapsed || "Default"
+}
 
 // --- SKU classification for datasheet gating ---
 // Parent SKUs follow PREFIX-NNNN (IC-0399, TRS-0051, MOD-0501, ...).
@@ -397,6 +426,8 @@ export const parseBasic = (buf: Buffer | undefined): Map<string, string> => {
 export type MediaEntry = {
   category: string | null
   categoryPath: string
+  // Raw Shopee leaf before canonical mapping (traceability + remap count).
+  leaf: string | null
   images: string[]
 }
 
@@ -467,9 +498,12 @@ export const parseMedia = (buf: Buffer | undefined): Map<string, MediaEntry> => 
       }
     }
     const pid = str(r[pidIdx])
+    const leaf = leafCategory(str(r[catIdx]))
     map.set(pid, {
-      category: leafCategory(str(r[catIdx])),
+      // Canonical category when mapped, raw leaf otherwise (status quo).
+      category: canonicalCategory(leaf) ?? leaf,
       categoryPath: str(r[catIdx]),
+      leaf,
       images,
     })
   }
@@ -511,6 +545,12 @@ export type ProductPlan = {
   variants: VariantPlan[]
   description: string
   category: string | null
+  // Raw Shopee category path for traceability (metadata category_path).
+  categoryPath: string
+  // Phase 3: derived spec layer (filterable facts, never renames Variation).
+  specFamily: string | null
+  specs: Record<string, string>
+  hasDatasheet: boolean
   images: string[]
 }
 
@@ -609,7 +649,7 @@ export const buildPlans = (
   media: Map<string, MediaEntry>,
   cleanDesc: boolean,
   ship: ShipWeights = emptyShipWeights()
-): { plans: ProductPlan[]; skipped: { pid: string; key?: string; reason: string }[] } => {
+): { plans: ProductPlan[]; skipped: { pid: string; key?: string; reason: string }[]; variantsRenamed: number; categoriesRemapped: number } => {
   const groups = new Map<string, SalesRow[]>()
   for (const r of sales) {
     if (!groups.has(r.pid)) {
@@ -620,6 +660,8 @@ export const buildPlans = (
 
   const plans: ProductPlan[] = []
   const skipped: { pid: string; key?: string; reason: string }[] = []
+  let variantsRenamed = 0
+  let categoriesRemapped = 0
   for (const [pid, vrows] of groups) {
     const name = vrows[0].name
     const parentSku = vrows.find((r) => r.parentSku)?.parentSku || ""
@@ -635,7 +677,11 @@ export const buildPlans = (
         badPrice++
         return
       }
-      const label = r.variationName || "Default"
+      const rawLabel = r.variationName || ""
+      const label = normalizeOptionValue(rawLabel)
+      if (label !== rawLabel) {
+        variantsRenamed++
+      }
       variants.push({
         shopeeVariationId: r.variationId,
         title: label,
@@ -659,6 +705,23 @@ export const buildPlans = (
     }
     const rawDesc = descriptions.get(pid) || ""
     const m = media.get(pid)
+    if (
+      m?.category &&
+      m.leaf &&
+      m.category.toLowerCase() !== m.leaf.trim().toLowerCase()
+    ) {
+      categoriesRemapped++
+    }
+    const flags = classifySku(key)
+    const specFamily = familyForCategory(m?.category)
+    const specs = deriveSpecs(
+      specFamily,
+      variants.map((v) => v.optionValue)
+    )
+    // Datasheet automation: title-extracted MPN candidate + curated-map URL.
+    // Both are fill-empty-only downstream (upsertOne) — plans just report.
+    const mpnCandidate = extractMpn(name)
+    const datasheetUrl = resolveDatasheetUrl(mpnCandidate)
     plans.push({
       pid,
       name,
@@ -667,10 +730,20 @@ export const buildPlans = (
       variants,
       description: rawDesc ? (cleanDesc ? cleanDescription(rawDesc) : rawDesc) : "",
       category: m?.category || null,
+      categoryPath: m?.categoryPath || "",
+      specFamily,
+      specs,
+      hasDatasheet: deriveHasDatasheet({
+        isSemiconductor: flags.isSemiconductor,
+        partNumber: flags.partNumber,
+        mpn: mpnCandidate || undefined,
+      }),
+      mpnCandidate,
+      datasheetUrl,
       images: m?.images || [],
     })
   }
-  return { plans, skipped }
+  return { plans, skipped, variantsRenamed, categoriesRemapped }
 }
 
 // --- HTTP plumbing (Admin REST, caller-supplied auth headers) ---
@@ -968,9 +1041,43 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
     const categoryId = await ensureCategory(plan.category)
     const imagePayload = plan.images.map((url) => ({ url }))
     const flags = classifySku(plan.key)
+    // Datasheet automation: operator mpn > plan candidate (title-extracted)
+    // for the identifier; operator datasheet_url > curated map hit for the
+    // document. Fill-empty only — automation never overwrites human input.
+    const existingMpn =
+      typeof existing?.metadata?.mpn === "string"
+        ? existing.metadata.mpn.trim()
+        : ""
+    const existingUrl =
+      typeof existing?.metadata?.datasheet_url === "string"
+        ? existing.metadata.datasheet_url.trim()
+        : ""
+    const finalMpn = existingMpn || plan.mpnCandidate || ""
+    const mappedUrl = resolveDatasheetUrl(finalMpn)
+    const partNumber = (existing && existingMpn) || flags.partNumber
     const docMetadata: Record<string, string> = {
-      ...(flags.partNumber ? { part_number: flags.partNumber } : {}),
+      ...(partNumber ? { part_number: partNumber } : {}),
       is_semiconductor: flags.isSemiconductor,
+      // Raw Shopee path for traceability (plan.category is canonical).
+      ...(plan.categoryPath ? { category_path: plan.categoryPath } : {}),
+      spec_family: plan.specFamily,
+      ...plan.specs,
+      ...(finalMpn && !existingMpn ? { mpn: finalMpn } : {}),
+      ...(mappedUrl && !existingUrl ? { datasheet_url: mappedUrl } : {}),
+    }
+    // has_datasheet is monotonic: only ever written "true" (plan derivation,
+    // candidate identifier, or an operator-mpn upgrade) — a derived false
+    // must never destroy a manually-set flag.
+    if (
+      plan.hasDatasheet ||
+      deriveHasDatasheet({
+        isSemiconductor: flags.isSemiconductor,
+        partNumber,
+        mpn: finalMpn || undefined,
+        datasheetUrl: existingUrl || undefined,
+      })
+    ) {
+      docMetadata.has_datasheet = "true"
     }
 
     // Publication follows sellable stock: zero-stock products stay draft
@@ -1104,8 +1211,10 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
       )) as { product_option: { id: string; values: { value: string }[] } }
       variationOption = { id: created.product_option.id, title: "Variation", values: [] }
     }
+    // Compare normalized: existing DB values predate normalization and may
+    // carry stray whitespace — matching on raw strings would post duplicates.
     const knownValues = new Set(
-      (variationOption?.values || []).map((v) => v.value)
+      (variationOption?.values || []).map((v) => normalizeOptionValue(v.value))
     )
 
     const freshV = (await get(
@@ -1236,7 +1345,7 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
   const basicDiag = describeWorkbook(input.basicBuf)
   const mediaDiag = describeWorkbook(input.mediaBuf)
   const shipDiag = describeWorkbook(input.shipBuf)
-  const { plans, skipped } = buildPlans(
+  const { plans, skipped, variantsRenamed, categoriesRemapped } = buildPlans(
     sales,
     descriptions,
     media,
@@ -1311,6 +1420,11 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
     skipped,
     categoriesToCreate,
     weightColumn,
+    variantsRenamed,
+    categoriesRemapped,
+    specsWithValues: plans.filter((p) => Object.keys(p.specs).length > 0)
+      .length,
+    specsWithDatasheet: plans.filter((p) => p.hasDatasheet).length,
     withDescriptions: plans.filter((p) => p.description.length > 0).length,
     withImages: plans.filter((p) => p.images.length > 0).length,
     diag: {

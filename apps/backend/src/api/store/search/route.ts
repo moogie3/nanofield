@@ -7,8 +7,9 @@ import {
 // Postgres full-text + trigram product search (no external engine).
 // Returns ranked product ids; the storefront hydrates them through the
 // regular /store/products endpoint so pricing/region logic stays in one
-// place. Ranking: exact SKU / part_number / handle > title substring >
-// trigram similarity > tsvector rank. Typo-tolerant via pg_trgm.
+// place. Ranking: exact SKU / part_number / mpn / option value / handle >
+// title substring > spec metadata / category / family > trigram similarity >
+// tsvector rank. Typo-tolerant via pg_trgm.
 // If pg_trgm is missing (extension not installed), falls back to an
 // ILIKE-only query instead of failing.
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
@@ -103,8 +104,34 @@ SELECT p.id, p.handle, p.title,
         AND (v.sku ILIKE $1 OR v.sku ILIKE $2)
     ) THEN 100 ELSE 0 END,
     CASE WHEN (p.metadata ->> 'part_number') ILIKE $1 THEN 100 ELSE 0 END,
+    CASE WHEN (p.metadata ->> 'mpn') ILIKE $1 THEN 100 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM product_variant v
+      JOIN product_variant_option vo ON vo.variant_id = v.id
+      JOIN product_option_value pov ON pov.id = vo.option_value_id
+      WHERE v.product_id = p.id AND v.deleted_at IS NULL
+        AND pov.deleted_at IS NULL AND pov.value ILIKE $1
+    ) THEN 100 ELSE 0 END,
     CASE WHEN p.handle ILIKE $1 THEN 90
          WHEN p.title ILIKE $2 THEN 80 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM product_variant v
+      JOIN product_variant_option vo ON vo.variant_id = v.id
+      JOIN product_option_value pov ON pov.id = vo.option_value_id
+      WHERE v.product_id = p.id AND v.deleted_at IS NULL
+        AND pov.deleted_at IS NULL AND pov.value ILIKE $2
+    ) THEN 70 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM jsonb_each_text(p.metadata) AS kv(k, v)
+      WHERE kv.k LIKE 'spec\\_%' AND kv.v ILIKE $2
+    ) THEN 70 ELSE 0 END,
+    CASE WHEN (p.metadata ->> 'spec_family') ILIKE $1 THEN 70 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM product_category_product pcp
+      JOIN product_category c ON c.id = pcp.product_category_id
+      WHERE pcp.product_id = p.id AND c.deleted_at IS NULL
+        AND (c.name ILIKE $1 OR c.name ILIKE $2)
+    ) THEN 70 ELSE 0 END,
     COALESCE(similarity(p.title, $3), 0) * 60,
     COALESCE(ts_rank(
       to_tsvector('simple', COALESCE(p.title, '') || ' ' || COALESCE(p.description, '')),
@@ -121,6 +148,26 @@ WHERE p.deleted_at IS NULL AND p.status = 'published'
     )
     OR p.title ILIKE $2 OR p.handle ILIKE $1
     OR (p.metadata ->> 'part_number') ILIKE $1
+    OR (p.metadata ->> 'mpn') ILIKE $1
+    OR EXISTS (
+      SELECT 1 FROM product_variant v
+      JOIN product_variant_option vo ON vo.variant_id = v.id
+      JOIN product_option_value pov ON pov.id = vo.option_value_id
+      WHERE v.product_id = p.id AND v.deleted_at IS NULL
+        AND pov.deleted_at IS NULL
+        AND (pov.value ILIKE $1 OR pov.value ILIKE $2)
+    )
+    OR EXISTS (
+      SELECT 1 FROM jsonb_each_text(p.metadata) AS kv(k, v)
+      WHERE kv.k LIKE 'spec\\_%' AND kv.v ILIKE $2
+    )
+    OR (p.metadata ->> 'spec_family') ILIKE $1
+    OR EXISTS (
+      SELECT 1 FROM product_category_product pcp
+      JOIN product_category c ON c.id = pcp.product_category_id
+      WHERE pcp.product_id = p.id AND c.deleted_at IS NULL
+        AND (c.name ILIKE $1 OR c.name ILIKE $2)
+    )
     OR similarity(p.title, $3) > 0.15
     OR to_tsvector('simple', COALESCE(p.title, '') || ' ' || COALESCE(p.description, ''))
        @@ plainto_tsquery('simple', $3)
@@ -138,8 +185,34 @@ SELECT p.id, p.handle, p.title,
         AND (v.sku ILIKE $1 OR v.sku ILIKE $2)
     ) THEN 100 ELSE 0 END,
     CASE WHEN (p.metadata ->> 'part_number') ILIKE $1 THEN 100 ELSE 0 END,
+    CASE WHEN (p.metadata ->> 'mpn') ILIKE $1 THEN 100 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM product_variant v
+      JOIN product_variant_option vo ON vo.variant_id = v.id
+      JOIN product_option_value pov ON pov.id = vo.option_value_id
+      WHERE v.product_id = p.id AND v.deleted_at IS NULL
+        AND pov.deleted_at IS NULL AND pov.value ILIKE $1
+    ) THEN 100 ELSE 0 END,
     CASE WHEN p.handle ILIKE $1 THEN 90
-         WHEN p.title ILIKE $2 THEN 80 ELSE 0 END
+         WHEN p.title ILIKE $2 THEN 80 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM product_variant v
+      JOIN product_variant_option vo ON vo.variant_id = v.id
+      JOIN product_option_value pov ON pov.id = vo.option_value_id
+      WHERE v.product_id = p.id AND v.deleted_at IS NULL
+        AND pov.deleted_at IS NULL AND pov.value ILIKE $2
+    ) THEN 70 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM jsonb_each_text(p.metadata) AS kv(k, v)
+      WHERE kv.k LIKE 'spec\\_%' AND kv.v ILIKE $2
+    ) THEN 70 ELSE 0 END,
+    CASE WHEN (p.metadata ->> 'spec_family') ILIKE $1 THEN 70 ELSE 0 END,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM product_category_product pcp
+      JOIN product_category c ON c.id = pcp.product_category_id
+      WHERE pcp.product_id = p.id AND c.deleted_at IS NULL
+        AND (c.name ILIKE $1 OR c.name ILIKE $2)
+    ) THEN 70 ELSE 0 END
   ) AS score
 FROM product p
 WHERE p.deleted_at IS NULL AND p.status = 'published'
@@ -151,6 +224,26 @@ WHERE p.deleted_at IS NULL AND p.status = 'published'
     )
     OR p.title ILIKE $2 OR p.handle ILIKE $1
     OR (p.metadata ->> 'part_number') ILIKE $1
+    OR (p.metadata ->> 'mpn') ILIKE $1
+    OR EXISTS (
+      SELECT 1 FROM product_variant v
+      JOIN product_variant_option vo ON vo.variant_id = v.id
+      JOIN product_option_value pov ON pov.id = vo.option_value_id
+      WHERE v.product_id = p.id AND v.deleted_at IS NULL
+        AND pov.deleted_at IS NULL
+        AND (pov.value ILIKE $1 OR pov.value ILIKE $2)
+    )
+    OR EXISTS (
+      SELECT 1 FROM jsonb_each_text(p.metadata) AS kv(k, v)
+      WHERE kv.k LIKE 'spec\\_%' AND kv.v ILIKE $2
+    )
+    OR (p.metadata ->> 'spec_family') ILIKE $1
+    OR EXISTS (
+      SELECT 1 FROM product_category_product pcp
+      JOIN product_category c ON c.id = pcp.product_category_id
+      WHERE pcp.product_id = p.id AND c.deleted_at IS NULL
+        AND (c.name ILIKE $1 OR c.name ILIKE $2)
+    )
   )
 ORDER BY score DESC, p.created_at DESC
 LIMIT $3

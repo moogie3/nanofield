@@ -150,7 +150,7 @@ const SiteSearch = () => {
             type="search"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Search products, orders, cart…"
+            placeholder="Search part number, IC, specs…"
             aria-label="Site search"
             className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
           />

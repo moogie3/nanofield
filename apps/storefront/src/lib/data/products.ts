@@ -109,6 +109,8 @@ export const listProductsWithSort = async ({
   countryCode,
   optionValueIds,
   categoryIds,
+  spec,
+  hasDatasheet,
 }: {
   page?: number
   queryParams?: ProductListQueryParams
@@ -116,6 +118,8 @@ export const listProductsWithSort = async ({
   countryCode: string
   optionValueIds?: OptionValueIds
   categoryIds?: string[]
+  spec?: string[]
+  hasDatasheet?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -142,11 +146,49 @@ export const listProductsWithSort = async ({
     countryCode,
   })
 
-  const sortedProducts = sortProducts(products, sortBy)
+  // Spec + datasheet filters run in memory on the fetched set (the store API
+  // has no metadata filter): every selected pair must match, so counts and
+  // pages stay exact. Pairs are "axis:value" against comma-separated
+  // metadata values, case-insensitive.
+  const specPairs = (spec || [])
+    .map((pair) => {
+      const idx = pair.indexOf(":")
+      if (idx < 0 || !/^spec_[a-z]+$/.test(pair.slice(0, idx))) {
+        return null
+      }
+      const value = pair.slice(idx + 1).trim().toLowerCase()
+      return value ? { axis: pair.slice(0, idx), value } : null
+    })
+    .filter((p): p is { axis: string; value: string } => !!p)
+  const matchesSpecs = (product: HttpTypes.StoreProduct): boolean => {
+    if (!specPairs.length && !hasDatasheet) {
+      return true
+    }
+    const metadata = (product.metadata || {}) as Record<string, unknown>
+    if (
+      hasDatasheet &&
+      (metadata.has_datasheet as string | undefined) !== "true"
+    ) {
+      return false
+    }
+    return specPairs.every(({ axis, value }) => {
+      const raw = metadata[axis]
+      if (typeof raw !== "string") {
+        return false
+      }
+      return raw
+        .split(",")
+        .map((v) => v.trim().toLowerCase())
+        .includes(value)
+    })
+  }
+  const filtered = products.filter(matchesSpecs)
+
+  const sortedProducts = sortProducts(filtered, sortBy)
 
   const pageParam = (page - 1) * limit
 
-  const filteredCount = products.length
+  const filteredCount = filtered.length
 
   const nextPage = filteredCount > pageParam + limit ? pageParam + limit : null
 
@@ -183,4 +225,38 @@ export const searchProductIds = async (
     }
   )
   return Array.isArray(ids) ? ids : []
+}
+
+export type FilterFacets = {
+  options: { value: string; count: number; ids: string[] }[]
+  specs: { axis: string; value: string; count: number }[]
+  datasheetCount: number
+}
+
+// Sidebar facet values (Phase 5): distinct option values, spec axis values,
+// and the datasheet-flag count across published products, optionally scoped
+// to the selected categories. Tiny GROUP BY payload — never product rows.
+export const getFilterFacets = async (
+  categoryIds?: string[]
+): Promise<FilterFacets> => {
+  const query: Record<string, unknown> = {}
+  if (categoryIds?.length) {
+    query.category_id = categoryIds
+  }
+  try {
+    const res = await sdk.client.fetch<FilterFacets>(`/store/facets`, {
+      method: "GET",
+      query,
+      cache: "no-store",
+    })
+    return {
+      options: Array.isArray(res.options) ? res.options : [],
+      specs: Array.isArray(res.specs) ? res.specs : [],
+      datasheetCount: Number(res.datasheetCount) || 0,
+    }
+  } catch {
+    // Facets are progressive enhancement: a backend hiccup degrades to the
+    // category/sort UI rather than breaking the catalog page.
+    return { options: [], specs: [], datasheetCount: 0 }
+  }
 }

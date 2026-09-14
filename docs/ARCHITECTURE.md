@@ -60,12 +60,14 @@ sales.xlsx + basic.xlsx + media.xlsx + ship.xlsx
         │                    │
         │                    ├── skipped rows (id + reason)
         │                    ├── Stok column resolution
-        │                    └── Berat weight badge (else 500 g fallback)
+        │                    ├── Berat weight badge (else 500 g fallback)
+        │                    └── consistency badges (labels cleaned,
+        │                        categories remapped, specs/datasheet)
         │
         │── GATE: Preview sign-off ──▶ Execute (writes)
         │                                      │
         │                                      ├── products + variants (IDR prices)
-        │                                      ├── categories (auto-created)
+        │                                      ├── categories (canonical allowlist)
         │                                      ├── spec metadata (part_number, …)
         │                                      ├── variant weights (ship file)
         │                                      ├── inventory levels ──▶ channel's location

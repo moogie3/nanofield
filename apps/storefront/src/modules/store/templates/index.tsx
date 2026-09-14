@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { SpecSelection } from "@lib/util/product-spec-filters"
 import PageBackdrop from "@modules/common/components/page-backdrop"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
@@ -16,6 +17,8 @@ const StoreTemplate = ({
   countryCode,
   optionValueIds,
   categoryIds,
+  spec,
+  hasDatasheet,
   query,
   productsIds,
 }: {
@@ -25,6 +28,8 @@ const StoreTemplate = ({
   countryCode: string
   optionValueIds?: OptionValueIds
   categoryIds?: string[]
+  spec?: SpecSelection
+  hasDatasheet?: boolean
   query?: string
   productsIds?: string[]
 }) => {
@@ -36,6 +41,8 @@ const StoreTemplate = ({
   const gridKey = JSON.stringify({
     categories: [...(categoryIds ?? [])].sort(),
     options: optionValueIds ?? [],
+    spec: [...(spec ?? [])].sort(),
+    datasheet: hasDatasheet ?? false,
     sort,
     page: pageNumber,
     view: view ?? "grid",
@@ -123,6 +130,9 @@ const StoreTemplate = ({
               countryCode={countryCode}
               optionValueIds={optionValueIds}
               categoryIds={categoryIds}
+              spec={spec}
+              hasDatasheet={hasDatasheet}
+              query={query}
               productsIds={productsIds}
             />
           </Suspense>

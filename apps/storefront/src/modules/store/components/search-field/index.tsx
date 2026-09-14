@@ -61,7 +61,7 @@ const SearchField = ({
             type="search"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={hero ? "Search part number, IC, transistor…" : "Search part number"}
+            placeholder="Search part number, IC, specs…"
             aria-label="Search products"
             className={
               hero

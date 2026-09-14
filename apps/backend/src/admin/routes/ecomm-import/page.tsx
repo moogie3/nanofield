@@ -33,6 +33,10 @@ type PreviewInfo = {
   withDescriptions: number
   withImages: number
   weightColumn: string | null
+  variantsRenamed: number
+  categoriesRemapped: number
+  specsWithValues: number
+  specsWithDatasheet: number
   sample: PreviewSample[]
   diag?: {
     sales: WorkbookDiag
@@ -495,6 +499,43 @@ const ImportPage = () => {
                 <Badge color="red">
                   not found — variants will quote at 500g
                 </Badge>
+              )}
+            </Text>
+          </div>
+          <div className="mt-3">
+            <Text size="small" className="font-medium">
+              Variation labels cleaned:{" "}
+              {preview.variantsRenamed > 0 ? (
+                <Badge color="grey">
+                  {preview.variantsRenamed} value(s) normalized
+                </Badge>
+              ) : (
+                <Badge color="green">0 — values already clean</Badge>
+              )}
+            </Text>
+          </div>
+          <div className="mt-3">
+            <Text size="small" className="font-medium">
+              Categories remapped:{" "}
+              {preview.categoriesRemapped > 0 ? (
+                <Badge color="grey">
+                  {preview.categoriesRemapped} product(s) to canonical
+                </Badge>
+              ) : (
+                <Badge color="green">0 — all leaves already canonical</Badge>
+              )}
+            </Text>
+          </div>
+          <div className="mt-3">
+            <Text size="small" className="font-medium">
+              Specs derived:{" "}
+              {preview.specsWithValues > 0 ? (
+                <Badge color="green">
+                  {preview.specsWithValues} product(s) ·{" "}
+                  {preview.specsWithDatasheet} with datasheet
+                </Badge>
+              ) : (
+                <Badge color="grey">none from these variation labels</Badge>
               )}
             </Text>
           </div>

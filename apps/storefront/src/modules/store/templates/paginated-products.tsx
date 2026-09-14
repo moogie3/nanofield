@@ -1,6 +1,10 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import {
+  formatSpecLabel,
+  SpecSelection,
+} from "@lib/util/product-spec-filters"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -26,6 +30,9 @@ export default async function PaginatedProducts({
   countryCode,
   optionValueIds,
   categoryIds,
+  spec,
+  hasDatasheet,
+  query,
   view,
 }: {
   sortBy?: SortOptions
@@ -36,6 +43,9 @@ export default async function PaginatedProducts({
   countryCode: string
   optionValueIds?: OptionValueIds
   categoryIds?: string[]
+  spec?: SpecSelection
+  hasDatasheet?: boolean
+  query?: string
   view?: "grid" | "list"
 }) {
   const queryParams: PaginatedProductsParams = {
@@ -80,6 +90,8 @@ export default async function PaginatedProducts({
     countryCode,
     optionValueIds,
     categoryIds: finalCategoryIds,
+    spec,
+    hasDatasheet,
   })
 
   // Search ranking wins over the sort dropdown: restore /store/search rank
@@ -97,14 +109,33 @@ export default async function PaginatedProducts({
   const layout = view === "list" ? "list" : "grid"
 
   if (products.length === 0) {
+    const blockers: string[] = []
+    if (query) {
+      blockers.push(`the search for \u201c${query}\u201d`)
+    }
+    for (const pair of spec ?? []) {
+      blockers.push(`the ${formatSpecLabel(pair)} filter`)
+    }
+    if (hasDatasheet) {
+      blockers.push("the Has datasheet filter")
+    }
+    if (optionValueIds?.length) {
+      blockers.push("the selected option values")
+    }
+    if (finalCategoryIds?.length) {
+      blockers.push(
+        `${finalCategoryIds.length} categor${finalCategoryIds.length === 1 ? "y" : "ies"}`
+      )
+    }
     return (
       <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-border bg-card px-6 py-16 text-center">
         <p className="font-heading text-xl font-bold text-foreground">
           No products match these filters
         </p>
         <p className="text-small-regular max-w-md text-ui-fg-subtle">
-          The selected categories returned nothing — they may have been
-          removed or renamed. Clear the filters to browse the full catalog.
+          {blockers.length
+            ? `Nothing matches ${blockers.join(" + ")} — try removing one filter at a time.`
+            : "The selected categories returned nothing — they may have been removed or renamed. Clear the filters to browse the full catalog."}
         </p>
         <a
           href={`/${countryCode}/store`}

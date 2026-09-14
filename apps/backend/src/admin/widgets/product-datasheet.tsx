@@ -27,6 +27,8 @@ const readMeta = (metadata: unknown, key: string): string => {
 // - `no_datasheet: "true"` hides all datasheet UI (tools, consumables)
 // - `datasheet_url` always links the real document, any category
 // - `mpn` falls back to a datasheet search for that part number
+// Phase 3: saving an mpn into an empty `part_number` also fills part_number,
+// so search and datasheet never disagree on the identifier.
 const ProductDatasheetWidget = () => {
   const { id } = useParams()
   const queryClient = useQueryClient()
@@ -42,6 +44,8 @@ const ProductDatasheetWidget = () => {
   const [hasDocs, setHasDocs] = useState(true)
   const [datasheetUrl, setDatasheetUrl] = useState("")
   const [mpn, setMpn] = useState("")
+  const partNumber = readMeta(metadata, "part_number")
+  const willSyncPartNumber = mpn.trim() !== "" && partNumber.trim() === ""
 
   useEffect(() => {
     if (!data?.product) {
@@ -60,6 +64,7 @@ const ProductDatasheetWidget = () => {
           no_datasheet: hasDocs ? "false" : "true",
           datasheet_url: datasheetUrl.trim(),
           mpn: mpn.trim(),
+          ...(willSyncPartNumber ? { part_number: mpn.trim() } : {}),
         },
       }),
     onSuccess: async () => {
@@ -126,6 +131,11 @@ const ProductDatasheetWidget = () => {
         <Text size="small" className="text-ui-fg-subtle">
           {preview}
         </Text>
+        {willSyncPartNumber && (
+          <Text size="small" className="text-ui-fg-subtle">
+            Saving will also set the empty part number to {mpn.trim()}.
+          </Text>
+        )}
         <div className="flex justify-end">
           <Button
             variant="primary"

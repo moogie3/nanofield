@@ -2,6 +2,10 @@ import { Metadata } from "next"
 
 import { searchProductIds } from "@lib/data/products"
 import { parseOptionValueIds } from "@lib/util/product-option-filters"
+import {
+  parseHasDatasheet,
+  parseSpecFilters,
+} from "@lib/util/product-spec-filters"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
 
@@ -17,6 +21,8 @@ type StorePageSearchParams = Record<string, string | string[] | undefined> & {
   view?: "grid" | "list"
   optionValueIds?: string | string[]
   category?: string | string[]
+  spec?: string | string[]
+  has_datasheet?: string
   q?: string
 }
 
@@ -33,6 +39,8 @@ export default async function StorePage(props: Params) {
   const { sortBy, page, category, view } = searchParams
   const query = typeof searchParams.q === "string" ? searchParams.q.trim() : ""
   const optionValueIds = parseOptionValueIds(searchParams)
+  const spec = parseSpecFilters(searchParams)
+  const hasDatasheet = parseHasDatasheet(searchParams)
   const categoryIds = Array.isArray(category)
     ? category
     : category
@@ -48,6 +56,8 @@ export default async function StorePage(props: Params) {
       countryCode={params.countryCode}
       optionValueIds={optionValueIds}
       categoryIds={categoryIds}
+      spec={spec}
+      hasDatasheet={hasDatasheet}
       query={query || undefined}
       productsIds={productsIds}
     />

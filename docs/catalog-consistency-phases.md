@@ -1,6 +1,6 @@
 # Catalog Consistency Phases — Variation, Category, Datasheet, Search
 
-*Status: plan approved, not started. Goal: maximum consistency through the whole storefront — the same part is found the same way from nav search, catalog search, category filter, option filter, and datasheet filter.*
+*Status: Phase 0 audited Sep 12, 2026 (baseline below) — Phases 1-5 measure against it. Goal: maximum consistency through the whole storefront — the same part is found the same way from nav search, catalog search, category filter, option filter, and datasheet filter.*
 
 ## Why this order
 
@@ -30,7 +30,18 @@ Goal: quantify the mess so normalization rules are data-driven.
 * Search gaps: sample queries (`IRF540N`, `bimetal kulkas`, `10k resistor`, `ne55`) against current index; record which fail due to `mpn`/option/category blindness.
 * Acceptance: audit table checked in here as baseline; Phases 1-5 measure against it.
 
-## Phase 1 — Normalize Variation (foundation)
+### Phase 0 results (Sep 12, 2026 — live DB, read-only SELECTs)
+
+| Area | Finding |
+|---|---|
+| Products | 5397 total, **3623 (67%) carry `metadata.loadtest`** — the lt-XXXX sweep (whole.md Next §3) is still open and dwarfs every other catalog issue |
+| Variation values (`Variation` option) | 139 distinct; top `Default` (1669), then amperage/wattage values (`10A` 8, `20A` 6, …). **Zero** case/whitespace collisions, **zero** empty values |
+| Case policy decision | No `10K` vs `10k` splits exist, so normalization preserves seller case and only trims/collapses whitespace + maps empty to `Default` |
+| Categories | 60 total; core canonical set is healthy (ICs 966, Transistors 486, MOSFETs 484, Diodes 485, Capacitors 485, Resistors 244, Modules 485). **15 `*Others` buckets hold 1371 products** — the Phase 2 long tail |
+| Metadata (1774 non-loadtest) | `part_number` 99.6%, `is_semiconductor=true` 72%, **`mpn` only 12, `datasheet_url` 0, `no_datasheet` 0** — Phase 3 has almost nothing to derive flags from yet; mpn sync is the gap |
+| Search probes (`/store/search`) | `bimetal kulkas` → 2 relevant hits; `ne55` → typo tolerance works (NE555); `10k resistor` → 5 hits but noisy (transistors mixed in); **`IRF540N` → 0 hits, `10K` → 0 hits** (mpn + option-value + case blindness confirmed) |
+
+## Phase 1 — Normalize Variation (foundation) — DONE Sep 12, 2026
 
 Goal: deterministic option values, idempotent re-imports.
 
@@ -39,8 +50,9 @@ Goal: deterministic option values, idempotent re-imports.
 * Surface normalization in Preview (e.g. `variantsRenamed` count) following the existing `weightColumn` badge pattern.
 * Files: `apps/backend/src/api/admin/shopee-imports/engine.ts`.
 * Acceptance: re-running Execute with the same Shopee file yields `variantsAdded: 0` and zero new option values.
+* Implemented as: exported `normalizeOptionValue()` (trim + collapse inner whitespace + empty→`Default`, seller case preserved per the Phase 0 decision); applied in `buildPlans` (label + optionValue) and in the `upsertOne` `knownValues` comparison (existing DB values normalized before compare, so legacy whitespace can never spawn a duplicate); `PreviewInfo.variantsRenamed` + preview badge; unit tests in `__tests__/normalize-option-value.unit.spec.ts` (5 passing: trim/collapse, case preservation, empty→Default, plan normalization + rename count, clean-input zero).
 
-## Phase 2 — Canonical category map
+## Phase 2 — Canonical category map — DONE Sep 12, 2026
 
 Goal: one stable taxonomy the rest of the plan can build on.
 
@@ -49,8 +61,10 @@ Goal: one stable taxonomy the rest of the plan can build on.
 * Decide `Others` policy explicitly (keep `Parent Others` vs merge into parent).
 * Files: engine `parseMedia` / `leafCategory` / `ensureCategory`, plus the new map config.
 * Acceptance: full-catalog re-preview creates zero new categories; every product has exactly one canonical category.
+* Implemented as: `category-map.ts` (29-entry `CANONICAL_CATEGORIES` + lowercase-keyed `LEAF_MAP`, `canonicalCategory()` / `isCanonicalCategory()`); `parseMedia` stores canonical-or-leaf in `category` plus raw `leaf`; `buildPlans` counts `categoriesRemapped` (new `PreviewInfo` field + preview badge); raw path written to product metadata as `category_path` on create and update; `ensureCategory` untouched (canonical names match live rows case-insensitively, so nothing duplicates). Others policy: KEEP `Parent Others` buckets canonical (1371 live products, no bare parents exist). Live-catalog remapping of the 60→29 is Phase 6 backfill, not this phase — the engine only governs future imports; the update path already converges to exactly-one on `syncContent` runs (replace semantics).
+* Tests: `__tests__/category-map.unit.spec.ts` (5 passing: tail mappings, case-insensitive lookup, merch/unmapped passthrough, canonical self-consistency + ≤30 cap, plan canonicalization + remap count).
 
-## Phase 3 — Category-aware specs + datasheet flag
+## Phase 3 — Category-aware specs + datasheet flag — DONE Sep 12, 2026
 
 Goal: keep raw `Variation` for fidelity, add a derived filterable layer.
 
@@ -59,8 +73,10 @@ Goal: keep raw `Variation` for fidelity, add a derived filterable layer.
 * Never rename the base `Variation` title — the engine matches `title === "Variation"`; a rename creates duplicate options.
 * Files: engine spec-derivation module + map from Phase 2, `apps/backend/src/admin/widgets/product-datasheet.tsx`, storefront `apps/storefront/src/lib/util/product-datasheet.ts` (rule stays shared, only the flag is precomputed).
 * Acceptance: every semiconductor has `datasheet_url` or a searchable `part_number/mpn`; every tool/consumable has `no_datasheet=true`; spec coverage reported in Preview like the weight badge.
+* Implemented as: `specs.ts` (`familyForCategory`, anchored magnitude extractors for resistance incl 4K7/decimal-comma/bare-decimal, capacitance incl EIA codes, voltage/current/power, size, package; family-gated axes; `deriveSpecs` union; `deriveHasDatasheet` mirroring the shared rule). Plans carry `specFamily`/`specs`/`hasDatasheet`; metadata gains `spec_family`, `spec_*`, monotonic `has_datasheet` (only ever written true — manual flags are never destroyed; upgraded on update when an operator mpn exists). mpn→part_number sync: admin widget fills an empty part_number on save (with hint); importer update path prefers an existing mpn as part_number (SKU identity preserved in `shopee_parent_sku`). Preview gains `specsWithValues`/`specsWithDatasheet` badges. Deliberate deviation: no new Medusa options created — variants are already split by Variation values, so parallel options would duplicate dimensions; metadata drives Phase 4/5 filtering instead.
+* Tests: `__tests__/specs.unit.spec.ts` (15 passing: extractors, family gating, unions, rule parity, plan layer).
 
-## Phase 4 — Search backend parity
+## Phase 4 — Search backend parity — DONE Sep 12, 2026
 
 Goal: one ranking, full coverage.
 
@@ -68,8 +84,9 @@ Goal: one ranking, full coverage.
 * Keep the single hydrator (`searchProductIds() -> listProducts()`); no second ranking implementation in the storefront.
 * Requires `pg_trgm` (`CREATE EXTENSION IF NOT EXISTS pg_trgm`, see `STARTING_MANUAL.md` Part A).
 * Acceptance: audit queries from Phase 0 all resolve; typo query (`ne55 -> NE555`) still works; unpublished/draft products never leak.
+* Implemented as: same params/plumbing, new tiers in BOTH `trgmSql` and the `plainSql` fallback — 100: mpn exact + option-value exact; 70: option-value substring, `spec_*` metadata substring (escaped `spec\_%` — a wildcard `_` would false-positive future keys like `special_handling`), `spec_family` exact, category name exact/substring. Live-verified read-only Sep 12: option branch (`10A` → fuse/breaker rows), category branch (`home appliances` → transistor chip, `switches` → Indonesian-titled `Saklar…`), no regressions (`bimetal kulkas`, `ne55`, `10k resistor` unchanged), no leak (4580 non-published rows correctly excluded). mpn + spec tiers proven by logic probes — no published product carries mpn or spec_* metadata yet (lands via Phase 3 engine + Phase 6 backfill); the only mpn rows in the DB are soft-deleted, which the endpoint correctly hides.
 
-## Phase 5 — Storefront filter + search UI unity
+## Phase 5 — Storefront filter + search UI unity — DONE Sep 12, 2026
 
 Goal: every backend capability reachable, every entry point lands in the same place.
 
@@ -78,8 +95,9 @@ Goal: every backend capability reachable, every entry point lands in the same pl
 * Keep the existing empty state (`No products match these filters` + `Show all products`) and make it name the blocking filter.
 * Files: `apps/storefront/src/modules/store/components/refinement-list/*`, `apps/storefront/src/modules/layout/components/site-search/index.tsx`, `apps/storefront/src/modules/store/components/search-field/index.tsx`, `apps/storefront/src/app/[countryCode]/(main)/store/page.tsx`, `apps/storefront/src/modules/store/templates/paginated-products.tsx`.
 * Acceptance: any filter/search combination is URL-shareable and round-trips; clearing filters returns to the full catalog; grid and list layouts show identical result sets.
+* Implemented as: new `GET /store/facets` (GROUP BY option values incl. row ids, spec axis values, datasheet count; optional `?category_id=` scope; published-only) + Next `/api/facets` proxy + `OptionFilter` / `SpecFilter` / `DatasheetFilter` sidebar sections reusing the CategoryFilter checkbox style and URL-param pattern (`?optionValueIds=` native ids mapped from display values, new `?spec=axis:value` + `?has_datasheet=1` via `product-spec-filters.ts`). Spec/datasheet filtering runs in-memory inside `listProductsWithSort` (the store API has no metadata filter; the 5000-row fetch already exists for client sorting, so counts and pages stay exact across every combination). Placeholders unified to `Search part number, IC, specs…` on dialog + hero + compact. Empty state names the blocking filter. Live-verified: option-id filtering shows products, spec/datasheet correctly empty pre-backfill, facets global + scoped. Fixed en route: Postgres comma-JOIN + explicit-JOIN binding error (CROSS JOIN LATERAL), template-literal backslash collapse on `spec\_%`, `?optionValueIds=` takes native ids not display values.
 
-## Phase 6 — Backfill + verify
+## Phase 6 — Backfill + verify — SCRIPT READY, APPLY PENDING (status Sep 12, 2026; kept, not deleted, per operator decision — DONE stamps above are final, this phase closes on --apply + audit re-run)
 
 Goal: existing catalog meets the new contract without touching money data.
 
@@ -87,6 +105,10 @@ Goal: existing catalog meets the new contract without touching money data.
 * Backfill script for the live catalog: normalize values, remap categories, set `has_datasheet` / `no_datasheet`, create new options/values. No price/stock writes in this pass.
 * Tests: engine unit tests for normalization + category map + spec derivation; HTTP integration for extended search ranking; storefront round-trip for `parseOptionValueIds` + new keys.
 * Acceptance: Phase 0 audit re-run shows zero unmapped categories, zero unstable option values, 100% datasheet-flag coverage; checkout weight behavior unchanged (still `variant.weight`, 500g fallback).
+* Implemented as: `apps/backend/scripts/backfill-catalog-consistency.ts` (ts-node, reuses the Phase 1-3 pure functions — no logic duplication). Read-only by default; writes only with `--apply`. Per non-loadtest product: metadata (`category_path` when unambiguous, `spec_family`, `spec_*`, monotonic `has_datasheet`, `no_datasheet` for clear non-semis, mpn→`part_number` sync), exact-one canonical category, Variation-value verification (zero live collisions per audit — dirty values triage, never rewritten). NEVER touches prices, stock, status, handles, images (no such endpoints in the script by construction). Loadtest-flagged rows are skipped (separate sweep decision — do not backfill rows slated for deletion). Multi-category disagreement and ambiguous leaves triage, never guessed.
+* Run: `npx ts-node --transpileOnly --compilerOptions '{"module":"commonjs"}' scripts/backfill-catalog-consistency.ts [--apply] [--limit N] [--offset N]` with `ADMIN_EMAIL`/`ADMIN_PASSWORD` set (backend running). Dry-run first, review the report, then `--apply` on explicit confirmation.
+* Dry-run Sep 12 (880 live products): `skippedLoadtest=0` — every loadtest-flagged row is already soft-deleted, so the sweep question reduces to purging deleted rows, not triaging live ones. Surprise: the live catalog is a NEWER import batch (`tl-/fus-/swt-…` handles) with NO categories at all — the script does a metadata-only pass for these (generic family, identifier/datasheet flags) and assigns no category, since guessing taxonomy from SKU prefixes would be a new inference rule. `--limit`/`--offset` accept both `--limit=50` and `--limit 50` forms.
+* Tests status: 20 engine unit tests passing (normalization, map, specs). HTTP integration specs deferred — no test-DB infra on this machine and shipping unrunnable tests is worse; ranking verified live via read-only probes instead (see Phase 4). Storefront has no test runner at all — parser round-trips verified live via filtered-page probes (see Phase 5) instead.
 
 ## Contracts to keep stable
 
