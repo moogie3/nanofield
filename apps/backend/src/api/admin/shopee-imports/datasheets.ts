@@ -2,8 +2,10 @@
 // Precedence everywhere, highest first:
 //   manual operator values > curated map > auto-extracted MPN > SKU behavior.
 // Automation only ever fills EMPTY fields — it can never overwrite or
-// destroy human input. Pure module: no imports, usable from engine,
+// destroy human input. Pure module: only a dependency-free sibling import, usable from engine,
 // backfill script, and admin widget alike.
+import { deriveHasDatasheet } from "./specs"
+
 const LEAD_PREFIX = /^(IC|TR|TRANSISTOR|DIODE|LED|CAP|RES|MOSFET|TRIAC|THYRISTOR)\b/i
 
 const STOP_WORDS = new Set([
@@ -108,4 +110,48 @@ export const describeDatasheetSource = (input: {
     return `MPN search for ${input.mpn.trim()}`
   }
   return "no datasheet UI"
+}
+
+export type DatasheetPatch = {
+  mpn?: string
+  datasheet_url?: string
+  has_datasheet?: "true"
+}
+
+// One-click bulk primitive: computes the metadata patch that brings one
+// product onto the datasheet contract, or null when it already complies.
+// Same fill-empty-only rules as the import path — safe to run over the
+// whole catalog in bulk.
+export const computeDatasheetPatch = (
+  metadata: Record<string, unknown> | null | undefined,
+  title: string
+): DatasheetPatch | null => {
+  const meta = (metadata || {}) as Record<string, unknown>
+  const str = (v: unknown): string => (typeof v === "string" ? v : "")
+  const existingMpn = str(meta.mpn).trim()
+  const existingUrl = str(meta.datasheet_url).trim()
+  const candidate = !existingMpn ? extractMpn(title) : null
+  const finalMpn = existingMpn || candidate || ""
+  const mapped = resolveDatasheetUrl(finalMpn)
+  const patch: DatasheetPatch = {}
+  if (candidate) {
+    patch.mpn = candidate
+  }
+  if (mapped && !existingUrl) {
+    patch.datasheet_url = mapped
+  }
+  const isSemi =
+    meta.is_semiconductor === "true" || meta.is_semiconductor === true
+  if (
+    deriveHasDatasheet({
+      isSemiconductor: isSemi,
+      partNumber: str(meta.part_number),
+      mpn: finalMpn || undefined,
+      datasheetUrl: existingUrl || undefined,
+    }) &&
+    str(meta.has_datasheet) !== "true"
+  ) {
+    patch.has_datasheet = "true"
+  }
+  return Object.keys(patch).length ? patch : null
 }

@@ -72,7 +72,7 @@ export function getDatasheetInfo(
   }
 
   return {
-    href: `https://www.alldatasheet.com/search.jsp?searchword=${encodeURIComponent(
+    href: `https://www.alldatasheet.com/view.jsp?Searchword=${encodeURIComponent(
       partLabel,
     )}`,
     partLabel,

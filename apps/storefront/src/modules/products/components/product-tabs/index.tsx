@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getDatasheetInfo } from "@lib/util/product-datasheet"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 
 type ProductTabsProps = {
@@ -217,7 +218,10 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
     },
   ].filter((item) => item.value !== "Unknown")
 
-  const mpnQuery = encodeURIComponent(String(partNumber))
+  // Direct-from-China sourcing: we are not in the authorized-distributor
+  // channel, so distributor stock/pricing links (which convert our traffic
+  // into their sales — and 404/0-result on obsolete Asian parts) are
+  // deliberately absent. Documents only.
   const sources = [
     {
       label: metadata.datasheet_url
@@ -226,28 +230,13 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
       note: "alldatasheet.com",
       href: datasheetUrl,
     },
-    {
-      label: `Check ${partNumber} stock & pricing`,
-      note: "digikey.com",
-      href: `https://www.digikey.com/en/products/result?keywords=${mpnQuery}`,
-    },
-    {
-      label: `Check ${partNumber} stock & pricing`,
-      note: "mouser.com",
-      href: `https://www.mouser.com/c/?q=${mpnQuery}`,
-    },
-    {
-      label: `Check ${partNumber} stock & pricing`,
-      note: "lcsc.com",
-      href: `https://www.lcsc.com/search?q=${mpnQuery}`,
-    },
   ]
 
   return (
     <div className="text-small-regular py-8 space-y-6">
       <div className="border border-border rounded-lg p-6 bg-muted/50">
         <h4 className="font-semibold text-foreground mb-4">
-          Datasheets & Distributors
+          Datasheets & Documents
         </h4>
         <div className="space-y-3">
           {sources.map((source) => (
@@ -259,7 +248,7 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
               className="flex items-center gap-3 p-3 border border-border rounded hover:bg-background transition-colors"
             >
               <svg
-                className="w-5 h-5 text-primary flex-shrink-0"
+                className="w-5 h-5 text-primary flex-shrink-0 self-start mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -271,9 +260,13 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
                   d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                 />
               </svg>
-              <span className="text-sm underline flex-1 min-w-0 break-words">{source.label}</span>
-              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
-                {source.note}
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-sm underline break-words">
+                  {source.label}
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {source.note}
+                </span>
               </span>
             </a>
           ))}
@@ -325,22 +318,24 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
               </span>
             </a>
           )}
-          {!metadata.datasheet_url &&
+          {!datasheet &&
             !metadata.application_note_url &&
             !metadata.cad_model_url && (
               <p className="text-muted-foreground text-sm">
-                No technical documents linked for this part. Request from
-                supplier portal.
+                No technical documents linked for this part yet.{" "}
+                <LocalizedClientLink href="/contact" className="underline">
+                  Ask our technical team ↗
+                </LocalizedClientLink>
               </p>
             )}
         </div>
       </div>
 
-      <div className="border border-border rounded-lg p-6 bg-muted/50">
-        <h4 className="font-semibold text-foreground mb-1">
-          Compliance & Certifications
-        </h4>
-        {complianceItems.length > 0 ? (
+      {complianceItems.length > 0 && (
+        <div className="border border-border rounded-lg p-6 bg-muted/50">
+          <h4 className="font-semibold text-foreground mb-1">
+            Compliance & Certifications
+          </h4>
           <>
             <p className="text-xs text-muted-foreground mb-4">
               Sourced from the manufacturer datasheet — always confirm against
@@ -368,14 +363,8 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
               ))}
             </div>
           </>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            Compliance data is still pending for this part. Values are added
-            from manufacturer documentation during catalog import — nothing
-            here is a guess.
-          </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="border border-border rounded-lg p-6 bg-muted/50">
         <h4 className="font-semibold text-foreground mb-4">

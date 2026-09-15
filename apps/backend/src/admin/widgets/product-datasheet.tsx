@@ -13,6 +13,7 @@ import {
   toast,
 } from "@medusajs/ui"
 import { sdk } from "../lib/sdk"
+import { describeDatasheetSource } from "../../api/admin/shopee-imports/datasheets"
 
 const readMeta = (metadata: unknown, key: string): string => {
   if (typeof metadata !== "object" || metadata === null) {
@@ -130,6 +131,13 @@ const ProductDatasheetWidget = () => {
         </div>
         <Text size="small" className="text-ui-fg-subtle">
           {preview}
+        </Text>
+        <Text size="small" className="text-ui-fg-subtle">
+          Resolves via:{" "}
+          {describeDatasheetSource({
+            datasheetUrl: datasheetUrl.trim(),
+            mpn: mpn.trim(),
+          })}
         </Text>
         {willSyncPartNumber && (
           <Text size="small" className="text-ui-fg-subtle">

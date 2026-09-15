@@ -61,6 +61,10 @@ export type PreviewInfo = {
   // has_datasheet at plan time. Surfaced as preview badges.
   specsWithValues: number
   specsWithDatasheet: number
+  // Datasheet automation: plans with a title-extracted MPN candidate, and
+  // plans with a curated-map document URL. Surfaced as preview badges.
+  mpnFilled: number
+  datasheetsLinked: number
   // Per-file parse diagnostics: row counts + detected headers so a 0-product
   // preview shows WHY (wrong file in a slot, renamed template, empty export).
   diag: {
@@ -551,6 +555,10 @@ export type ProductPlan = {
   specFamily: string | null
   specs: Record<string, string>
   hasDatasheet: boolean
+  // Datasheet automation: title-extracted MPN + curated-map URL (both may
+  // be null). Fill-empty-only downstream — plans just report.
+  mpnCandidate: string | null
+  datasheetUrl: string | null
   images: string[]
 }
 
@@ -649,7 +657,7 @@ export const buildPlans = (
   media: Map<string, MediaEntry>,
   cleanDesc: boolean,
   ship: ShipWeights = emptyShipWeights()
-): { plans: ProductPlan[]; skipped: { pid: string; key?: string; reason: string }[]; variantsRenamed: number; categoriesRemapped: number } => {
+): { plans: ProductPlan[]; skipped: { pid: string; key?: string; reason: string }[]; variantsRenamed: number; categoriesRemapped: number; mpnFilled: number; datasheetsLinked: number } => {
   const groups = new Map<string, SalesRow[]>()
   for (const r of sales) {
     if (!groups.has(r.pid)) {
@@ -743,7 +751,14 @@ export const buildPlans = (
       images: m?.images || [],
     })
   }
-  return { plans, skipped, variantsRenamed, categoriesRemapped }
+  return {
+    plans,
+    skipped,
+    variantsRenamed,
+    categoriesRemapped,
+    mpnFilled: plans.filter((p) => !!p.mpnCandidate).length,
+    datasheetsLinked: plans.filter((p) => !!p.datasheetUrl).length,
+  }
 }
 
 // --- HTTP plumbing (Admin REST, caller-supplied auth headers) ---
@@ -1345,7 +1360,7 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
   const basicDiag = describeWorkbook(input.basicBuf)
   const mediaDiag = describeWorkbook(input.mediaBuf)
   const shipDiag = describeWorkbook(input.shipBuf)
-  const { plans, skipped, variantsRenamed, categoriesRemapped } = buildPlans(
+  const { plans, skipped, variantsRenamed, categoriesRemapped, mpnFilled, datasheetsLinked } = buildPlans(
     sales,
     descriptions,
     media,
@@ -1425,6 +1440,8 @@ export const buildPreview = async (input: PreviewInput): Promise<PreviewInfo> =>
     specsWithValues: plans.filter((p) => Object.keys(p.specs).length > 0)
       .length,
     specsWithDatasheet: plans.filter((p) => p.hasDatasheet).length,
+    mpnFilled,
+    datasheetsLinked,
     withDescriptions: plans.filter((p) => p.description.length > 0).length,
     withImages: plans.filter((p) => p.images.length > 0).length,
     diag: {

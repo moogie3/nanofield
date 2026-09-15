@@ -16,6 +16,10 @@
 //     scripts/backfill-catalog-consistency.ts [--apply] [--limit N] [--offset N]
 import { normalizeOptionValue } from "../src/api/admin/shopee-imports/engine"
 import {
+  extractMpn,
+  resolveDatasheetUrl,
+} from "../src/api/admin/shopee-imports/datasheets"
+import {
   canonicalCategory,
   isCanonicalCategory,
 } from "../src/api/admin/shopee-imports/category-map"
@@ -42,6 +46,7 @@ const OFFSET = Number(flagValue("--offset")) || 0
 type AdminProduct = {
   id: string
   handle: string
+  title: string
   status: string
   metadata: Record<string, string> | null
   categories?: { id: string; name: string }[]
@@ -129,13 +134,15 @@ const main = async () => {
     metadataWrites: 0,
     categoryChanges: 0,
     valuesAdded: 0,
+    mpnFilled: 0,
+    datasheetsLinked: 0,
     triage: [] as { id: string; handle: string; reason: string }[],
   }
 
   let offset = OFFSET
   for (;;) {
     const res = (await get(
-      `/admin/products?limit=100&offset=${offset}&fields=id,handle,status,metadata,categories,options.values&order=created_at`
+      `/admin/products?limit=100&offset=${offset}&fields=id,handle,title,status,metadata,categories,options.values&order=created_at`
     )) as { products: AdminProduct[]; count: number }
     if (!res.products.length) break
     for (const p of res.products) {
@@ -206,6 +213,21 @@ const main = async () => {
       }
       const mpn =
         typeof meta.mpn === "string" ? meta.mpn.trim() : ""
+      // Datasheet automation: title-extracted candidate fills empty mpn;
+      // curated map fills empty datasheet_url. Never overwrites.
+      const mpnCandidate = !mpn ? extractMpn(p.title) : null
+      const finalMpn = mpn || mpnCandidate || ""
+      if (mpnCandidate) {
+        next.mpn = mpnCandidate
+        report.mpnFilled++
+      }
+      const mappedUrl = resolveDatasheetUrl(finalMpn)
+      const existingUrl =
+        typeof meta.datasheet_url === "string" ? meta.datasheet_url.trim() : ""
+      if (mappedUrl && !existingUrl) {
+        next.datasheet_url = mappedUrl
+        report.datasheetsLinked++
+      }
       if (mpn && meta.part_number !== mpn) {
         next.part_number = mpn
       }
@@ -217,9 +239,8 @@ const main = async () => {
         deriveHasDatasheet({
           isSemiconductor: isSemi,
           partNumber,
-          mpn: mpn || undefined,
-          datasheetUrl:
-            typeof meta.datasheet_url === "string" ? meta.datasheet_url : "",
+          mpn: finalMpn || undefined,
+          datasheetUrl: existingUrl || undefined,
         }) &&
         meta.has_datasheet !== "true"
       ) {

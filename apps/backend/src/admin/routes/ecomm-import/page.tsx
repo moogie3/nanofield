@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { ArrowUpTray } from "@medusajs/icons"
-import { Badge, Button, Container, Heading, Input, Label, Switch, Text } from "@medusajs/ui"
+import { Badge, Button, Container, Heading, Input, Label, Switch, Text, usePrompt } from "@medusajs/ui"
 
 // JSON shapes served by /admin/shopee-imports/* (mirrors the server
 // engine types; local copies because the admin bundle cannot import from
@@ -37,6 +37,8 @@ type PreviewInfo = {
   categoriesRemapped: number
   specsWithValues: number
   specsWithDatasheet: number
+  mpnFilled: number
+  datasheetsLinked: number
   sample: PreviewSample[]
   diag?: {
     sales: WorkbookDiag
@@ -202,6 +204,29 @@ const ImportPage = () => {
   const [jobId, setJobId] = useState<string | null>(null)
   const [job, setJob] = useState<ImportJob | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
+  const dialog = usePrompt()
+
+  type DsReport = {
+    scanned: number
+    skippedLoadtest: number
+    patched: number
+    mpnFilled: number
+    urlsLinked: number
+    flagsSet: number
+    sample: { handle: string; patch: Record<string, string> }[]
+  }
+  type DsJob = {
+    id: string
+    state: "running" | "done" | "failed"
+    events: { t: string; message: string }[]
+    report?: DsReport
+    error?: string
+  }
+  const [dsReport, setDsReport] = useState<DsReport | null>(null)
+  const [dsJobId, setDsJobId] = useState<string | null>(null)
+  const [dsJob, setDsJob] = useState<DsJob | null>(null)
+  const [dsBusy, setDsBusy] = useState(false)
+  const dsLogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!jobId) {
@@ -239,6 +264,83 @@ const ImportPage = () => {
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
   }, [job?.events.length])
+
+  useEffect(() => {
+    if (!dsJobId) {
+      return
+    }
+    let alive = true
+    const poll = async () => {
+      try {
+        const r = await fetch(`/admin/datasheets/auto-link?id=${dsJobId}`)
+        const data = (await r.json()) as { job: DsJob }
+        if (!alive) {
+          return false
+        }
+        setDsJob(data.job)
+        return data.job.state === "running"
+      } catch {
+        return true
+      }
+    }
+    void poll()
+    const timer = setInterval(() => {
+      void poll().then((running) => {
+        if (!running) {
+          clearInterval(timer)
+        }
+      })
+    }, 2000)
+    return () => {
+      alive = false
+      clearInterval(timer)
+    }
+  }, [dsJobId])
+
+  useEffect(() => {
+    dsLogRef.current?.scrollTo({ top: dsLogRef.current.scrollHeight })
+  }, [dsJob?.events.length])
+
+  const runDsLink = async (dryRun: boolean) => {
+    if (!dryRun) {
+      const ok = await dialog({
+        title: "Apply datasheet auto-link?",
+        description:
+          "Merges MPN / datasheet_url / has_datasheet into product metadata catalog-wide. Metadata only — never prices, stock, or categories.",
+        confirmText: "Apply",
+        cancelText: "Cancel",
+      })
+      if (!ok) {
+        return
+      }
+    }
+    setDsBusy(true)
+    setError(null)
+    setDsReport(null)
+    setDsJob(null)
+    try {
+      const r = await fetch("/admin/datasheets/auto-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun }),
+      })
+      const data = (await r.json()) as { report?: DsReport; jobId?: string }
+      if (!r.ok) {
+        throw new Error(
+          (data as { message?: string }).message || `HTTP ${r.status}`
+        )
+      }
+      if (data.report) {
+        setDsReport(data.report)
+      } else if (data.jobId) {
+        setDsJobId(data.jobId)
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setDsBusy(false)
+    }
+  }
 
   const runPreview = async () => {
     if (!files.sales) {
@@ -541,6 +643,19 @@ const ImportPage = () => {
           </div>
           <div className="mt-3">
             <Text size="small" className="font-medium">
+              Datasheets:{" "}
+              {preview.mpnFilled > 0 || preview.datasheetsLinked > 0 ? (
+                <Badge color="green">
+                  {preview.mpnFilled} MPN(s) extracted ·{" "}
+                  {preview.datasheetsLinked} curated document(s)
+                </Badge>
+              ) : (
+                <Badge color="grey">no identifiers extracted</Badge>
+              )}
+            </Text>
+          </div>
+          <div className="mt-3">
+            <Text size="small" className="font-medium">
               Sample rows
             </Text>
             <div className="mt-1 divide-y divide-ui-border-base rounded-lg border border-ui-border-base">
@@ -660,6 +775,115 @@ const ImportPage = () => {
           )}
         </Container>
       )}
+      <Container>
+        <Heading level="h2">Datasheet auto-link</Heading>
+        <Text className="text-ui-fg-subtle">
+          One click: fills empty MPNs from product titles, links curated-map
+          PDFs, and flags has_datasheet across the catalog — the same rules
+          new imports already follow. Metadata only, operator values are never
+          overwritten.
+        </Text>
+        <div className="mt-3 flex gap-2">
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={() => runDsLink(true)}
+            isLoading={dsBusy}
+          >
+            Dry run
+          </Button>
+          <Button
+            variant="primary"
+            size="small"
+            onClick={() => runDsLink(false)}
+            isLoading={dsBusy}
+          >
+            Apply to catalog
+          </Button>
+        </div>
+        {dsReport && (
+          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {[
+              ["Scanned", dsReport.scanned],
+              ["To patch", dsReport.patched],
+              ["MPN filled", dsReport.mpnFilled],
+              ["URLs linked", dsReport.urlsLinked],
+              ["Flags set", dsReport.flagsSet],
+              ["Loadtest skipped", dsReport.skippedLoadtest],
+            ].map(([label, value]) => (
+              <div
+                key={label as string}
+                className="rounded-lg border border-ui-border-base p-3"
+              >
+                <Text size="small" className="text-ui-fg-subtle">
+                  {label}
+                </Text>
+                <Heading level="h2">{value as number}</Heading>
+              </div>
+            ))}
+          </div>
+        )}
+        {dsReport && dsReport.sample.length > 0 && (
+          <div className="mt-3">
+            <Text size="small" className="font-medium">
+              Sample patches ({dsReport.sample.length})
+            </Text>
+            <div className="mt-1 divide-y divide-ui-border-base rounded-lg border border-ui-border-base">
+              {dsReport.sample.map((s, i) => (
+                <div
+                  key={`${s.handle}-${i}`}
+                  className="flex items-center justify-between gap-3 px-3 py-2"
+                >
+                  <Text size="xsmall" className="font-mono">
+                    {s.handle}
+                  </Text>
+                  <Text size="xsmall" className="text-ui-fg-subtle">
+                    {Object.keys(s.patch).join(", ")}
+                  </Text>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {dsJob && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between">
+              <Text size="small" className="font-medium">
+                Apply progress
+              </Text>
+              <Badge
+                color={
+                  dsJob.state === "done"
+                    ? "green"
+                    : dsJob.state === "failed"
+                      ? "red"
+                      : "blue"
+                }
+              >
+                {dsJob.state}
+              </Badge>
+            </div>
+            <div
+              ref={dsLogRef}
+              className="mt-2 max-h-64 overflow-y-auto rounded-lg bg-ui-bg-subtle p-3 font-mono text-xs"
+            >
+              {dsJob.events.map((e, i) => (
+                <div key={i} className="whitespace-pre-wrap">
+                  {e.message}
+                </div>
+              ))}
+              {dsJob.events.length === 0 && (
+                <span className="text-ui-fg-subtle">Starting…</span>
+              )}
+            </div>
+            {dsJob.error && (
+              <Text size="small" className="mt-3 text-ui-fg-error">
+                {dsJob.error}
+              </Text>
+            )}
+          </div>
+        )}
+      </Container>
     </div>
   )
 }
