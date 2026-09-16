@@ -3,7 +3,7 @@ import type {
   SubscriberConfig,
 } from "@medusajs/framework"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { notifyFeed } from "../api/admin/shopee-imports/notify"
+import { notifyCustomer, notifyFeed } from "../api/admin/shopee-imports/notify"
 
 // Shipment pipeline per order: packed → shipped → AWB entered. One bell
 // note each, broadcast to all admins. Volume is one note per step per
@@ -13,6 +13,8 @@ import { notifyFeed } from "../api/admin/shopee-imports/notify"
 type OrderLite = {
   id: string
   display_id: number
+  email?: string | null
+  courier?: string | null
 }
 
 const orderDisplay = async (
@@ -23,10 +25,26 @@ const orderDisplay = async (
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
     const { data: orders } = (await query.graph({
       entity: "order",
-      fields: ["id", "display_id"],
+      fields: ["id", "display_id", "email", "shipping_methods.name"],
       filters: { id: orderId },
-    })) as { data: OrderLite[] }
-    return orders?.[0] ?? null
+    })) as {
+      data: {
+        id: string
+        display_id: number
+        email?: string | null
+        shipping_methods?: { name?: string | null }[]
+      }[]
+    }
+    const hit = orders?.[0]
+    if (!hit) {
+      return null
+    }
+    return {
+      id: hit.id,
+      display_id: hit.display_id,
+      email: hit.email,
+      courier: hit.shipping_methods?.[0]?.name ?? null,
+    }
   } catch {
     return null
   }
@@ -72,6 +90,28 @@ export default async function shipmentActivityHandler({
       description:
         "Courier handoff recorded. The AWB is booked manually — enter tracking on the shipment.",
     })
+    // The AWB itself is entered separately (fulfillment label), so the
+    // email goes out without it and points at support for the number.
+    if (order) {
+      await notifyCustomer(container, {
+        to: order.email,
+        template: "nanofield-order-shipped",
+        data: {
+          displayId: order.display_id,
+          ...(order.courier ? { courier: order.courier } : {}),
+        },
+      })
+      if (order.email) {
+        await notifyFeed(container, {
+          to: order.email.toLowerCase(),
+          title: `${ref} shipped`,
+          description: order.courier
+            ? `Handed to ${order.courier}. The tracking number appears here once entered.`
+            : "Handed to the courier. The tracking number appears here once entered.",
+          data: { orderId: order.id },
+        })
+      }
+    }
     return
   }
 

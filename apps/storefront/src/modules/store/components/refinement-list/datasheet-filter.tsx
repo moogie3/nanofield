@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react"
 import clsx from "clsx"
+import {
+  useCachedFetch,
+  type FacetPayload,
+} from "@lib/hooks/use-cached-fetch"
 
 type DatasheetFilterProps = {
   checked?: boolean
@@ -16,35 +20,23 @@ const DatasheetFilter = ({
 }: DatasheetFilterProps) => {
   const [count, setCount] = useState<number | null>(null)
   const [mounted, setMounted] = useState(false)
-  const scopeKey = [...categoryIds].sort().join(",")
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    const fetchFacets = async () => {
-      try {
-        const params = new URLSearchParams()
-        categoryIds.forEach((id) => params.append("category_id", id))
-        const query = params.toString()
-        const response = await fetch(
-          `/api/facets${query ? `?${query}` : ""}`
-        )
-        if (response.ok) {
-          const data = await response.json()
-          setCount(
-            typeof data.datasheetCount === "number" ? data.datasheetCount : null
-          )
-        }
-      } catch (error) {
-        console.error("Failed to fetch datasheet facet", error)
-      }
-    }
+  const params = new URLSearchParams()
+  categoryIds.forEach((id) => params.append("category_id", id))
+  const query = params.toString()
+  const data = useCachedFetch<FacetPayload>(
+    mounted ? `/api/facets${query ? `?${query}` : ""}` : null
+  )
 
-    fetchFacets()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scopeKey])
+  useEffect(() => {
+    if (data && typeof data.datasheetCount === "number") {
+      setCount(data.datasheetCount)
+    }
+  }, [data])
 
   if (!mounted) {
     return null

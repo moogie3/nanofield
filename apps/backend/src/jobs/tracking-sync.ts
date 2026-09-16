@@ -1,7 +1,7 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { markOrderFulfillmentAsDeliveredWorkflow } from "@medusajs/core-flows"
-import { notifyFeed } from "../api/admin/shopee-imports/notify"
+import { notifyCustomer, notifyFeed } from "../api/admin/shopee-imports/notify"
 import {
   normalizeCourier,
   trackWaybill,
@@ -41,6 +41,7 @@ const lastFiveDigits = (phone: unknown): string | undefined => {
 type OpenShipment = {
   orderId: string
   displayId: number
+  email?: string | null
   fulfillmentId: string
   awb: string
   courier: string
@@ -67,6 +68,7 @@ export default async function trackingSyncJob(
       fields: [
         "id",
         "display_id",
+        "email",
         "shipping_address.phone",
         "fulfillments.id",
         "fulfillments.data",
@@ -113,6 +115,8 @@ export default async function trackingSyncJob(
         open.push({
           orderId: order.id as string,
           displayId: Number(order.display_id) || 0,
+          email:
+            typeof order.email === "string" ? (order.email as string) : null,
           fulfillmentId: f.id as string,
           awb: (awb as string).trim(),
           courier,
@@ -152,6 +156,19 @@ export default async function trackingSyncJob(
           title: `Order #${s.displayId} delivered`,
           description: `Courier ${s.courier.toUpperCase()} confirmed delivery (AWB ${s.awb}).`,
         })
+        await notifyCustomer(container, {
+          to: s.email,
+          template: "nanofield-order-delivered",
+          data: { displayId: s.displayId },
+        })
+        if (s.email) {
+          await notifyFeed(container, {
+            to: s.email.toLowerCase(),
+            title: `Order #${s.displayId} delivered`,
+            description: `Courier ${s.courier.toUpperCase()} confirmed delivery (AWB ${s.awb}).`,
+            data: { orderId: s.orderId },
+          })
+        }
       } catch (e) {
         // Bad AWB / courier outage: log loudly so the AWB gets fixed, keep
         // polling the rest. Costs one quota hit — acceptable at this cap.

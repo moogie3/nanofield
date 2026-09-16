@@ -46,6 +46,8 @@ Configure at minimum the following variables (the full list with comments is fou
 | `MIDTRANS_IS_PRODUCTION` | `false` for testing; flip to `true` only at go-live together with the live keys. Register `{BACKEND_URL}/hooks/payment/midtrans` as the notification URL in the Midtrans dashboard per environment |
 | `STORE_NAME` / `STORE_PHONE` / `STORE_ADDRESS_1` / `STORE_CITY` / `STORE_PROVINCE` / `STORE_COUNTRY_CODE` | Sender block printed as Pengirim on every shipping label (`GET /admin/orders/[id]/receipt`). No admin UI edits these yet — change them here |
 | `TRACKING_SYNC_ENABLED` / `TRACKING_SYNC_CRON` / `TRACKING_SYNC_MAX_PER_RUN` / `TRACKING_SYNC_MIN_AGE_HOURS` | Auto-delivery sync job (`tracking-sync`, defaults `true` / every 6h / 5 per run / 6h min age). Shares the 100 hits/day RajaOngkir quota with checkout quotes — keep the cap small |
+| `RESEND_API_KEY` / `RESEND_FROM` | Production customer email (verified sender required). When set, Resend is the active email provider; leave `RESEND_API_KEY` empty to fall through to Mailtrap |
+| `MAILTRAP_HOST` / `MAILTRAP_PORT` / `MAILTRAP_USER` / `MAILTRAP_PASS` / `MAILTRAP_FROM` | Development customer email via Mailtrap sandbox SMTP credentials (sandbox inbox → SMTP Settings). Active only when `MAILTRAP_USER` is set and `RESEND_API_KEY` is empty |
 
 `STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` / `REDIS_URL` already default to local values in the template.
 
@@ -159,7 +161,7 @@ Checkout is the point at which every unit above converges: cart (region prices) 
 - **Returns, claims, and exchanges:** complete Medusa flows, unused until post-sale operations require them.
 - **Promotions:** the discount-code engine, unused (no codes have been issued).
 - **Price lists, customer groups, companies, and quotes:** the B2B reserve — the reason Medusa was selected; they remain disabled until genuine B2B demand appears.
-- **Notification providers:** only the `feed` channel through the local provider is connected — it powers the administration bell (import completion and failure, order placement and cancellation, team changes).
+- **Notification providers:** the `feed` channel through the local provider is connected — it powers the administration bell (import completion and failure, order placement and cancellation, team changes) AND the logged-in customer navbar bell (order confirmed/shipped/delivered/canceled, keyed by customer email via `GET /store/notifications`). Customer email rides `resend-notification` (production, `RESEND_API_KEY` + verified `RESEND_FROM`) or `mailtrap-notification` sandbox (dev, `MAILTRAP_HOST/PORT/USER/PASS` SMTP credentials + `MAILTRAP_FROM`); exactly one registers, chosen by which credentials exist. No email provider → customer sends skip silently and the admin "notify customer" checkbox does nothing.
 
 ---
 

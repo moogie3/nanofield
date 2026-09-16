@@ -15,7 +15,7 @@ type MedusaError = {
 const FRIENDLY_MESSAGES: [RegExp, string][] = [
   [
     /some variant does not have the required inventory/i,
-    "Not enough stock available — please lower the quantity.",
+    "Exceeds available stock.",
   ],
 ]
 

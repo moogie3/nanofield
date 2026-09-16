@@ -9,25 +9,36 @@ import { Text, clx } from "@modules/common/components/ui"
 import { Fragment } from "react"
 import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
-import { MenuNavIcon, SideMenuItemIcon } from "../nav-icons"
+import { MenuNavIcon, SideMenuIcons, SideMenuItemIcon } from "../nav-icons"
 import { Locale } from "@lib/data/locales"
 
-const SideMenuItems = {
-  Home: "/",
-  Store: "/store",
-  Account: "/account",
-  Cart: "/cart",
+type SideMenuItem = {
+  name: keyof typeof SideMenuIcons
+  href: string
 }
+
+const BaseSideMenuItems: SideMenuItem[] = [
+  { name: "Home", href: "/" },
+  { name: "Store", href: "/store" },
+  { name: "Account", href: "/account" },
+  { name: "Cart", href: "/cart" },
+]
 
 type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
   locales: Locale[] | null
   currentLocale: string | null
+  isLoggedIn?: boolean
 }
 
-const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
+const SideMenu = ({ regions, locales, currentLocale, isLoggedIn }: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
+  // Login-gated entry: guests have no feed, so no dead-end item. No unread
+  // dot here — the desktop bell owns badge state; this just navigates.
+  const items: SideMenuItem[] = isLoggedIn
+    ? [...BaseSideMenuItems, { name: "Notifications", href: "/account/notifications" }]
+    : BaseSideMenuItems
 
   return (
     <div className="h-full">
@@ -74,7 +85,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                       </button>
                     </div>
                     <ul className="flex flex-col gap-6 items-start justify-start">
-                      {Object.entries(SideMenuItems).map(([name, href]) => {
+                      {items.map(({ name, href }) => {
                         return (
                           <li key={name}>
                             <LocalizedClientLink
@@ -83,9 +94,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                               onClick={close}
                               data-testid={`${name.toLowerCase()}-link`}
                             >
-                              <SideMenuItemIcon
-                                name={name as keyof typeof SideMenuItems}
-                              />
+                              <SideMenuItemIcon name={name} />
                               {name}
                             </LocalizedClientLink>
                           </li>

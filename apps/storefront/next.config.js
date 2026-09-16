@@ -13,6 +13,16 @@ const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
  */
 const nextConfig = {
   reactStrictMode: true,
+  // Revisit-light navigations (back/forward, re-opened dropdown links)
+  // reuse the router cache for 30s instead of refetching every page.
+  // Mutations bypass it via explicit router.refresh() + tag revalidation,
+  // so cart/promo updates always land fresh.
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+  },
   async redirects() {
     return [
       {

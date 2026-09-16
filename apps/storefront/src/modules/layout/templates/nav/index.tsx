@@ -2,10 +2,12 @@ import { Suspense } from "react"
 
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
+import { retrieveCustomer } from "@lib/data/customer"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
+import NotificationButton from "@modules/layout/components/notification-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import SiteSearch from "@modules/layout/components/site-search"
 import StickyNav from "@modules/layout/components/sticky-nav"
@@ -21,6 +23,9 @@ export default async function Nav() {
     listLocales(),
     getLocale(),
   ])
+  // Login gate for the mobile side-menu entry (the desktop bell gates
+  // itself). Never throws — guests simply get no entry.
+  const customer = await retrieveCustomer().catch(() => null)
 
   return (
     <StickyNav>
@@ -31,6 +36,7 @@ export default async function Nav() {
               regions={regions}
               locales={locales}
               currentLocale={currentLocale}
+              isLoggedIn={!!customer}
             />
           </div>
           <div className="flex items-center h-full">
@@ -58,6 +64,11 @@ export default async function Nav() {
             >
               <AccountNavIcon />
             </LocalizedClientLink>
+            {/* Login-gated bell: renders nothing for guests. Desktop only —
+                mobile uses the side-menu entry. */}
+            <Suspense fallback={null}>
+              <NotificationButton />
+            </Suspense>
           </div>
           <Suspense
             fallback={

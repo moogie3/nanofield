@@ -1,4 +1,4 @@
-import { defineMiddlewares } from "@medusajs/framework/http"
+import { authenticate, defineMiddlewares } from "@medusajs/framework/http"
 import multer from "multer"
 
 // Shopee xlsx uploads (Shopee caps templates at 5MB; base64/JSON is NOT
@@ -19,5 +19,10 @@ export default defineMiddlewares({
   routes: [
     { matcher: "/admin/shopee-imports/preview", middlewares: [shopeeFiles] },
     { matcher: "/admin/shopee-imports/execute", middlewares: [shopeeFiles] },
+    // Customer notification bell: logged-in customers only (401 otherwise).
+    {
+      matcher: "/store/notifications",
+      middlewares: [authenticate("customer", ["session", "bearer"])],
+    },
   ],
 })

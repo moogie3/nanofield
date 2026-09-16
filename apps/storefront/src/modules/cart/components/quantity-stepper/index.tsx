@@ -2,6 +2,7 @@
 
 import { updateLineItem } from "@lib/data/cart"
 import { clx } from "@modules/common/components/ui"
+import { useCartCount } from "@modules/common/components/cart-count"
 import { useEffect, useState } from "react"
 
 type QuantityStepperProps = {
@@ -25,6 +26,7 @@ const QuantityStepper = ({
   // Optimistic value so the number changes instantly on click instead of
   // waiting for the server round-trip + cache revalidation.
   const [displayQuantity, setDisplayQuantity] = useState(quantity)
+  const { bump } = useCartCount()
 
   // Re-sync when the cart settles (e.g. after revalidation or errors).
   useEffect(() => {
@@ -34,16 +36,30 @@ const QuantityStepper = ({
   }, [quantity, updating])
 
   const handleChange = async (next: number) => {
-    if (next < 1 || next > max || next === displayQuantity || updating) {
+    if (next < 1 || next === displayQuantity || updating) {
       return
     }
-    setDisplayQuantity(next)
+    // Clamp typed entries to stock instead of rejecting them: the cap hint
+    // below tells the shopper why.
+    const clamped = Math.min(next, max)
+    const clampedDown = clamped < next
+    const delta = clamped - displayQuantity
+    if (delta === 0) {
+      if (clampedDown) {
+        onUpdateError?.(`Only ${max} available in stock`)
+      }
+      return
+    }
+    setDisplayQuantity(clamped)
+    // Badge follows instantly; server truth reconciles it on refresh.
+    bump(delta)
     setUpdating(true)
     onUpdateError?.(null)
     try {
-      await updateLineItem({ lineId, quantity: next })
+      await updateLineItem({ lineId, quantity: clamped })
     } catch (err) {
       // Roll back to the last confirmed quantity on failure.
+      bump(-delta)
       setDisplayQuantity(quantity)
       onUpdateError?.(
         err instanceof Error ? err.message : "Could not update quantity"
@@ -51,6 +67,24 @@ const QuantityStepper = ({
     } finally {
       setUpdating(false)
     }
+    if (clampedDown) {
+      onUpdateError?.(`Only ${max} available in stock`)
+    }
+  }
+
+  const [draft, setDraft] = useState<string | null>(null)
+
+  const commitDraft = () => {
+    if (draft === null) {
+      return
+    }
+    const text = draft
+    setDraft(null)
+    const parsed = parseInt(text, 10)
+    if (!Number.isFinite(parsed)) {
+      return
+    }
+    void handleChange(parsed)
   }
 
   return (
@@ -75,17 +109,27 @@ const QuantityStepper = ({
       >
         −
       </button>
-      <span
+      <input
         aria-live="polite"
+        aria-label="Quantity"
         data-testid="quantity-value"
         data-value={displayQuantity}
+        inputMode="numeric"
+        autoComplete="off"
+        value={draft ?? String(displayQuantity)}
+        disabled={updating}
+        onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ""))}
+        onBlur={commitDraft}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            ;(e.target as HTMLInputElement).blur()
+          }
+        }}
         className={clx(
-          "text-center font-medium tabular-nums",
-          size === "sm" ? "w-5 text-xs" : "w-7 text-sm"
+          "bg-transparent text-center font-medium tabular-nums focus:outline-none",
+          size === "sm" ? "w-7 text-xs" : "w-9 text-sm"
         )}
-      >
-        {displayQuantity}
-      </span>
+      />
       <button
         type="button"
         aria-label="Increase quantity"

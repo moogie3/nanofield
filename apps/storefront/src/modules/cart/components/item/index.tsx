@@ -64,7 +64,11 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       {type === "full" && (
         <Table.Cell>
           <div className="flex gap-2 items-center">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
+            <DeleteButton
+              id={item.id}
+              quantity={item.quantity}
+              data-testid="product-delete-button"
+            />
             <QuantityStepper
               lineId={item.id}
               quantity={item.quantity}

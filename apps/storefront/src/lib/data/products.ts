@@ -133,14 +133,57 @@ export const listProductsWithSort = async ({
     new Set((categoryIds || []).filter(Boolean))
   )
 
+  const baseQueryParams = {
+    ...queryParams,
+    ...(optionFilters.length ? { option_value_id: optionFilters } : {}),
+    ...(categoryFilters.length ? { category_id: categoryFilters } : {}),
+  }
+
+  // Fast path: only price sorting and spec/datasheet filters need the whole
+  // catalog in memory. Default browsing pages natively (one 80-row page)
+  // instead of hydrating up to 5000 products to show 80 — that full fetch
+  // is what made the store page take seconds.
+  const needsFullSet =
+    sortBy === "price_asc" ||
+    sortBy === "price_desc" ||
+    (spec?.length ?? 0) > 0 ||
+    !!hasDatasheet
+
+  if (!needsFullSet) {
+    const { response } = await listProducts({
+      pageParam: page,
+      queryParams: {
+        ...baseQueryParams,
+        limit,
+      },
+      countryCode,
+    })
+    const sortedProducts = sortProducts(response.products, sortBy)
+    const pageParam = (page - 1) * limit
+    const nextPage =
+      response.count > pageParam + limit ? pageParam + limit : null
+
+    return {
+      response: {
+        products: sortedProducts,
+        count: response.count,
+      },
+      nextPage,
+      queryParams,
+    }
+  }
+
   const { response: { products } } = await listProducts({
     pageParam: 0,
     queryParams: {
-      ...queryParams,
-      ...(optionFilters.length ? { option_value_id: optionFilters } : {}),
-      ...(categoryFilters.length ? { category_id: categoryFilters } : {}),
+      ...baseQueryParams,
       // Client-side price sorting needs the full set: fetch up to the
       // whole catalog (Nanofield scale: low thousands) instead of paging.
+      // Lean fields: grid cards render title/thumbnail/price/stock/metadata
+      // only — variant images/options/tags never reach the card, so they
+      // stay out of the payload (backend work + JSON + RSC cost).
+      fields:
+        "*variants.calculated_price,+variants.inventory_quantity,+metadata",
       limit: 5000,
     },
     countryCode,

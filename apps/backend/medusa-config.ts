@@ -71,6 +71,49 @@ module.exports = defineConfig({
               channels: ["feed"],
             },
           },
+          // Email providers: exactly one is ever active. Resend wins when
+          // its key exists (production intent); otherwise Mailtrap sandbox
+          // catches everything in dev. Neither set → customer email calls
+          // skip silently (notifyCustomer never throws).
+          ...(process.env.RESEND_API_KEY
+            ? [
+                {
+                  resolve: "./src/modules/resend-notification",
+                  id: "resend",
+                  options: {
+                    apiKey: process.env.RESEND_API_KEY,
+                    // Single-sender verification: must be exactly the
+                    // verified address, otherwise Resend rejects the send.
+                    from: process.env.RESEND_FROM,
+                    storeName: process.env.STORE_NAME,
+                    whatsapp: process.env.STORE_PHONE,
+                    supportEmail: process.env.STORE_EMAIL,
+                    address: process.env.STORE_ADDRESS_1,
+                  },
+                },
+              ]
+            : []),
+          ...(process.env.MAILTRAP_USER && !process.env.RESEND_API_KEY
+            ? [
+                {
+                  resolve: "./src/modules/mailtrap-notification",
+                  id: "mailtrap",
+                  options: {
+                    host:
+                      process.env.MAILTRAP_HOST ||
+                      "sandbox.smtp.mailtrap.io",
+                    port: Number(process.env.MAILTRAP_PORT) || 2525,
+                    user: process.env.MAILTRAP_USER,
+                    pass: process.env.MAILTRAP_PASS,
+                    from: process.env.MAILTRAP_FROM,
+                    storeName: process.env.STORE_NAME,
+                    whatsapp: process.env.STORE_PHONE,
+                    supportEmail: process.env.STORE_EMAIL,
+                    address: process.env.STORE_ADDRESS_1,
+                  },
+                },
+              ]
+            : []),
         ],
       },
     },

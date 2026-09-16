@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react"
 import clsx from "clsx"
+import {
+  useCachedFetch,
+  type FacetPayload,
+} from "@lib/hooks/use-cached-fetch"
 
 type SpecFacet = { axis: string; value: string; count: number }
 
@@ -20,33 +24,23 @@ const SpecFilter = ({
 }: SpecFilterProps) => {
   const [facets, setFacets] = useState<SpecFacet[]>([])
   const [mounted, setMounted] = useState(false)
-  const scopeKey = [...categoryIds].sort().join(",")
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    const fetchFacets = async () => {
-      try {
-        const params = new URLSearchParams()
-        categoryIds.forEach((id) => params.append("category_id", id))
-        const query = params.toString()
-        const response = await fetch(
-          `/api/facets${query ? `?${query}` : ""}`
-        )
-        if (response.ok) {
-          const data = await response.json()
-          setFacets(Array.isArray(data.specs) ? data.specs : [])
-        }
-      } catch (error) {
-        console.error("Failed to fetch spec facets", error)
-      }
-    }
+  const params = new URLSearchParams()
+  categoryIds.forEach((id) => params.append("category_id", id))
+  const query = params.toString()
+  const data = useCachedFetch<FacetPayload>(
+    mounted ? `/api/facets${query ? `?${query}` : ""}` : null
+  )
 
-    fetchFacets()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scopeKey])
+  useEffect(() => {
+    if (data) {
+      setFacets(Array.isArray(data.specs) ? data.specs : [])
+    }
+  }, [data])
 
   const grouped = useMemo(() => {
     const groups = new Map<string, SpecFacet[]>()

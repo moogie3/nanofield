@@ -15,6 +15,7 @@ import { HttpTypes } from "@medusajs/types"
 import Trash from "@modules/common/icons/trash"
 import ErrorMessage from "../error-message"
 import { SubmitButton } from "../submit-button"
+import { useRouter } from "next/navigation"
 
 type DiscountCodeProps = {
   cart: HttpTypes.StoreCart
@@ -23,6 +24,7 @@ type DiscountCodeProps = {
 const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   const [isOpen, setIsOpen] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
+  const router = useRouter()
 
   const { promotions = [] } = cart
   const removePromotionCode = async (code: string) => {
@@ -33,6 +35,10 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     await applyPromotions(
       validPromotions.filter((p) => p.code !== undefined).map((p) => p.code!),
     )
+    // Server-side revalidation alone doesn't reliably repaint this client
+    // tree (it holds the previous cart prop) — refresh explicitly so the
+    // badge and every total update immediately, on any page.
+    router.refresh()
   }
 
   const addPromotionCode = async (formData: FormData) => {
@@ -50,6 +56,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
 
     try {
       await applyPromotions(codes)
+      router.refresh()
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : String(e))
     }

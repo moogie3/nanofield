@@ -6,6 +6,7 @@ import {
   ChipIcon,
   CircuitBoardIcon,
   FaceIdIcon,
+  Notification01Icon,
   PackageIcon,
   ShoppingBag01Icon,
   UserCircleIcon,
@@ -50,8 +51,30 @@ export function AccountNavIcon({ className }: { className?: string }) {
   )
 }
 
-export function CartNavIcon({
+export function BellNavIcon({
   count,
+  className,
+}: {
+  count?: number
+  className?: string
+}) {
+  return (
+    <span className="relative flex items-center">
+      <HugeiconsIcon
+        icon={Notification01Icon}
+        strokeWidth={2}
+        className={className ?? "h-6 w-6"}
+      />
+      {!!count && count > 0 && (
+        <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </span>
+  )
+}
+
+export function CartNavIcon({  count,
   className,
 }: {
   count?: number
@@ -94,6 +117,7 @@ export const SideMenuIcons = {
   Store: CircuitBoardIcon,
   Account: FaceIdIcon,
   Cart: PackageIcon,
+  Notifications: Notification01Icon,
 } as const
 
 export function SideMenuItemIcon({

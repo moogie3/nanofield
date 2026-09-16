@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react"
 import clsx from "clsx"
+import {
+  useCachedFetch,
+  type FacetPayload,
+} from "@lib/hooks/use-cached-fetch"
 
 type OptionFacet = { value: string; count: number; ids: string[] }
 
@@ -18,35 +22,23 @@ const OptionFilter = ({
 }: OptionFilterProps) => {
   const [facets, setFacets] = useState<OptionFacet[]>([])
   const [mounted, setMounted] = useState(false)
-  const scopeKey = [...categoryIds].sort().join(",")
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    const fetchFacets = async () => {
-      try {
-        const params = new URLSearchParams()
-        categoryIds.forEach((id) => params.append("category_id", id))
-        const query = params.toString()
-        const response = await fetch(
-          `/api/facets${query ? `?${query}` : ""}`
-        )
-        if (response.ok) {
-          const data = await response.json()
-          setFacets(Array.isArray(data.options) ? data.options : [])
-        }
-      } catch (error) {
-        console.error("Failed to fetch option facets", error)
-      }
-    }
+  const params = new URLSearchParams()
+  categoryIds.forEach((id) => params.append("category_id", id))
+  const query = params.toString()
+  const data = useCachedFetch<FacetPayload>(
+    mounted ? `/api/facets${query ? `?${query}` : ""}` : null
+  )
 
-    fetchFacets()
-    // Re-scope when the selected categories change; `scopeKey` keeps the
-    // dependency stable across renders.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scopeKey])
+  useEffect(() => {
+    if (data) {
+      setFacets(Array.isArray(data.options) ? data.options : [])
+    }
+  }, [data])
 
   if (!mounted || !facets.length) {
     return null

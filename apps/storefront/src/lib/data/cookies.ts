@@ -21,7 +21,13 @@ export const getAuthHeaders = async (): Promise<
 export const getCacheTag = async (tag: string): Promise<string> => {
   try {
     const cookies = await nextCookies()
-    const cacheId = cookies.get("_medusa_cache_id")?.value
+    // Prefer the dedicated cache id, but fall back to the cart id so carts
+    // created before the cache cookie existed (or when it expires first)
+    // still get a stable, per-cart tag instead of an untagged fetch that
+    // no revalidation can ever invalidate.
+    const cacheId =
+      cookies.get("_medusa_cache_id")?.value ||
+      cookies.get("_medusa_cart_id")?.value
 
     if (!cacheId) {
       return ""
@@ -124,12 +130,17 @@ export const getCartId = async () => {
 // the cross-site return navigation from a redirect-based payment method.
 export const setCartId = async (cartId: string) => {
   const cookies = await nextCookies()
-  cookies.set("_medusa_cart_id", cartId, {
+  const options = {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-  })
+  } as const
+  cookies.set("_medusa_cart_id", cartId, options)
+  // The dedicated cache id is what cart/fulfillment fetch tags are built
+  // from — without it every cart fetch is untagged and no revalidation can
+  // ever invalidate it (stale promos/totals everywhere).
+  cookies.set("_medusa_cache_id", cartId, options)
 }
 
 export const removeCartId = async () => {
