@@ -128,20 +128,21 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                         </Badge>{" "}
                         (
                         {promotion.application_method?.value !== undefined &&
-                          promotion.application_method.currency_code !==
-                            undefined && (
-                            <>
-                              {promotion.application_method.type ===
-                              "percentage"
-                                ? `${promotion.application_method.value}%`
-                                : convertToLocale({
-                                    amount: +promotion.application_method.value,
-                                    currency_code:
-                                      promotion.application_method
-                                        .currency_code,
-                                  })}
-                            </>
-                          )}
+                          (promotion.application_method.type ===
+                          "percentage" ? (
+                            <>{`${promotion.application_method.value}%`}</>
+                          ) : (
+                            promotion.application_method.currency_code !==
+                              undefined && (
+                              <>
+                                {convertToLocale({
+                                  amount: +promotion.application_method.value,
+                                  currency_code:
+                                    promotion.application_method.currency_code,
+                                })}
+                              </>
+                            )
+                          ))}
                         )
                         {/* {promotion.is_automatic && (
                           <Tooltip content="This promotion is automatically applied">
