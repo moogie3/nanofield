@@ -2,7 +2,7 @@
 
 Nanofield is a standalone ecommerce store for semiconductors, electronic components, and appliance spare parts. B2C first, with B2B held in reserve.
 
-Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, and a support/error page system (contact, returns, FAQ, branded error screens).
+Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, a support/error page system (contact, returns, FAQ, branded error screens), a customer notification bell (order/return/broadcast feed with history page) plus return emails, storefront announcement strips + image banners with an Announcements admin page, a Store Sender admin page for shipping labels, nightly feed retention, weight-gated cargo options, a free in-store pickup option, and Resend/Mailtrap customer email.
 
 Project docs (all in `docs/`):
 
@@ -11,6 +11,7 @@ Project docs (all in `docs/`):
 - `docs/STARTING_MANUAL.md` — fresh-clone to working-checkout manual: setup order, Definition of Ready gates, admin reference
 - `docs/ARCHITECTURE.md` — system sketch: backend, storefront, RajaOngkir, Shopee pipeline, and how they connect
 - `docs/catalog-consistency-phases.md` — catalog consistency plan: Variation, categories, specs/datasheet, search + filter parity
+- `DEPLOY.md` — production runbook: Railway backend (Docker) + Vercel storefront + go-live flips
 - `AGENTS.md` — contributor commands, package-manager rules, code style
 
 ## Repository layout

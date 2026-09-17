@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
 import NewArrivals from "@modules/home/components/new-arrivals"
+import StoreBanners from "@modules/common/components/store-banners"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 
@@ -32,6 +33,7 @@ export default async function Home(props: {
   return (
     <>
       <Hero />
+      <StoreBanners />
       <NewArrivals region={region} countryCode={countryCode} />
       <div className="py-12">
         <ul className="flex flex-col gap-x-6">

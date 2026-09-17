@@ -15,6 +15,10 @@ const shopeeFiles = upload.fields([
   { name: "ship", maxCount: 1 },
 ])
 
+// Banner image upload (single `image` file, 5MB cap enforced in the route).
+// JSON posts pass through untouched — multer only parses multipart bodies.
+const bannerImage = upload.single("image")
+
 export default defineMiddlewares({
   routes: [
     { matcher: "/admin/shopee-imports/preview", middlewares: [shopeeFiles] },
@@ -24,5 +28,6 @@ export default defineMiddlewares({
       matcher: "/store/notifications",
       middlewares: [authenticate("customer", ["session", "bearer"])],
     },
+    { matcher: "/admin/banners", middlewares: [bannerImage] },
   ],
 })

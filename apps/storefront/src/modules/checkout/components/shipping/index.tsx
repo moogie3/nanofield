@@ -15,6 +15,32 @@ import { useEffect, useState } from "react"
 const PICKUP_OPTION_ON = "__PICKUP_ON"
 const PICKUP_OPTION_OFF = "__PICKUP_OFF"
 
+// Cargo gating: JNE JTR (and friends) only make sense above a threshold —
+// showing them on a 200g cart invites misquotes and support tickets. The
+// server still quotes them if selected, so this is merchandising, not a
+// security boundary. Same 500g/item fallback as the backend quotes.
+const CARGO_MIN_WEIGHT_G =
+  Number(process.env.NEXT_PUBLIC_CARGO_MIN_WEIGHT_G) || 10000
+const FALLBACK_ITEM_WEIGHT_G = 500
+
+const cartWeightG = (cart: HttpTypes.StoreCart): number =>
+  (cart.items ?? []).reduce(
+    (acc, i) =>
+      acc + (i.variant?.weight ?? FALLBACK_ITEM_WEIGHT_G) * i.quantity,
+    0
+  )
+
+// Matches cargo services by option name or fulfillment payload id
+// (e.g. "JNE JTR", "jne-jtr", "cargo"). Name matching covers admin-created
+// options whose payload isn't exposed to the storefront.
+const isCargoOption = (sm: HttpTypes.StoreCartShippingOption): boolean => {
+  const name = (sm.name || "").toLowerCase()
+  const payloadId = String(
+    (sm as unknown as { data?: { id?: unknown } }).data?.id || ""
+  ).toLowerCase()
+  return /jtr|cargo/.test(name) || /jtr|cargo/.test(payloadId)
+}
+
 type ShippingProps = {
   cart: HttpTypes.StoreCart
   availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
@@ -99,11 +125,22 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const hasPickupOptions = !!_pickupMethods?.length
 
+  // Cargo options hide below the threshold; everything else always shows.
+  const weightG = cartWeightG(cart)
+  const gatedOutCargo =
+    _shippingMethods?.filter(
+      (sm) => weightG < CARGO_MIN_WEIGHT_G && isCargoOption(sm)
+    ) ?? []
+  const visibleShippingMethods =
+    _shippingMethods?.filter(
+      (sm) => weightG >= CARGO_MIN_WEIGHT_G || !isCargoOption(sm)
+    ) ?? null
+
   useEffect(() => {
     setIsLoadingPrices(true)
 
-    if (_shippingMethods?.length) {
-      const promises = _shippingMethods
+    if (visibleShippingMethods?.length) {
+      const promises = visibleShippingMethods
         .filter((sm) => sm.price_type === "calculated")
         .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
 
@@ -127,6 +164,9 @@ const Shipping: React.FC<ShippingProps> = ({
     if (_pickupMethods?.find((m) => m.id === shippingMethodId)) {
       setShowPickupOptions(PICKUP_OPTION_ON)
     }
+    // Intentionally narrow: re-prices only when the option list itself
+    // changes. The visible (weight-gated) subset derives from the same list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableShippingMethods])
 
   const handleEdit = () => {
@@ -263,7 +303,7 @@ const Shipping: React.FC<ShippingProps> = ({
                     }
                   }}
                 >
-                  {_shippingMethods?.map((option) => {
+                  {visibleShippingMethods?.map((option) => {
                     const isDisabled =
                       option.price_type === "calculated" &&
                       !isLoadingPrices &&
@@ -314,6 +354,13 @@ const Shipping: React.FC<ShippingProps> = ({
                     )
                   })}
                 </RadioGroup>
+                {gatedOutCargo.length > 0 && (
+                  <p className="text-small-regular text-ui-fg-subtle mt-2">
+                    Cargo shipping (JNE JTR) unlocks above{" "}
+                    {(CARGO_MIN_WEIGHT_G / 1000).toLocaleString("en-US")} kg —
+                    this cart is ≈{(weightG / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })} kg.
+                  </p>
+                )}
               </div>
             </div>
           </div>

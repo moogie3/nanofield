@@ -41,6 +41,23 @@ describe("customer email templates", () => {
     expect(canceled.text).toContain("refund")
   })
 
+  it("return templates carry the order reference", () => {
+    const requested = TEMPLATES["nanofield-return-requested"]({ displayId: 9 })
+    expect(requested.subject).toContain("#9")
+    expect(requested.text).toContain("under review")
+    const received = TEMPLATES["nanofield-return-received"]({ displayId: 10 })
+    expect(received.subject).toContain("#10")
+    expect(received.text).toContain("refund")
+    const exchange = TEMPLATES["nanofield-return-update"]({
+      displayId: 11,
+      kind: "exchange",
+    })
+    expect(exchange.subject).toContain("Exchange update")
+    expect(exchange.subject).toContain("#11")
+    const claim = TEMPLATES["nanofield-return-update"]({ displayId: 12 })
+    expect(claim.subject).toContain("Claim update")
+  })
+
   it("escapes user-controlled content in html", () => {
     const rendered = TEMPLATES["nanofield-order-confirmation"]({
       displayId: '<img src=x onerror=alert(1)>',

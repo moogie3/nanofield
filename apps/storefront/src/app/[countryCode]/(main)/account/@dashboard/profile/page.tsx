@@ -24,7 +24,7 @@ export default async function Profile() {
 
   return (
     <div className="w-full" data-testid="profile-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
+      <div className="mb-8">
         <PageHeader
           eyebrow="Account"
           title="Profile"

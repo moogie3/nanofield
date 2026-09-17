@@ -3,7 +3,7 @@ import type {
   SubscriberConfig,
 } from "@medusajs/framework"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { notifyFeed } from "../api/admin/shopee-imports/notify"
+import { notifyCustomer, notifyFeed } from "../api/admin/shopee-imports/notify"
 
 // Return / claim / exchange lifecycle. One bell note per event, both sides:
 // broadcast to all admins (operator copy) + customer feed keyed by
@@ -98,6 +98,22 @@ export default async function returnActivityHandler({
       title,
       description: text.customer,
       data: { orderId: order.id },
+    })
+    // Inbox twin of the bell note (Mailtrap in dev, Resend in prod).
+    // Template per event; claim + exchange share the update template.
+    const template =
+      name === "order.return_requested"
+        ? "nanofield-return-requested"
+        : name === "order.return_received"
+          ? "nanofield-return-received"
+          : "nanofield-return-update"
+    await notifyCustomer(container, {
+      to: order.email,
+      template,
+      data: {
+        displayId: order.display_id,
+        ...(name === "order.exchange_created" ? { kind: "exchange" } : {}),
+      },
     })
   }
 }

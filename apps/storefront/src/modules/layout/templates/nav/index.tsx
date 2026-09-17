@@ -64,11 +64,6 @@ export default async function Nav() {
             >
               <AccountNavIcon />
             </LocalizedClientLink>
-            {/* Login-gated bell: renders nothing for guests. Desktop only —
-                mobile uses the side-menu entry. */}
-            <Suspense fallback={null}>
-              <NotificationButton />
-            </Suspense>
           </div>
           <Suspense
             fallback={
@@ -84,7 +79,15 @@ export default async function Nav() {
           >
             <CartButton />
           </Suspense>
-          <div className="flex items-center ml-4">
+          {/* Login-gated bell: renders nothing for guests. Desktop only
+              (mobile uses the side-menu entry), left of the theme toggle.
+              Uniform gap-x-6 rhythm with every other nav icon. */}
+          <div className="hidden small:flex items-center h-full">
+            <Suspense fallback={null}>
+              <NotificationButton />
+            </Suspense>
+          </div>
+          <div className="flex items-center">
             <ThemeToggle />
           </div>
         </div>

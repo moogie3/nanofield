@@ -12,7 +12,7 @@ export default async function NotificationButton() {
     return null
   }
 
-  const initial = await listCustomerNotifications(20, 0)
+  const feed = await listCustomerNotifications(20, 0)
 
-  return <NotificationBell customerId={customer.id} initial={initial} />
+  return <NotificationBell customerId={customer.id} initial={feed.notifications} />
 }

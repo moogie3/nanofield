@@ -1,12 +1,22 @@
 "use client"
 
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
+import { XMark } from "@medusajs/icons"
 import {
   listCustomerNotifications,
   type CustomerNotification,
 } from "@lib/data/notifications"
+import {
+  dismissNotificationId,
+  getDismissedIds,
+} from "@lib/util/feed-dismiss"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { useCallback, useEffect, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react"
 import { BellNavIcon } from "../nav-icons"
 
 const POLL_MS = 60000
@@ -51,6 +61,11 @@ export default function NotificationBell({
   initial: CustomerNotification[]
 }) {
   const [items, setItems] = useState<CustomerNotification[]>(initial)
+  // Per-row dismissal (the header X only closes the panel). Dismissed ids
+  // persist per device; the server feed stays append-only history.
+  const [dismissed, setDismissed] = useState<string[]>(() =>
+    getDismissedIds()
+  )
   const [seenAt, setSeenAt] = useState<string | null>(() => {
     try {
       return window.localStorage.getItem(seenKey(customerId))
@@ -59,9 +74,14 @@ export default function NotificationBell({
     }
   })
 
+  // Failed polls keep the stale list: only fresh rows replace. This is
+  // what used to blank the panel seconds after opening (one failed fetch
+  // → setItems([]) → "all gone").
   const refresh = useCallback(async () => {
-    const fresh = await listCustomerNotifications(20, 0)
-    setItems(fresh)
+    const feed = await listCustomerNotifications(20, 0)
+    if (feed.ok) {
+      setItems(feed.notifications)
+    }
   }, [])
 
   // First mount: silent baseline (newest item) so history doesn't all
@@ -100,12 +120,26 @@ export default function NotificationBell({
   }, [items, seenAt, customerId, refresh])
 
   const unread = seenAt
-    ? items.filter((n) => n.created_at && n.created_at > seenAt).length
+    ? items.filter(
+        (n) =>
+          !dismissed.includes(n.id) && n.created_at && n.created_at > seenAt
+      ).length
     : 0
-  const shown = items.slice(0, PANEL_LIMIT)
+  const visible = items.filter((n) => !dismissed.includes(n.id))
+  const shown = visible.slice(0, PANEL_LIMIT)
+
+  const onDismissRow = (e: ReactMouseEvent, id: string) => {
+    // Rows are links — dismiss must not navigate.
+    e.preventDefault()
+    e.stopPropagation()
+    setDismissed(dismissNotificationId(id))
+  }
 
   return (
-    <Popover className="relative h-full">
+    <Popover className="relative flex h-full items-center">
+      {/* Full-height centering chain (matches the account/cart links) plus
+          no stuck focus ring: after clicking, focus stays on the button and
+          the default ring would sit visible around the bell. */}
       {({ open, close }) => (
         <>
           <PopoverButton
@@ -120,7 +154,7 @@ export default function NotificationBell({
                 markRead()
               }
             }}
-            className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95"
+            className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95 focus:outline-none"
           >
             <BellNavIcon count={unread} />
           </PopoverButton>
@@ -138,6 +172,8 @@ export default function NotificationBell({
               className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-popover border-x border-b border-border w-[380px] text-popover-foreground"
               data-testid="nav-notification-panel"
             >
+              {/* No header close button by decision: clicking the bell icon
+                  toggles the panel, per-row X dismisses single items. */}
               <div className="p-3 flex items-center justify-center">
                 <h3 className="text-large-semi">Notifications</h3>
               </div>
@@ -176,6 +212,14 @@ export default function NotificationBell({
                             <span className="text-small-regular text-ui-fg-subtle">
                               {timeAgo(n.created_at)}
                             </span>
+                            <button
+                              type="button"
+                              onClick={(e) => onDismissRow(e, n.id)}
+                              aria-label={`Dismiss: ${n.title}`}
+                              className="rounded p-0.5 text-ui-fg-subtle hover:bg-muted hover:text-ui-fg-base focus:outline-none"
+                            >
+                              <XMark className="h-3.5 w-3.5" />
+                            </button>
                           </span>
                         </span>
                         {!!n.description && (
@@ -211,11 +255,11 @@ export default function NotificationBell({
                   })}
                 </ul>
               )}
-              {items.length > 0 && (
+              {visible.length > 0 && (
                 <div className="border-t border-border p-3 flex items-center justify-center gap-3">
-                  {items.length > PANEL_LIMIT && (
+                  {visible.length > PANEL_LIMIT && (
                     <span className="text-small-regular text-ui-fg-subtle">
-                      +{items.length - PANEL_LIMIT} more
+                      +{visible.length - PANEL_LIMIT} more
                     </span>
                   )}
                   <LocalizedClientLink

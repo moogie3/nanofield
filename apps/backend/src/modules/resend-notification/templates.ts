@@ -212,6 +212,68 @@ const orderCanceled = (data: TemplateData): RenderedTemplate => {
   }
 }
 
+const returnRequested = (data: TemplateData): RenderedTemplate => {
+  const ref = orderRef(data)
+  const bodyHtml =
+    `<p style="margin:0 0 12px;">Return request received for order <strong>${esc(ref)}</strong> — our team will review it shortly and follow up here.</p>` +
+    `<p style="margin:12px 0 0;">Changed your mind about what to send back? Reply to this email before we confirm the request.</p>`
+  return {
+    subject: `Return request received for order ${ref}`,
+    html: shell(
+      `Return requested for ${ref}`,
+      `Return requested for ${ref} — under review.`,
+      bodyHtml,
+      data.contact
+    ),
+    text: [
+      `Return request received for your Nanofield order ${ref} — under review.`,
+      "Reply here to change or cancel the request before we confirm it.",
+    ].join("\n"),
+  }
+}
+
+const returnReceived = (data: TemplateData): RenderedTemplate => {
+  const ref = orderRef(data)
+  const bodyHtml =
+    `<p style="margin:0 0 12px;">Return received for order <strong>${esc(ref)}</strong> — the items are back on our bench.</p>` +
+    `<p style="margin:12px 0 0;">The refund follows to your original payment method. Bank/e-wallet refunds usually land within a few business days — reply here if nothing shows up.</p>`
+  return {
+    subject: `Return received for order ${ref} — refund on its way`,
+    html: shell(
+      `Return received for ${ref}`,
+      `Return received for ${ref} — refund on its way.`,
+      bodyHtml,
+      data.contact
+    ),
+    text: [
+      `Return received for your Nanofield order ${ref}.`,
+      "The refund follows to your original payment method within a few business days.",
+    ].join("\n"),
+  }
+}
+
+const returnUpdate = (data: TemplateData): RenderedTemplate => {
+  const ref = orderRef(data)
+  const kind =
+    data.kind === "exchange" ? "Exchange update" : "Claim update"
+  const bodyHtml =
+    `<p style="margin:0 0 12px;">${esc(kind)} for order <strong>${esc(ref)}</strong> — our team is on it and will follow up with next steps here.</p>` +
+    `<p style="margin:12px 0 0;">Anything to add (photos, notes)? Just reply to this email.</p>`
+  return {
+    subject: `${kind} for order ${ref}`,
+    html: shell(
+      `${kind} for ${ref}`,
+      `${kind} for ${ref} — next steps coming.`,
+      bodyHtml,
+      data.contact
+    ),
+    text: [
+      `${kind} for your Nanofield order ${ref} — next steps coming.`,
+      "Reply here with photos or notes if you have anything to add.",
+    ].join("\n"),
+  }
+}
+
 export const TEMPLATES: Record<
   string,
   (data: TemplateData) => RenderedTemplate
@@ -220,4 +282,7 @@ export const TEMPLATES: Record<
   "nanofield-order-shipped": orderShipped,
   "nanofield-order-delivered": orderDelivered,
   "nanofield-order-canceled": orderCanceled,
+  "nanofield-return-requested": returnRequested,
+  "nanofield-return-received": returnReceived,
+  "nanofield-return-update": returnUpdate,
 }

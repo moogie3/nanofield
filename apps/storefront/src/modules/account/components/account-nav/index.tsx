@@ -14,6 +14,7 @@ import {
   FaceIdIcon,
   Location01Icon,
   Logout01Icon,
+  Notification01Icon,
   PackageIcon,
 } from "@hugeicons/core-free-icons"
 
@@ -106,6 +107,23 @@ const AccountNav = ({
                   </LocalizedClientLink>
                 </li>
                 <li>
+                  <LocalizedClientLink
+                    href="/account/notifications"
+                    className="flex items-center justify-between py-4 border-b border-border px-8"
+                    data-testid="notifications-link"
+                  >
+                    <div className="flex items-center gap-x-2">
+                      <HugeiconsIcon
+                        icon={Notification01Icon}
+                        strokeWidth={2}
+                        className="h-5 w-5"
+                      />
+                      <span>Notifications</span>
+                    </div>
+                    <ChevronDown className="transform -rotate-90" />
+                  </LocalizedClientLink>
+                </li>
+                <li>
                   <button
                     type="button"
                     className="flex items-center justify-between py-4 border-b border-border px-8 w-full"
@@ -173,6 +191,16 @@ const AccountNav = ({
                   icon={PackageIcon}
                 >
                   Orders
+                </AccountNavLink>
+              </li>
+              <li>
+                <AccountNavLink
+                  href="/account/notifications"
+                  route={route!}
+                  data-testid="notifications-link"
+                  icon={Notification01Icon}
+                >
+                  Notifications
                 </AccountNavLink>
               </li>
               <li className="text-grey-700">

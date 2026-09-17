@@ -21,12 +21,9 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
 }) => {
   return (
     <div className="flex flex-col justify-center gap-y-4">
-      <div className="flex gap-2 justify-between items-center">
-        <PageHeader
-          eyebrow="Account"
-          title="Order details"
-          subtitle="Track payment, shipment, and items for this order — including its QR code and transfer reference."
-        />
+      {/* Stacked: the old side-by-side row squeezed the header against the
+          back link, wrapping the h1 mid-phrase ("Order" / "details"). */}
+      <div className="flex justify-end">
         <LocalizedClientLink
           href="/account/orders"
           className="flex gap-2 items-center text-ui-fg-subtle hover:text-ui-fg-base shrink-0"
@@ -34,6 +31,13 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         >
           <XMark /> Back to overview
         </LocalizedClientLink>
+      </div>
+      <div>
+        <PageHeader
+          eyebrow="Account"
+          title="Order details"
+          subtitle="Track payment, shipment, and items for this order — including its QR code and transfer reference."
+        />
       </div>
       <div
         className="flex flex-col gap-4 h-full bg-card border border-border rounded-2xl w-full p-6"

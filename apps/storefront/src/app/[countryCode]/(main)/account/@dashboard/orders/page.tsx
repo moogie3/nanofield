@@ -52,7 +52,7 @@ export default async function Orders(props: {
 
   return (
     <div className="w-full" data-testid="orders-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
+      <div className="mb-8">
         <PageHeader
           eyebrow="Account"
           title="Orders"

@@ -154,6 +154,8 @@ Fulfillment stamped { courier, service, manual_booking: true }
 /app ──┬── Nanofield            (custom — store home, revenue charts)
        ├── E-comm Import       (custom — catalog pipeline UI)
        ├── Shipping Services   (custom — live courier menu)
+       ├── Announcements       (custom — bell broadcasts + banner/strip/image mgmt)
+       ├── Store Sender        (custom — label Pengirim block, env fallback)
        │
        ├── Orders / Draft Orders      (core — lifecycle drawers)
        ├── Products (+ bulk-tools widget, datasheet widget)
@@ -171,6 +173,8 @@ Fulfillment stamped { courier, service, manual_booking: true }
 ```
 
 Convention: custom pages sit pinned above core navigation; custom widgets inject into core pages (`product.list.before`, `product.details.side`, `order.details.side.before` — receipt printing via `GET /admin/orders/[id]/receipt`); the bell drawer is fed by the local `feed` notification channel (stock drawer — no DOM injection).
+
+Notification fan-out (one event, up to three surfaces): order/shipment/return subscribers post `feed` rows (admin copy to `""`, customer copy to the lowercased order email) and `notifyCustomer` emails (Resend prod / Mailtrap dev, exactly one registered). Bell broadcasts (`to: ""` + `broadcast: true`) additionally feed the customer bell via `GET /store/notifications` (customer-authenticated; admin ops notes without the flag stay admin-only). The `banner` module (`banner` table) feeds `GET /store/banners` (public, live = published + within dates) for the homepage/store strips and image banners; admin CRUD lives on the Announcements page. The storefront bell polls every 60s with per-device localStorage seen/dismissed state; the banner feed is uncached (`no-store`).
 
 ---
 
@@ -197,10 +201,12 @@ Middleware region map: in-memory + fetch cache, 1-hour TTL
 ```text
  - - - Manual pickup option (manual provider, admin UI only)
  - - - Weight-gated cargo options (JTR above X kg via option rules)
- - - - R2 image migration (today: cf.shopee.co.id hotlinks)
- - - - Tokopedia import split · second warehouse · white-label
+ - - - Second warehouse · white-label origins
  - - - B2B modules (customer groups, price lists, companies, quotes)
- - - - Hosting decision + PSE registration (see plan §7)
+ - - - PSE registration (hosting decided: Railway backend + Vercel storefront, see DEPLOY.md)
+ - - - Return emails (bell covers returns; templates stop at delivered/canceled)
+ - - - Transfer-request bell · notification retention job · bell realtime/server read-state/mobile dot
+ - - - Phase 6 backfill --apply + audit re-run (see catalog-consistency-phases.md)
 ```
 
 Nothing dashed is required for launch; nothing solid may be skipped before it.

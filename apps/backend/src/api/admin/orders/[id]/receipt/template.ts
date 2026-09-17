@@ -1,4 +1,17 @@
-export function generateReceiptHtml(order: any): string {
+export type SenderBlock = {
+  first_name: string
+  last_name: string
+  phone: string
+  address_1: string
+  city: string
+  province: string
+  country_code: string
+}
+
+export function generateReceiptHtml(
+  order: any,
+  sender?: Partial<SenderBlock>
+): string {
   const shipping = order.shipping_address || {}
 
   const addressHtml = (addr: any, label: string, isLarge: boolean = false) => {
@@ -24,14 +37,17 @@ export function generateReceiptHtml(order: any): string {
     `
   }
 
-  const nanofieldSender = {
-    first_name: process.env.STORE_NAME || "Nanofield",
-    last_name: "",
-    phone: process.env.STORE_PHONE || "+62 851-2155-0532", 
-    address_1: process.env.STORE_ADDRESS_1 || "Pasar Jambi",
-    city: process.env.STORE_CITY || "Jambi",
-    province: process.env.STORE_PROVINCE || "Jambi",
-    country_code: process.env.STORE_COUNTRY_CODE || "id"
+  // Admin-managed sender block wins when provided; env is the fallback so
+  // labels never break on a fresh database without a saved profile.
+  const nanofieldSender: SenderBlock = {
+    first_name: sender?.first_name || process.env.STORE_NAME || "Nanofield",
+    last_name: sender?.last_name || "",
+    phone: sender?.phone || process.env.STORE_PHONE || "+62 851-2155-0532",
+    address_1: sender?.address_1 || process.env.STORE_ADDRESS_1 || "Pasar Jambi",
+    city: sender?.city || process.env.STORE_CITY || "Jambi",
+    province: sender?.province || process.env.STORE_PROVINCE || "Jambi",
+    country_code:
+      sender?.country_code || process.env.STORE_COUNTRY_CODE || "id",
   }
 
   const trackingUrl = `https://nanofield.com/order/${order.id}`

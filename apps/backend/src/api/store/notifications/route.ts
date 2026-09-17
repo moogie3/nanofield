@@ -1,10 +1,13 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { formatIDR } from "../../admin/shopee-imports/notify"
 
 // Customer notification bell feed. Returns channel "feed" records
 // addressed to the logged-in customer (to = lowercased email) plus
-// store-wide broadcasts (to = ""). Logged-out callers never reach here —
-// the authenticate middleware on this route answers 401 first.
+// store-wide announcement broadcasts (to = "" flagged broadcast:true).
+// Admin operational notes share to = "" without the flag and stay
+// admin-only. Logged-out callers never reach here — the authenticate
+// middleware on this route answers 401 first.
 // Shape per item: { id, title, description, created_at, orderId?, link?, broadcast? }
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const actorId = (
@@ -45,7 +48,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
 
   // Two exact-match queries instead of one $or — merged and sorted here.
-  // Broadcast rows (Phase D announcements) ride along with to = "".
   let rows: FeedRow[] = []
   try {
     const [own, broadcast] = await Promise.all([
@@ -60,7 +62,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         filters: { to: "", channel: "feed" },
       }),
     ])
-    rows = [...(own.data ?? []), ...(broadcast.data ?? [])]
+    rows = [
+      ...(own.data ?? []),
+      ...((broadcast.data ?? []).filter((n) => n?.data?.broadcast)),
+    ]
       .filter((n) => n?.id && n.created_at)
       .sort((a, b) => (a.created_at! < b.created_at! ? 1 : -1))
   } catch {
@@ -90,9 +95,15 @@ type FeedRow = {
 const toPayload = (n: FeedRow) => ({
   id: n.id,
   title: n.data?.title || "New notification",
-  description: n.data?.description || "",
+  description: normalizeLegacyAmounts(n.data?.description || ""),
   created_at: n.created_at,
   ...(n.data?.orderId ? { orderId: n.data.orderId } : {}),
   ...(n.data?.link ? { link: n.data.link } : {}),
   ...(n.data?.broadcast ? { broadcast: true } : {}),
 })
+
+// Oldest feed rows (written before formatIDR) embed raw BigNumber totals
+// like "Total 19000.0000000000000000 IDR". History rows are immutable, so
+// normalize at read time: dotted-decimal + IDR suffix becomes Rp formatting.
+const normalizeLegacyAmounts = (text: string): string =>
+  text.replace(/(\d+\.\d+)\s+IDR/g, (_, amount: string) => formatIDR(amount))

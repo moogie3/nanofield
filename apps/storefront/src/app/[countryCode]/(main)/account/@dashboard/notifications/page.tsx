@@ -33,13 +33,14 @@ export default async function Notifications(props: {
   }
 
   // Fetch one extra to know whether a "Show more" button is needed.
-  const fetched = await listCustomerNotifications(limit + 1, 0)
+  const feed = await listCustomerNotifications(limit + 1, 0)
+  const fetched = feed.notifications
   const notifications = fetched.slice(0, limit)
   const hasMore = fetched.length > limit
 
   return (
     <div className="w-full" data-testid="notifications-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
+      <div className="mb-8">
         <PageHeader
           eyebrow="Account"
           title="Notifications"

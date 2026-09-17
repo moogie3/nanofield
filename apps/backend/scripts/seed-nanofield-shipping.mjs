@@ -4,8 +4,10 @@
 // catalog itself: IDR store currency, Indonesia/IDR region, `id` tax region,
 // Pasar Jambi stock location, sales-channel link, fulfillment-provider links,
 // fulfillment set + service zone + `id` geo-zone, Standard option type,
-// the jne-ctc service enabled, and the three calculated shipping options
-// (JNE REG, J&T Express, JNE City Courier) on the rajaongkir provider.
+// the jne-ctc service enabled, the three calculated shipping options
+// (JNE REG, J&T Express, JNE City Courier) on the rajaongkir provider,
+// plus a free "Pickup in store" option on the manual provider (own pickup
+// fulfillment set — the storefront splits pickup out by set type).
 //
 // Safe to re-run: every step checks current state first and skips what
 // already exists. Nothing is ever deleted.
@@ -360,6 +362,77 @@ for (const opt of OPTIONS) {
       { attribute: "is_return", value: "false", operator: "eq" },
     ],
   })
+}
+
+// --- 12. Pickup in store (manual provider, free) ---
+// Needs its own fulfillment set of type "pickup" — the storefront splits
+// pickup options out by set type. Same Indonesia zone shape as shipping.
+const PICKUP_SET_NAME = "Pasar Jambi pickup"
+const PICKUP_OPTION_NAME = "Pickup in store"
+{
+  let tree = await getLocationTree()
+  let pickupSet = (tree.fulfillment_sets || []).find(
+    (s) => s && s.type === "pickup" && !s.deleted_at
+  )
+  if (!pickupSet) {
+    emit(`no pickup fulfillment set, creating "${PICKUP_SET_NAME}"`)
+    await post(`/admin/stock-locations/${location.id}/fulfillment-sets`, {
+      name: PICKUP_SET_NAME,
+      type: "pickup",
+    })
+    tree = await getLocationTree()
+    pickupSet = (tree.fulfillment_sets || []).find(
+      (s) => s && s.type === "pickup" && !s.deleted_at
+    )
+  } else {
+    live(`pickup set ok: ${pickupSet.name} (${pickupSet.id})`)
+  }
+  if (!pickupSet) {
+    throw new Error("pickup fulfillment set could not be confirmed, aborting")
+  }
+  let pickupZone = (pickupSet.service_zones || []).find(Boolean) || null
+  if (!pickupZone) {
+    emit("no pickup service zone, creating one with id geo-zone")
+    await post(`/admin/fulfillment-sets/${pickupSet.id}/service-zones`, {
+      name: "Pasar Jambi pickup",
+      geo_zones: [{ country_code: "id", type: "country" }],
+    })
+    tree = await getLocationTree()
+    pickupSet = (tree.fulfillment_sets || []).find(
+      (s) => s && s.id === pickupSet.id
+    )
+    pickupZone = (pickupSet.service_zones || []).find(Boolean) || null
+  } else {
+    live(`pickup zone ok: ${pickupZone.name}`)
+  }
+  if (!pickupZone) {
+    throw new Error("pickup service zone could not be confirmed, aborting")
+  }
+  const { shipping_options: allOptions } = await get(
+    "/admin/shipping-options?limit=100"
+  )
+  const pickupExists = (allOptions || []).some(
+    (o) => o.name === PICKUP_OPTION_NAME && o.provider_id === "manual_manual"
+  )
+  if (pickupExists) {
+    live(`shipping option ok: ${PICKUP_OPTION_NAME}`)
+  } else {
+    emit(`creating flat free option ${PICKUP_OPTION_NAME}`)
+    await post("/admin/shipping-options", {
+      name: PICKUP_OPTION_NAME,
+      price_type: "flat",
+      provider_id: "manual_manual",
+      service_zone_id: pickupZone.id,
+      shipping_profile_id: profileId,
+      type_id: stdType.id,
+      data: {},
+      prices: [{ currency_code: "idr", amount: 0 }],
+      rules: [
+        { attribute: "enabled_in_store", value: "true", operator: "eq" },
+        { attribute: "is_return", value: "false", operator: "eq" },
+      ],
+    })
+  }
 }
 
 live(DRY_RUN ? "DRY RUN complete — no writes performed." : "Shipping setup complete.")

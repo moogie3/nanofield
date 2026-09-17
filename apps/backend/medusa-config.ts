@@ -18,6 +18,12 @@ module.exports = defineConfig({
       resolve: "./src/modules/rajaongkir",
     },
     {
+      resolve: "./src/modules/banner",
+    },
+    {
+      resolve: "./src/modules/sender-profile",
+    },
+    {
       resolve: "@medusajs/medusa/fulfillment",
       options: {
         providers: [

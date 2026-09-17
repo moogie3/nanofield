@@ -68,7 +68,7 @@ const OrderCard = ({ order }: OrderCardProps) => {
       <div className="absolute top-0 right-0 w-32 h-32 bg-ui-bg-base/5 rounded-bl-full -z-10 pointer-events-none blur-3xl"></div>
       
       <div>
-        <div className="text-large-semi mb-3">
+        <div className="text-large-semi mb-3 break-all">
           Order ID: <span className="font-mono text-sm" data-testid="order-raw-id">{order.id}</span>
         </div>
         <div className="flex items-center divide-x divide-border text-small-regular text-ui-fg-base">
@@ -115,9 +115,12 @@ const OrderCard = ({ order }: OrderCardProps) => {
               <div className="w-16 shrink-0">
                 <Thumbnail thumbnail={i.thumbnail} images={[]} size="square" />
               </div>
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 flex-1">
+                {/* Wraps to two lines max: truncate on the old inline span
+                    never constrained, letting long titles force the card
+                    wider than its column. */}
                 <span
-                  className="text-ui-fg-base font-semibold truncate"
+                  className="text-ui-fg-base font-semibold block line-clamp-2 break-words"
                   data-testid="item-title"
                 >
                   {i.title}
