@@ -42,6 +42,7 @@ export const listCustomerNotifications = async (
         headers: {
           ...authHeaders,
         },
+        cache: "no-store",
       }
     )
     .then(({ notifications, total }) => ({

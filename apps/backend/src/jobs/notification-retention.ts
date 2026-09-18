@@ -28,7 +28,9 @@ export default async function notificationRetentionJob(
       return
     }
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
-    const notificationModule = container.resolve(Modules.NOTIFICATION) as {
+    const notificationModule = container.resolve(
+      Modules.NOTIFICATION
+    ) as unknown as {
       listNotifications: (
         filters: Record<string, unknown>,
         config?: Record<string, unknown>

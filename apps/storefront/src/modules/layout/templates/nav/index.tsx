@@ -11,6 +11,7 @@ import NotificationButton from "@modules/layout/components/notification-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import SiteSearch from "@modules/layout/components/site-search"
 import StickyNav from "@modules/layout/components/sticky-nav"
+import AnnouncementBanner from "@modules/layout/components/announcement-banner"
 import {
   AccountNavIcon,
   CartNavIcon,
@@ -28,7 +29,7 @@ export default async function Nav() {
   const customer = await retrieveCustomer().catch(() => null)
 
   return (
-    <StickyNav>
+    <StickyNav banner={<AnnouncementBanner />}>
       <nav className="content-container text-ui-fg-subtle flex items-center justify-between w-full h-full text-base">
         <div className="flex-1 basis-0 h-full flex items-center gap-x-6">
           <div className="h-full">

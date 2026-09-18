@@ -1,33 +1,26 @@
 import { listStoreBanners } from "@lib/data/banners"
-import AnnouncementStrip from "./announcement-strip"
-import ImageBanner from "./image-banner"
+import ImageBannerCarousel from "./image-banner-carousel"
 
-// Live storefront banners for the homepage + store page: announcement
-// strip(s) stacked above the image banner(s). Renders nothing when empty —
-// callers place it unconditionally.
+// Image banner carousel for the homepage + store page.
+// Announcement strips have moved to the global layout (AnnouncementBanner)
+// so they appear below the navbar on every page.
+// Renders nothing when there are no live image banners.
 export default async function StoreBanners() {
-  const { announcements, image } = await listStoreBanners().catch(() => ({
+  const { image } = await listStoreBanners().catch(() => ({
     announcements: [],
     image: [],
   }))
 
-  if (!announcements.length && !image.length) {
+  if (!image.length) {
     return null
   }
 
-  // relative: paints above the absolute PageBackdrop grid (positioned
-  // elements win over static siblings in the same stacking context).
   return (
     <div
-      className="content-container relative flex flex-col gap-4 pt-6"
+      className="content-container relative pt-6 pb-10"
       data-testid="store-banners"
     >
-      {announcements.map((b) => (
-        <AnnouncementStrip key={b.id} banner={b} />
-      ))}
-      {image.map((b) => (
-        <ImageBanner key={b.id} banner={b} />
-      ))}
+      <ImageBannerCarousel banners={image} />
     </div>
   )
 }

@@ -10,9 +10,8 @@ import { formatIDR } from "../../admin/shopee-imports/notify"
 // middleware on this route answers 401 first.
 // Shape per item: { id, title, description, created_at, orderId?, link?, broadcast? }
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const actorId = (
-    req.auth_context as { actor_id?: string } | undefined
-  )?.actor_id
+  const actorId = (req as unknown as { auth_context?: { actor_id?: string } })
+    .auth_context?.actor_id
   if (!actorId) {
     res.status(401).json({ message: "Not authenticated" })
     return

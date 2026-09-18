@@ -1,35 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { XMark } from "@medusajs/icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Megaphone01Icon } from "@hugeicons/core-free-icons"
 import type { StoreBanner } from "@lib/data/banners"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-const dismissKey = (id: string) => `nf-banner-dismissed-${id}`
+const dismissKey = (banner: StoreBanner) => 
+  `nf-banner-dismissed-${banner.id}-${banner.updated_at || "0"}`
 
-// Dismissible announcement strip. Per-banner localStorage dismissal — a new
-// banner id shows again even if an old one was dismissed.
+// Suppresses render entirely until after mount so we can read localStorage
+// without causing a hydration mismatch. Before mount both server and client
+// render nothing — no flash, no mismatch.
 export default function AnnouncementStrip({ banner }: { banner: StoreBanner }) {
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    try {
-      return window.localStorage.getItem(dismissKey(banner.id)) === "1"
-    } catch {
-      return false
-    }
-  })
+  const [mounted, setMounted] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
 
-  if (dismissed) {
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(dismissKey(banner)) === "1") {
+        setDismissed(true)
+      }
+    } catch {
+      // private mode — treat as not dismissed
+    }
+    setMounted(true)
+  }, [banner])
+
+  // Render nothing until client has read localStorage — eliminates both
+  // the hydration mismatch and the dismissed-banner flash on refresh.
+  if (!mounted || dismissed) {
     return null
   }
 
   const dismiss = () => {
     setDismissed(true)
     try {
-      window.localStorage.setItem(dismissKey(banner.id), "1")
+      window.localStorage.setItem(dismissKey(banner), "1")
     } catch {
-      // private mode — hides for this session
+      // private mode — hides for this session only
     }
   }
 

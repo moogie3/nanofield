@@ -10,6 +10,7 @@ type BannerRow = {
 type BannerOps = {
   listBanners: (filters?: Record<string, unknown>) => Promise<BannerRow[]>
   updateBanners: (data: Record<string, unknown>[]) => Promise<BannerRow[]>
+  deleteBanners: (ids: string[]) => Promise<void>
 }
 
 const BANNER_KEYS = ["banner", "bannerModuleService"]
@@ -48,8 +49,7 @@ const parseDate = (v: unknown): string | null => {
   return t.toISOString()
 }
 
-// Publish toggle + date/copy edits. No delete by decision — unpublish flips
-// is_published and the row stays as history.
+// Publish toggle + date/copy edits.
 export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const id = String(req.params.id || "")
   const ops = banners(req)
@@ -96,4 +96,20 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   }
   const [updated] = await ops.updateBanners([patch])
   res.status(200).json({ banner: updated })
+}
+
+// Hard-delete a banner row. Used for image banners removed from the carousel.
+// Announcement banners can use unpublish instead, but image slots are replaced.
+export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
+  const id = String(req.params.id || "")
+  const ops = banners(req)
+  const existing = (await ops.listBanners({ id })).find((b) => b.id === id)
+  if (!existing) {
+    throw new MedusaError(
+      MedusaError.Types.NOT_FOUND,
+      `no banner with id ${id}`
+    )
+  }
+  await ops.deleteBanners([id])
+  res.status(200).json({ deleted: true })
 }

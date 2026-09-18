@@ -849,8 +849,9 @@ const Hero = () => {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 text-primary opacity-30 dark:opacity-40"
+        className="pointer-events-none absolute inset-0 opacity-30 dark:opacity-40"
         style={{
+          color: "var(--hero-trace)",
           maskImage:
             "radial-gradient(ellipse 75% 90% at 50% 40%, black 30%, transparent 75%)",
           WebkitMaskImage:

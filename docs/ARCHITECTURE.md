@@ -154,7 +154,7 @@ Fulfillment stamped { courier, service, manual_booking: true }
 /app ──┬── Nanofield            (custom — store home, revenue charts)
        ├── E-comm Import       (custom — catalog pipeline UI)
        ├── Shipping Services   (custom — live courier menu)
-       ├── Announcements       (custom — bell broadcasts + banner/strip/image mgmt)
+       ├── Customer Notifications (custom — bell broadcasts + banner/strip/image mgmt)
        ├── Store Sender        (custom — label Pengirim block, env fallback)
        │
        ├── Orders / Draft Orders      (core — lifecycle drawers)
@@ -174,7 +174,7 @@ Fulfillment stamped { courier, service, manual_booking: true }
 
 Convention: custom pages sit pinned above core navigation; custom widgets inject into core pages (`product.list.before`, `product.details.side`, `order.details.side.before` — receipt printing via `GET /admin/orders/[id]/receipt`); the bell drawer is fed by the local `feed` notification channel (stock drawer — no DOM injection).
 
-Notification fan-out (one event, up to three surfaces): order/shipment/return subscribers post `feed` rows (admin copy to `""`, customer copy to the lowercased order email) and `notifyCustomer` emails (Resend prod / Mailtrap dev, exactly one registered). Bell broadcasts (`to: ""` + `broadcast: true`) additionally feed the customer bell via `GET /store/notifications` (customer-authenticated; admin ops notes without the flag stay admin-only). The `banner` module (`banner` table) feeds `GET /store/banners` (public, live = published + within dates) for the homepage/store strips and image banners; admin CRUD lives on the Announcements page. The storefront bell polls every 60s with per-device localStorage seen/dismissed state; the banner feed is uncached (`no-store`).
+Notification fan-out (one event, up to three surfaces): order/shipment/return subscribers post `feed` rows (admin copy to `""`, customer copy to the lowercased order email) and `notifyCustomer` emails (Resend prod / Mailtrap dev, exactly one registered). Bell broadcasts (`to: ""` + `broadcast: true`) additionally feed the customer bell via `GET /store/notifications` (customer-authenticated; admin ops notes without the flag stay admin-only). The `banner` module (`banner` table) feeds `GET /store/banners` (public, live = published + within dates) for the homepage/store strips and image banners; admin CRUD lives on the Customer Notifications page. The storefront bell polls every 60s with per-device localStorage seen/dismissed state; the banner feed is uncached (`no-store`).
 
 ---
 

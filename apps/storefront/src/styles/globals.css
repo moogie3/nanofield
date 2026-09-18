@@ -430,6 +430,9 @@
     --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
     --sidebar-border: oklch(0.925 0.005 214.3);
     --sidebar-ring: oklch(0.723 0.014 214.4);
+    /* Hero circuit trace color: slate-blue in light mode (PCB silkscreen ink),
+       teal in dark mode (existing green-glow aesthetic). */
+    --hero-trace: oklch(0.55 0.12 250);
   }
   .dark {
     --background: oklch(0.148 0.004 228.8);
@@ -463,6 +466,8 @@
     --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.56 0.021 213.5);
+    /* Dark mode: keep existing teal glow for the circuit traces */
+    --hero-trace: oklch(0.65 0.12 180);
   }
 
   .theme {

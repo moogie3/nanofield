@@ -1036,11 +1036,11 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
       amount: p.amount,
     }))
     const idx = rest.findIndex((p) => p.currency_code === currency)
-    if (idx >= 0) {
-      rest[idx] = { ...rest[idx], amount }
-    } else {
-      rest.push({ currency_code: currency, amount })
-    }
+      if (idx >= 0) {
+        rest[idx] = { ...rest[idx], amount }
+      } else {
+        rest.push({ id: undefined, currency_code: currency, amount })
+      }
     return rest
   }
 
@@ -1073,10 +1073,10 @@ export const runImport = async (opts: RunOptions): Promise<ImportReport> => {
     const docMetadata: Record<string, string> = {
       ...(partNumber ? { part_number: partNumber } : {}),
       is_semiconductor: flags.isSemiconductor,
-      // Raw Shopee path for traceability (plan.category is canonical).
-      ...(plan.categoryPath ? { category_path: plan.categoryPath } : {}),
-      spec_family: plan.specFamily,
-      ...plan.specs,
+        // Raw Shopee path for traceability (plan.category is canonical).
+        ...(plan.categoryPath ? { category_path: plan.categoryPath } : {}),
+        spec_family: plan.specFamily as string,
+        ...plan.specs,
       ...(finalMpn && !existingMpn ? { mpn: finalMpn } : {}),
       ...(mappedUrl && !existingUrl ? { datasheet_url: mappedUrl } : {}),
     }

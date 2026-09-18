@@ -34,8 +34,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     res.status(400).json({ message: "sales file (Informasi Penjualan) is required" })
     return
   }
+  const body = (req.body || {}) as Record<string, unknown>
   const cleanDesc =
-    req.body?.cleanDesc === true || req.body?.cleanDesc === "true" || req.body?.cleanDesc === "1"
+    body.cleanDesc === true || body.cleanDesc === "true" || body.cleanDesc === "1"
 
   try {
     const preview = await buildPreview({

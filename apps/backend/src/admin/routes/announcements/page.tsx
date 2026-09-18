@@ -11,6 +11,7 @@ import {
   Text,
   Textarea,
   toast,
+  usePrompt,
 } from "@medusajs/ui"
 
 // Store-wide announcements (customer navbar bell) + storefront banners
@@ -51,6 +52,7 @@ const emptyImage = { title: "", link: "", endsAt: "" }
 const endOfDay = (date: string): string => `${date}T23:59:59`
 
 const AnnouncementsPage = () => {
+  const prompt = usePrompt()
   const [rows, setRows] = useState<Announcement[]>([])
   const [banners, setBanners] = useState<Banner[]>([])
   const [loading, setLoading] = useState(true)
@@ -247,6 +249,30 @@ const AnnouncementsPage = () => {
       setUploading(false)
     }
   }
+  const deleteImageBanner = async (id: string, title: string) => {
+    const confirmed = await prompt({
+      title: "Remove slide from carousel?",
+      description: `"${title}" will be permanently deleted and removed from the storefront carousel. This cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+    })
+    if (!confirmed) {
+      return
+    }
+    setError(null)
+    try {
+      const r = await fetch(`/admin/banners/${id}`, { method: "DELETE" })
+      const data = (await r.json()) as { message?: string }
+      if (!r.ok) {
+        throw new Error(data.message || r.statusText)
+      }
+      await load()
+      toast.success("Image removed from carousel")
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const togglePublish = async (b: Banner) => {
     setError(null)
     try {
@@ -277,7 +303,13 @@ const AnnouncementsPage = () => {
   // homepage/store strip) is a separate Banner row — unpublish it in the
   // Banners section if it exists.
   const removeBroadcast = async (id: string, title: string) => {
-    if (!window.confirm(`Delete broadcast "${title}"? This cannot be undone.`)) {
+    const confirmed = await prompt({
+      title: "Delete broadcast?",
+      description: `"${title}" will be permanently deleted from the bell history. This cannot be undone. If a banner twin exists, unpublish it separately in the Announcement strips section.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+    })
+    if (!confirmed) {
       return
     }
     setError(null)
@@ -289,6 +321,40 @@ const AnnouncementsPage = () => {
       }
       await load()
       toast.success("Broadcast deleted")
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const reannounceBroadcast = async (a: Announcement) => {
+    const confirmed = await prompt({
+      title: "Reannounce broadcast?",
+      description: `This will send "${a.title}" to everyone's notification bell again as a new message.`,
+      confirmText: "Reannounce",
+      cancelText: "Cancel",
+    })
+    if (!confirmed) {
+      return
+    }
+    setError(null)
+    try {
+      const r = await fetch("/admin/announcements", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: a.title,
+          description: a.description || "",
+          ...(a.link ? { link: a.link } : {}),
+        }),
+      })
+      const data = (await r.json()) as { message?: string }
+      if (!r.ok) {
+        throw new Error(data.message || r.statusText)
+      }
+      await load()
+      toast.success("Broadcast reannounced", {
+        description: "Customers will pick it up on their next bell poll.",
+      })
     } catch (e) {
       setError((e as Error).message)
     }
@@ -343,11 +409,11 @@ const AnnouncementsPage = () => {
   return (
     <div className="flex flex-col gap-y-4">
       <Container>
-        <Heading level="h1">Announcements</Heading>
+        <Heading level="h1">User Notifications (Bell)</Heading>
         <Text className="mt-1 text-ui-fg-subtle">
-          Broadcast to every logged-in customer&apos;s navbar bell. Appears
-          within a minute; also shows in the admin bell. Past broadcasts can
-          be deleted below — double-check before broadcasting.
+          Broadcast a persistent message to the notification inbox of every logged-in customer. Appears
+          within a minute. Use this for low-urgency or persistent updates (e.g., "Welcome", "New category added"). 
+          For transient, unmissable alerts that guests must see, use the <strong>Global Announcement Strip</strong> below instead.
         </Text>
         {error && <Text className="mt-2 text-ui-fg-error">{error}</Text>}
         <div className="mt-4 flex flex-col gap-3">
@@ -412,13 +478,75 @@ const AnnouncementsPage = () => {
         </div>
       </Container>
       <Container>
-        <Heading level="h2">Image banner</Heading>
+        <Heading level="h2">Image Banner Carousel</Heading>
         <Text className="mt-1 text-ui-fg-subtle">
-          Fixed banner under the announcement strip on the homepage and store
-          page. JPEG/PNG/WebP under 5MB. Customers cannot dismiss it — control
-          visibility with the end date and unpublish below.
+          Each uploaded image becomes one slide in the homepage carousel.
+          Published images appear in newest-first order — add more to grow the
+          carousel, unpublish or delete to remove a slide. JPEG/PNG/WebP under
+          5MB. The carousel displays all slides at a fixed <strong>3:1 aspect ratio</strong>{" "}
+          (e.g. 1500&times;500 px) — images are cropped to fit, so upload
+          landscape images close to that ratio for best results.
         </Text>
+
+        {/* Live carousel slides */}
+        {banners.filter((b) => b.type === "image").length > 0 && (
+          <div className="mt-4">
+            <Text weight="plus" className="text-small-plus mb-2">
+              Current slides ({banners.filter((b) => b.type === "image" && b.is_published).length} published
+              {banners.filter((b) => b.type === "image" && !b.is_published).length > 0
+                ? `, ${banners.filter((b) => b.type === "image" && !b.is_published).length} unpublished`
+                : ""})
+            </Text>
+            <ul className="flex flex-col gap-3">
+              {banners
+                .filter((b) => b.type === "image")
+                .map((b, i) => (
+                  <li
+                    key={b.id}
+                    className="flex items-start gap-3 rounded-xl border border-ui-border-base p-3"
+                  >
+                    {b.image_url && (
+                      <img
+                        src={b.image_url}
+                        alt={b.title}
+                        className="h-16 w-48 shrink-0 rounded-lg border border-ui-border-base object-cover"
+                      />
+                    )}
+                    <div className="flex flex-1 flex-col gap-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Badge color={b.is_published ? "green" : "grey"}>
+                          {b.is_published ? `Slide ${i + 1}` : "unpublished"}
+                        </Badge>
+                        <Text weight="plus" className="truncate">{b.title}</Text>
+                      </div>
+                      <Text className="text-small-regular text-ui-fg-subtle">
+                        {[b.link, b.ends_at ? `through ${formatDate(b.ends_at)}` : "no end date"]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Text>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={() => void togglePublish(b)}
+                      >
+                        {b.is_published ? "Unpublish" : "Publish"}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => void deleteImageBanner(b.id, b.title)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+
         <div className="mt-4 flex flex-col gap-3">
+          <Text weight="plus" className="text-small-plus">Add a new slide</Text>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="img-title">Title (required)</Label>
@@ -467,16 +595,16 @@ const AnnouncementsPage = () => {
             onClick={() => void uploadImageBanner()}
             disabled={!imageValid}
           >
-            Publish image banner
+            Add slide
           </Button>
         </div>
       </Container>
       <Container>
-        <Heading level="h2">Announcement strip</Heading>
+        <Heading level="h2">Global Announcement Strip</Heading>
         <Text className="mt-1 text-ui-fg-subtle">
-          Dismissible text strip above the image banner, no bell involved.
-          Use it for existing broadcasts (set the same copy again here) or
-          one-off notes.
+          Dismissible text strip pinned below the navbar. Visible to everyone, including guests.
+          Use this for high-urgency, transient alerts (e.g., "Flash Sale", "Site Maintenance").
+          Customers who click "X" will not see it again unless you click Reannounce.
         </Text>
         <div className="mt-4 flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
@@ -533,30 +661,27 @@ const AnnouncementsPage = () => {
         </div>
       </Container>
       <Container>
-        <Heading level="h2">Banners</Heading>
+        <Heading level="h2">Live Announcement Strips</Heading>
         <Text className="mt-1 text-ui-fg-subtle">
           Live = published and within dates. Unpublish hides immediately;
-          expired rows stay as history.
+          expired rows stay as history. Image banner slides are managed above.
         </Text>
         {bannerError && (
           <Text className="mt-2 text-ui-fg-error">{bannerError}</Text>
         )}
         {loading ? (
           <Text className="mt-2 text-ui-fg-subtle">Loading…</Text>
-        ) : banners.length === 0 ? (
-          <Text className="mt-2 text-ui-fg-subtle">No banners yet.</Text>
+        ) : banners.filter((b) => b.type === "announcement").length === 0 ? (
+          <Text className="mt-2 text-ui-fg-subtle">No announcement strips yet.</Text>
         ) : (
           <ul className="mt-2 flex flex-col">
-            {banners.map((b) => (
+            {banners.filter((b) => b.type === "announcement").map((b) => (
               <li
                 key={b.id}
                 className="border-t border-ui-border-base py-3 first:border-t-0"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <Badge color={b.type === "image" ? "blue" : "green"}>
-                      {b.type}
-                    </Badge>
                     <Badge color={b.is_published ? "green" : "grey"}>
                       {b.is_published ? "published" : "unpublished"}
                     </Badge>
@@ -574,34 +699,23 @@ const AnnouncementsPage = () => {
                     .filter(Boolean)
                     .join(" · ")}
                 </Text>
-                {/* Live preview of what the storefront renders: image thumb
-                    for image banners, strip mock for announcements. Same
-                    origin, so the relative /static path resolves directly. */}
-                {b.type === "image" && b.image_url ? (
-                  <img
-                    src={b.image_url}
-                    alt={b.title}
-                    className="mt-2 max-h-40 rounded-lg border border-ui-border-base object-cover"
-                  />
-                ) : (
-                  <div className="mt-2 rounded-lg border border-ui-border-base bg-ui-bg-subtle px-3 py-2">
-                    <Text weight="plus" className="text-small-plus">
-                      {b.title}
+                <div className="mt-2 rounded-lg border border-ui-border-base bg-ui-bg-subtle px-3 py-2">
+                  <Text weight="plus" className="text-small-plus">
+                    {b.title}
+                  </Text>
+                  {!!b.description && (
+                    <Text className="text-small-regular text-ui-fg-subtle">
+                      {b.description}
                     </Text>
-                    {!!b.description && (
-                      <Text className="text-small-regular text-ui-fg-subtle">
-                        {b.description}
-                      </Text>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         )}
       </Container>
       <Container>
-        <Heading level="h2">Past broadcasts</Heading>
+        <Heading level="h2">Past Broadcasts</Heading>
         {loading ? (
           <Text className="mt-2 text-ui-fg-subtle">Loading…</Text>
         ) : rows.length === 0 ? (
@@ -668,6 +782,12 @@ const AnnouncementsPage = () => {
                           }
                         >
                           Edit
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => void reannounceBroadcast(a)}
+                        >
+                          Reannounce
                         </Button>
                         <Button
                           variant="secondary"

@@ -17,7 +17,8 @@ const OrderReceiptWidget = () => {
   })
 
   const order = data?.order
-  const isPaid = order?.payment_status === "captured" || order?.payment_status === "paid"
+  const status = order?.payment_status as string | undefined
+  const isPaid = status === "captured" || status === "paid" || status === "authorized"
 
   // Assuming storefront order tracking URL format
   const trackingUrl = `https://nanofield.com/order/${id}`

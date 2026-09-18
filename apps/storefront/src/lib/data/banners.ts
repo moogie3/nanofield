@@ -9,6 +9,7 @@ export type StoreBanner = {
   link: string
   image_url: string
   ends_at: string | null
+  updated_at: string | null
 }
 
 // Public storefront banner feed (GET /store/banners, publishable key only —

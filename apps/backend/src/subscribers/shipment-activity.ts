@@ -27,7 +27,7 @@ const orderDisplay = async (
       entity: "order",
       fields: ["id", "display_id", "email", "shipping_methods.name"],
       filters: { id: orderId },
-    })) as {
+    })) as unknown as {
       data: {
         id: string
         display_id: number

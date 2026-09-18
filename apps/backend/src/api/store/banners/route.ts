@@ -11,6 +11,7 @@ type BannerRow = {
   starts_at?: string | null
   ends_at?: string | null
   is_published?: boolean | null
+  updated_at?: string | Date | null
 }
 
 type BannerOps = {
@@ -78,4 +79,5 @@ const toPayload = (b: BannerRow) => ({
   // Heals rows persisted with Windows backslash separators (see admin POST).
   image_url: (b.image_url || "").replace(/\\/g, "/"),
   ends_at: b.ends_at || null,
+  updated_at: b.updated_at ? new Date(b.updated_at).getTime().toString() : null,
 })

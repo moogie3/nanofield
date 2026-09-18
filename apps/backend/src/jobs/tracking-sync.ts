@@ -147,9 +147,9 @@ export default async function trackingSyncJob(
         if (!tracked.delivered) {
           continue
         }
-        await markOrderFulfillmentAsDeliveredWorkflow(container).run({
-          input: { order_id: s.orderId, fulfillment_id: s.fulfillmentId },
-        })
+          await markOrderFulfillmentAsDeliveredWorkflow(container).run({
+            input: { orderId: s.orderId, fulfillmentId: s.fulfillmentId },
+          })
         delivered += 1
         await notifyFeed(container, {
           to: "",

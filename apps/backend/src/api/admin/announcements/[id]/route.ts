@@ -45,7 +45,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
       "link must be a storefront path starting with /"
     )
   }
-  const notificationModule = req.scope.resolve(Modules.NOTIFICATION) as {
+  const notificationModule = req.scope.resolve(Modules.NOTIFICATION) as unknown as {
     updateNotifications: (
       data: Record<string, unknown>
     ) => Promise<unknown>
@@ -69,7 +69,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
   const id = String(req.params.id || "")
   await loadBroadcast(req, id)
-  const notificationModule = req.scope.resolve(Modules.NOTIFICATION) as {
+  const notificationModule = req.scope.resolve(Modules.NOTIFICATION) as unknown as {
     deleteNotifications: (ids: string[]) => Promise<void>
   }
   await notificationModule.deleteNotifications([id])

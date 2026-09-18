@@ -2,7 +2,7 @@
 
 Nanofield is a standalone ecommerce store for semiconductors, electronic components, and appliance spare parts. B2C first, with B2B held in reserve.
 
-Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, a support/error page system (contact, returns, FAQ, branded error screens), a customer notification bell (order/return/broadcast feed with history page) plus return emails, storefront announcement strips + image banners with an Announcements admin page, a Store Sender admin page for shipping labels, nightly feed retention, weight-gated cargo options, a free in-store pickup option, and Resend/Mailtrap customer email.
+Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, a support/error page system (contact, returns, FAQ, branded error screens), a customer notification bell (order/return/broadcast feed with history page) plus return emails, storefront global announcement strips + image banner carousel with a Customer Notifications admin page, a Store Sender admin page for shipping labels, nightly feed retention, weight-gated cargo options, a free in-store pickup option, and Resend/Mailtrap customer email.
 
 Project docs (all in `docs/`):
 
@@ -116,6 +116,14 @@ Run from the repo root unless noted (`<pm>` = npm here):
 | Backend HTTP integration tests | `cd apps/backend && npm run test:integration:http` |
 | Generate migration for a custom module | `cd apps/backend && npx medusa db:generate <module-name>` |
 | Run migrations | `cd apps/backend && npx medusa db:migrate` |
+
+## Backend Scripts
+
+Administrative and utility scripts are located in `apps/backend/scripts/`. Run them from the backend directory using the Medusa exec command:
+
+- **Shipping Setup:** `cd apps/backend && npx medusa exec scripts/seed-nanofield-shipping.mjs` (Sets up Indonesian shipping zones, RajaOngkir fulfillment, and the pickup option).
+- **Catalog Consistency:** `cd apps/backend && npx medusa exec scripts/backfill-catalog-consistency.ts` (Phase 6 script to normalize metadata).
+- **Utility / Testing:** `cd apps/backend && npx medusa exec scripts/probe-admin.mjs` (and `seed-semiconductors.mjs`) for one-off probing and demo data generation.
 
 ## Catalog cache behavior (read this before reporting "stale" data)
 

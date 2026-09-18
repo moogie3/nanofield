@@ -81,6 +81,7 @@ export const formatIDR = (
 // Address the notification to the admin who triggered the request so it
 // shows under their bell (the drawer also matches broadcast "").
 export const feedRecipient = (req: MedusaRequest): string => {
-  const auth = req.auth_context as { actor_id?: string } | undefined
+  const auth = (req as unknown as { auth_context?: { actor_id?: string } })
+    .auth_context
   return auth?.actor_id || ""
 }

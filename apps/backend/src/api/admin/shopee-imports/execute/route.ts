@@ -46,11 +46,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
+  const body = (req.body || {}) as Record<string, unknown>
   const options = {
-    publishNew: flag(req.body?.publishNew),
-    syncContent: flag(req.body?.syncContent),
-    cleanDesc: flag(req.body?.cleanDesc),
-    dryRun: flag(req.body?.dryRun),
+    publishNew: flag(body.publishNew),
+    syncContent: flag(body.syncContent),
+    cleanDesc: flag(body.cleanDesc),
+    dryRun: flag(body.dryRun),
   }
   const job = createJob(sales.originalname, options)
   const headers = forwardAuth(req)

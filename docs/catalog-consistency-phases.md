@@ -102,7 +102,7 @@ Goal: every backend capability reachable, every entry point lands in the same pl
 * Acceptance: any filter/search combination is URL-shareable and round-trips; clearing filters returns to the full catalog; grid and list layouts show identical result sets.
 * Implemented as: new `GET /store/facets` (GROUP BY option values incl. row ids, spec axis values, datasheet count; optional `?category_id=` scope; published-only) + Next `/api/facets` proxy + `OptionFilter` / `SpecFilter` / `DatasheetFilter` sidebar sections reusing the CategoryFilter checkbox style and URL-param pattern (`?optionValueIds=` native ids mapped from display values, new `?spec=axis:value` + `?has_datasheet=1` via `product-spec-filters.ts`). Spec/datasheet filtering runs in-memory inside `listProductsWithSort` (the store API has no metadata filter; the 5000-row fetch already exists for client sorting, so counts and pages stay exact across every combination). Placeholders unified to `Search part number, IC, specs…` on dialog + hero + compact. Empty state names the blocking filter. Live-verified: option-id filtering shows products, spec/datasheet correctly empty pre-backfill, facets global + scoped. Fixed en route: Postgres comma-JOIN + explicit-JOIN binding error (CROSS JOIN LATERAL), template-literal backslash collapse on `spec\_%`, `?optionValueIds=` takes native ids not display values.
 
-## Phase 6 — Backfill + verify — SCRIPT READY, APPLY PENDING (status Sep 12, 2026; kept, not deleted, per operator decision — DONE stamps above are final, this phase closes on --apply + audit re-run)
+## Phase 6 - Backfill + verify - DONE Sep 18, 2026
 
 Goal: existing catalog meets the new contract without touching money data.
 

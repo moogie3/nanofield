@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
-export default function StickyNav({ children }: { children: React.ReactNode }) {
+export default function StickyNav({
+  children,
+  banner,
+}: {
+  children: React.ReactNode
+  banner?: React.ReactNode
+}) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -29,6 +35,18 @@ export default function StickyNav({ children }: { children: React.ReactNode }) {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
         />
       </header>
+      {banner && (
+        <div
+          className={cn(
+            "duration-300",
+            scrolled
+              ? "bg-[color-mix(in_oklch,var(--background)_85%,transparent)] backdrop-blur-xl"
+              : "bg-transparent",
+          )}
+        >
+          {banner}
+        </div>
+      )}
     </div>
   )
 }

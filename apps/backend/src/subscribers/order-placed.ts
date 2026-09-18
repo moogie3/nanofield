@@ -28,7 +28,7 @@ export default async function orderActivityHandler({
       entity: "order",
       fields: ["id", "display_id", "total", "currency_code", "email"],
       filters: { id: data.id },
-    })) as {
+    })) as unknown as {
       data: {
         id: string
         display_id: number

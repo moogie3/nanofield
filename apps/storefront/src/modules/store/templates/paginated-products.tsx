@@ -9,7 +9,7 @@ import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
-// Fixed page size: 10 rows × 8-col grid. No per-page selector by decision
+// Fixed page size: 16 rows x 5-col grid. No per-page selector by decision
 // (speed + simplicity over choice).
 const PRODUCT_LIMIT = 80
 
@@ -152,7 +152,7 @@ export default async function PaginatedProducts({
       <ul
         className={
           layout === "grid"
-            ? "grid grid-cols-2 w-full small:grid-cols-4 medium:grid-cols-6 large:grid-cols-8 gap-x-3 gap-y-5"
+            ? "grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 large:grid-cols-5 gap-x-3 gap-y-5"
             : "flex flex-col w-full gap-3"
         }
         data-testid="products-list"

@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { MedusaError } from "@medusajs/framework/utils"
 import { computeDatasheetPatch } from "../../shopee-imports/datasheets"
 
 // One-click bulk datasheet linking for the existing catalog (the import path
@@ -128,10 +129,11 @@ const scanProducts = async (
 }
 
 // POST /admin/datasheets/auto-link { dryRun } — dry-run returns the full
-// report synchronously; apply runs in the background and returns a job id.
-export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const dryRun = req.body?.dryRun !== false
-  const baseUrl = selfBaseUrl()
+  // report synchronously; apply runs in the background and returns a job id.
+  export async function POST(req: MedusaRequest, res: MedusaResponse) {
+    const body = (req.body || {}) as Record<string, unknown>
+    const dryRun = body.dryRun !== false
+    const baseUrl = selfBaseUrl()
   const headers = forwardAuth(req)
   const report = emptyReport()
 
