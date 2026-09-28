@@ -1,8 +1,101 @@
-import { loadEnv, defineConfig } from '@medusajs/framework/utils'
+import {
+  loadEnv,
+  defineConfig,
+  ContainerRegistrationKeys,
+  Modules,
+} from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
+// Brand script for auth pages without a widget outlet. The invite-accept
+// page (/app/invite) renders no injection zone (only login.before/after
+// exist), so the branding widgets never mount there and it keeps the stock
+// "Welcome to Medusa" copy. This inline head script runs on every admin
+// page but only acts on /app/invite*, swapping the logo, headings, and
+// title to Nanofield. Mirrors src/admin/lib/brand-dom.ts (kept separate:
+// medusa-config runs in node and must stay dependency-free).
+const NANOFIELD_AUTH_SCRIPT = [
+  ';(function () {',
+  '  var AVATAR = \'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" fill="none"><circle cx="15" cy="23" r="8.5" fill="#2B8DC4"/><circle cx="26" cy="23" r="8.5" fill="#E6654F"/><circle cx="36" cy="21" r="9" fill="#2C8869"/><circle cx="38" cy="14" r="5.5" fill="#2C8869"/></svg>\'',
+  '  var COPY = {',
+  '    "Welcome to Medusa": "Welcome to Nanofield",',
+  '    "Create your account below": "Create your Nanofield account below"',
+  '  }',
+  '  function onInvitePage() {',
+  '    return window.location.pathname.indexOf("/app/invite") === 0',
+  '  }',
+  '  function swapLogos() {',
+  '    var svgs = document.querySelectorAll(\'svg[viewBox="0 0 400 400"], svg[viewBox="0 0 36 38"]\')',
+  '    for (var i = 0; i < svgs.length; i++) {',
+  '      var svg = svgs[i]',
+  '      if (svg.hasAttribute("data-nanofield-avatar")) continue',
+  '      var tpl = document.createElement("template")',
+  '      tpl.innerHTML = AVATAR',
+  '      var node = tpl.content.firstElementChild',
+  '      if (!node) continue',
+  '      node.setAttribute("data-nanofield-avatar", "true")',
+  '      svg.replaceWith(node)',
+  '    }',
+  '  }',
+  '  function swapCopy() {',
+  '    var walker = document.createTreeWalker(document.body, 4)',
+  '    var nodes = []',
+  '    var n',
+  '    while ((n = walker.nextNode())) nodes.push(n)',
+  '    for (var i = 0; i < nodes.length; i++) {',
+  '      var t = nodes[i]',
+  '      var text = (t.textContent || "").trim()',
+  '      var rep = COPY[text]',
+  '      if (rep && t.parentElement && t.parentElement.tagName !== "SCRIPT" && t.parentElement.tagName !== "STYLE") {',
+  '        t.textContent = (t.textContent || "").replace(text, rep)',
+  '      }',
+  '    }',
+  '  }',
+  '  function swapTitle() {',
+  '    var el = document.querySelector("title")',
+  '    if (el && /medusa/i.test(el.textContent || "")) {',
+  '      el.textContent = (el.textContent || "").replace(/medusa/gi, "Nanofield")',
+  '    }',
+  '  }',
+  '  function sweep() {',
+  '    if (!onInvitePage()) return',
+  '    swapLogos()',
+  '    swapCopy()',
+  '    swapTitle()',
+  '  }',
+  '  function boot() {',
+  '    sweep()',
+  '    new MutationObserver(sweep).observe(document.documentElement, { childList: true, subtree: true, characterData: true })',
+  '  }',
+  '  if (document.readyState === "loading") {',
+  '    document.addEventListener("DOMContentLoaded", boot)',
+  '  } else {',
+  '    boot()',
+  '  }',
+  '})()',
+].join('\n')
+
 module.exports = defineConfig({
+  admin: {
+    path: '/app',
+    // Inject the auth-page brand script into the admin shell (dev + build).
+    // transformIndexHtml runs for every admin page, including /app/invite.
+    // Return ONLY the additions: the bundler mergeConfigs our return value
+    // onto the base config, so spreading the base plugins here would
+    // register every base plugin (including react-refresh) twice.
+    vite: () => ({
+      plugins: [
+        {
+          name: 'nanofield-brand-head',
+          transformIndexHtml: (html: string) =>
+            html.replace(
+              '</head>',
+              `<script>${NANOFIELD_AUTH_SCRIPT}</script></head>`
+            ),
+        },
+      ],
+    }),
+  },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     http: {
@@ -21,6 +114,15 @@ module.exports = defineConfig({
     }
   },
   modules: [
+    // RBAC engine (policies, roles, user↔role links). Required when
+    // MEDUSA_FF_RBAC=true — the flag alone only gates routes, the module
+    // itself is NOT auto-loaded. Without this, every query.graph on
+    // rbac_* entities fails with Service alias not found and all guarded
+    // admin routes 403.
+    {
+      key: "rbac",
+      resolve: "@medusajs/medusa/rbac",
+    },
     {
       resolve: "./src/modules/rajaongkir",
     },
@@ -31,7 +133,19 @@ module.exports = defineConfig({
       resolve: "./src/modules/sender-profile",
     },
     {
+      // dependencies are forwarded from the global container into the
+      // module's local container (register-modules resolution): query,
+      // link, and rbac are used by AuditLogModuleService.bootstrapTiers in
+      // onApplicationStart. NOTE: the Module() definition in index.ts can
+      // NOT declare these — Module() only keeps service/loaders/linkable
+      // and silently drops everything else. This entry is the only place
+      // that works.
       resolve: "./src/modules/audit-log",
+      dependencies: [
+        ContainerRegistrationKeys.QUERY,
+        ContainerRegistrationKeys.LINK,
+        Modules.RBAC,
+      ],
     },
     {
       resolve: "@medusajs/medusa/fulfillment",

@@ -85,8 +85,11 @@ const auditLog = (req: MedusaRequest): AuditOps => {
   )
 }
 
-// Newest first, paginated. Filters: actor (id or email substring), method,
-// path substring. has_more avoids a second count query.
+// Newest first, paginated. Filters pushed to DB where possible:
+//   method — exact match
+//   path   — case-insensitive substring via $ilike
+//   actor  — $ilike on actor_id OR actor_email ($or)
+// has_more uses the +1 sentinel to avoid a separate count query.
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   await requireAuditRead(req)
   const limit = Math.min(
@@ -95,28 +98,38 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   )
   const offset = Math.max(0, parseInt(String(req.query.offset ?? "0"), 10) || 0)
   const filters: Record<string, unknown> = {}
+
   if (req.query.method) {
     filters.method = String(req.query.method).toUpperCase()
   }
+
+  const pathFilter =
+    typeof req.query.path === "string" ? req.query.path.trim() : ""
+  if (pathFilter) {
+    filters.path = { $ilike: `%${pathFilter}%` }
+  }
+
+  const actorFilter =
+    typeof req.query.actor === "string" ? req.query.actor.trim() : ""
+  if (actorFilter) {
+    filters.$or = [
+      { actor_id: { $ilike: `%${actorFilter}%` } },
+      { actor_email: { $ilike: `%${actorFilter}%` } },
+    ]
+  }
+
   const rows = await auditLog(req).listAuditEntries(filters, {
     take: limit + 1,
     skip: offset,
     order: { created_at: "DESC" },
   })
+
   let entries = rows
   let hasMore = false
   if (rows.length > limit) {
     entries = rows.slice(0, limit)
     hasMore = true
   }
-  const actor = typeof req.query.actor === "string" ? req.query.actor.trim().toLowerCase() : ""
-  const path = typeof req.query.path === "string" ? req.query.path.trim().toLowerCase() : ""
-  const filtered = entries.filter(
-    (r) =>
-      (!actor ||
-        r.actor_id.toLowerCase().includes(actor) ||
-        (r.actor_email || "").toLowerCase().includes(actor)) &&
-      (!path || r.path.toLowerCase().includes(path))
-  )
-  res.status(200).json({ entries: filtered, has_more: hasMore })
+
+  res.status(200).json({ entries, has_more: hasMore })
 }

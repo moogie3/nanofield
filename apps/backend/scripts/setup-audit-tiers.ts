@@ -1,11 +1,9 @@
-// Audit-log tier setup: Owner (sees everything, reads the audit log) and
-// Staff (everything except the audit log) roles plus the audit-log:read
-// policy. Idempotent — safe to re-run. Assigns Owner to the admin running
-// it; assign Staff to every invited user afterwards (Users → … → Roles).
-//
-// Why Staff must hold a role: hasPermission fail-opens for users with NO
-// roles, so a role-less invitee would pass the audit gate. A Staff member
-// holding the (policy-less) Staff role is correctly denied.
+// Audit-log tier setup (MANUAL BACKFILL ONLY — normally not needed).
+// The audit-log module loader (src/modules/audit-log/loaders) already
+// ensures policies/roles on every boot and assigns Owner to
+// AUDIT_OWNER_EMAIL, and the team-activity subscriber tiers every new
+// invite. Run this script only to backfill accounts created BEFORE the
+// loader existed. Idempotent — safe to re-run.
 //
 //   ADMIN_EMAIL=you@nanofield.com ADMIN_PASSWORD=... npx ts-node \
 //     --transpileOnly --compilerOptions '{"module":"commonjs"}' \

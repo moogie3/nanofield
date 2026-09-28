@@ -60,6 +60,9 @@ const AuditLogPage = () => {
   const [method, setMethod] = useState("")
   const [actor, setActor] = useState("")
   const [path, setPath] = useState("")
+  const [actors, setActors] = useState<
+    { id: string; email: string; first_name?: string | null; last_name?: string | null }[]
+  >([])
 
   const load = useCallback(
     async (nextOffset: number, reset: boolean) => {
@@ -111,6 +114,33 @@ const AuditLogPage = () => {
     void load(0, true)
   }, [load])
 
+  // Actor dropdown options: every admin user. The ?actor= backend filter
+  // is $ilike on actor_id OR actor_email, so passing the email matches.
+  // Loaded once — admin headcount is tiny.
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      try {
+        const r = await fetch("/admin/users?limit=100")
+        if (!r.ok) {
+          return
+        }
+        const data = (await r.json()) as {
+          users?: { id: string; email: string; first_name?: string | null; last_name?: string | null }[]
+        }
+        if (!cancelled && Array.isArray(data.users)) {
+          setActors(data.users)
+        }
+      } catch {
+        // options stay empty — the "All actors" default still works
+      }
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <div className="flex flex-col gap-y-4">
       <Container>
@@ -150,13 +180,23 @@ const AuditLogPage = () => {
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="audit-actor">Actor (id or email)</Label>
-                <Input
-                  id="audit-actor"
-                  value={actor}
-                  onChange={(e) => setActor(e.target.value)}
-                  placeholder="admin@…"
-                />
+                <Label htmlFor="audit-actor">Actor</Label>
+                <Select
+                  value={actor || "ALL"}
+                  onValueChange={(v) => setActor(v === "ALL" ? "" : v)}
+                >
+                  <Select.Trigger id="audit-actor">
+                    <Select.Value placeholder="All actors" />
+                  </Select.Trigger>
+                  <Select.Content>
+                    <Select.Item value="ALL">All actors</Select.Item>
+                    {actors.map((u) => (
+                      <Select.Item key={u.id} value={u.email}>
+                        {u.email}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select>
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="audit-path">Endpoint contains</Label>

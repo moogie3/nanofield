@@ -538,6 +538,7 @@ const STATIC_COPY: Record<string, string> = {
     "Get started with Nanofield right away.",
   "Start Medusa Admin": "Open Nanofield Admin",
   "Welcome to Medusa": "Welcome to Nanofield",
+  "Create your account below": "Create your Nanofield account below",
 }
 
 // Settings sidebar: air between the General / Developer / My Account
