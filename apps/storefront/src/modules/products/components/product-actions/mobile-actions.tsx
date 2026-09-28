@@ -8,6 +8,8 @@ import X from "@modules/common/icons/x"
 
 import { getProductPrice } from "@lib/util/get-product-price"
 import OptionSelect from "./option-select"
+import SignInForPrice from "@modules/common/components/sign-in-for-price"
+import SignInGateModal from "@modules/account/components/sign-in-gate-modal"
 import { HttpTypes } from "@medusajs/types"
 import { isSimpleProduct } from "@lib/util/product"
 
@@ -21,6 +23,7 @@ type MobileActionsProps = {
   isAdding?: boolean
   show: boolean
   optionsDisabled: boolean
+  showPrices?: boolean
 }
 
 const MobileActions: React.FC<MobileActionsProps> = ({
@@ -33,8 +36,10 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   isAdding,
   show,
   optionsDisabled,
+  showPrices = true,
 }) => {
   const { state, open, close } = useToggleState()
+  const [gateOpen, setGateOpen] = React.useState(false)
 
   const price = getProductPrice({
     product: product,
@@ -76,26 +81,30 @@ const MobileActions: React.FC<MobileActionsProps> = ({
             <div className="flex items-center gap-x-2">
               <span data-testid="mobile-title">{product.title}</span>
               <span>—</span>
-              {selectedPrice ? (
-                <div className="flex items-end gap-x-2 text-ui-fg-base">
-                  {selectedPrice.price_type === "sale" && (
-                    <p>
-                      <span className="line-through text-small-regular">
-                        {selectedPrice.original_price}
-                      </span>
-                    </p>
-                  )}
-                  <span
-                    className={clx({
-                      "text-ui-fg-interactive":
-                        selectedPrice.price_type === "sale",
-                    })}
-                  >
-                    {selectedPrice.calculated_price}
-                  </span>
-                </div>
+              {showPrices ? (
+                selectedPrice ? (
+                  <div className="flex items-end gap-x-2 text-ui-fg-base">
+                    {selectedPrice.price_type === "sale" && (
+                      <p>
+                        <span className="line-through text-small-regular">
+                          {selectedPrice.original_price}
+                        </span>
+                      </p>
+                    )}
+                    <span
+                      className={clx({
+                        "text-ui-fg-interactive":
+                          selectedPrice.price_type === "sale",
+                      })}
+                    >
+                      {selectedPrice.calculated_price}
+                    </span>
+                  </div>
+                ) : (
+                  <div></div>
+                )
               ) : (
-                <div></div>
+                <SignInForPrice />
               )}
             </div>
             <div
@@ -121,18 +130,26 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 </Button>
               )}
               <Button
-                onClick={handleAddToCart}
-                disabled={!inStock || !variant}
+                onClick={() =>
+                  showPrices ? handleAddToCart() : setGateOpen(true)
+                }
+                disabled={showPrices && (!inStock || !variant)}
                 className="w-full"
                 isLoading={isAdding}
                 data-testid="mobile-cart-button"
               >
-                {!variant
-                  ? "Select variant"
-                  : !inStock
-                    ? "Out of stock"
-                    : "Add to cart"}
+                {!showPrices
+                  ? "Sign in to buy"
+                  : !variant
+                    ? "Select variant"
+                    : !inStock
+                      ? "Out of stock"
+                      : "Add to cart"}
               </Button>
+              <SignInGateModal
+                open={gateOpen}
+                onClose={() => setGateOpen(false)}
+              />
             </div>
           </div>
         </Transition>

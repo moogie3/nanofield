@@ -54,6 +54,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
                 disabled={true}
                 product={product}
                 region={region}
+                showPrices={false}
               />
             }
           >

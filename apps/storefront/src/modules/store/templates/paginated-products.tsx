@@ -1,4 +1,5 @@
 import { listProductsWithSort } from "@lib/data/products"
+import { retrieveCustomer } from "@lib/data/customer"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import {
@@ -80,6 +81,10 @@ export default async function PaginatedProducts({
   if (!region) {
     return null
   }
+
+  // Price-on-login gate: one check per listing, threaded down to cards.
+  const customer = await retrieveCustomer().catch(() => null)
+  const showPrices = !!customer
 
   const {
     response: { products: fetched, count },
@@ -165,6 +170,7 @@ export default async function PaginatedProducts({
                 region={region}
                 countryCode={countryCode}
                 layout={layout}
+                showPrices={showPrices}
               />
             </li>
           )

@@ -3,14 +3,33 @@ import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
-import { useActionState } from "react"
+import VerificationNotice from "@modules/account/components/verification-notice"
+import { useActionState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
 }
 
+// Internal return path only — never follow an external URL from ?return_to.
+const safeReturnTo = (value: string | null): string | null =>
+  value && value.startsWith("/") && !value.startsWith("//")
+    ? value
+    : null
+
 const Login = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(login, null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = safeReturnTo(searchParams.get("return_to"))
+
+  // Price-gate CTA lands here with ?return_to=<product>; send the shopper
+  // back after a successful sign-in instead of stranding them on /account.
+  useEffect(() => {
+    if (message?.state === "success" && returnTo) {
+      router.push(returnTo)
+    }
+  }, [message, returnTo, router])
 
   return (
     <div
@@ -22,12 +41,11 @@ const Login = ({ setCurrentView }: Props) => {
         Sign in to access an enhanced shopping experience.
       </p>
       {message?.state === "verification_required" && (
-        <div
-          className="w-full mb-6 text-center text-base-regular text-ui-fg-base bg-ui-bg-subtle border border-ui-border-base rounded-rounded p-4"
-          data-testid="login-verification-message"
-        >
-          We sent a verification link to <strong>{message.email}</strong>.
-          Please verify your email, then sign in.
+        <div className="w-full mb-6">
+          <VerificationNotice
+            email={message.email}
+            testId="login-verification-message"
+          />
         </div>
       )}
       <form className="w-full" action={formAction}>

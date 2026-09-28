@@ -4,8 +4,8 @@ import { useRef, useState } from "react"
 import Image from "next/image"
 import DefaultProductImage from "@modules/products/components/default-product-image"
 
-const PANEL_WIDTH = 200
-const PANEL_HEIGHT_ESTIMATE = 260
+const PANEL_WIDTH = 320
+const PANEL_HEIGHT_ESTIMATE = 380
 const CURSOR_OFFSET = 18
 const VIEWPORT_MARGIN = 16
 
@@ -94,7 +94,7 @@ export default function HoverPreview({
                 src={image}
                 alt={title}
                 fill
-                sizes="200px"
+                sizes="320px"
                 className="object-cover object-center"
                 draggable={false}
               />

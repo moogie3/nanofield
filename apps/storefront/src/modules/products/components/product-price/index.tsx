@@ -1,14 +1,18 @@
 import { clx } from "@modules/common/components/ui"
 
 import { getProductPrice } from "@lib/util/get-product-price"
+import SignInForPrice from "@modules/common/components/sign-in-for-price"
 import { HttpTypes } from "@medusajs/types"
 
 export default function ProductPrice({
   product,
   variant,
+  showPrices = true,
 }: {
   product: HttpTypes.StoreProduct
   variant?: HttpTypes.StoreProductVariant
+  // Guests see a sign-in CTA instead of prices (price-on-login gate).
+  showPrices?: boolean
 }) {
   const { cheapestPrice, variantPrice } = getProductPrice({
     product,
@@ -16,6 +20,17 @@ export default function ProductPrice({
   })
 
   const selectedPrice = variant ? variantPrice : cheapestPrice
+
+  if (!showPrices) {
+    return (
+      <div className="flex flex-col gap-1 text-ui-fg-base">
+        <SignInForPrice className="text-large-semi text-primary hover:underline" />
+        <span className="text-small-regular text-ui-fg-subtle">
+          Sign in to unlock member prices and checkout.
+        </span>
+      </div>
+    )
+  }
 
   if (!selectedPrice) {
     return <div className="block w-32 h-9 bg-muted animate-pulse" />

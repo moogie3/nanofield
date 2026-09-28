@@ -5,13 +5,16 @@ import PaymentWrapper from "@modules/checkout/components/payment-wrapper"
 import CheckoutForm from "@modules/checkout/templates/checkout-form"
 import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 export const metadata: Metadata = {
   title: "Checkout",
 }
 
-export default async function Checkout() {
+export default async function Checkout(props: {
+  params: Promise<{ countryCode: string }>
+}) {
+  const params = await props.params
   const cart = await retrieveCart()
 
   if (!cart) {
@@ -19,6 +22,14 @@ export default async function Checkout() {
   }
 
   const customer = await retrieveCustomer()
+
+  // Price-on-login gate, last line: checkout requires a (verified) account.
+  // Guests keep their cart cookie and land back here after signing in.
+  if (!customer) {
+    redirect(
+      `/${params.countryCode}/account?return_to=${encodeURIComponent(`/${params.countryCode}/checkout`)}`
+    )
+  }
 
   return (
     <div className="content-container py-12">

@@ -28,7 +28,11 @@ const SECTIONS: { heading: string; items: { q: string; a: string }[] }[] = [
         a: "Tracking numbers are booked manually with the courier after handoff, so there can be a short delay between the Shipped status and the AWB appearing. If it still has not shown up, send us your Order ID on WhatsApp and we will look it up.",
       },
       {
-        q: "I checked out as a guest. Where is my order?",
+        q: "Do I need an account to buy?",
+        a: "Yes — prices and checkout are for members. Create an account, verify your email through the link we send you, then sign in. Guests can still browse the full catalog, search parts, and read datasheets.",
+      },
+      {
+        q: "My order is under a different email. Where is it?",
         a: "Scroll to the order transfer form at the bottom of the Orders page and paste the Order ID from your confirmation. That links the order to your account so you can follow it there.",
       },
     ],

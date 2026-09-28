@@ -1,4 +1,5 @@
 import { listProducts } from "@lib/data/products"
+import { retrieveCustomer } from "@lib/data/customer"
 import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
@@ -46,6 +47,8 @@ export default async function RelatedProducts({
     return null
   }
 
+  const customer = await retrieveCustomer().catch(() => null)
+
   return (
     <div className="product-page-constraint">
       <div className="flex flex-col items-center text-center mb-16">
@@ -60,7 +63,11 @@ export default async function RelatedProducts({
       <ul className="grid grid-cols-3 small:grid-cols-6 gap-x-3 gap-y-5">
         {products.map((product) => (
           <li key={product.id}>
-            <Product region={region} product={product} />
+            <Product
+              region={region}
+              product={product}
+              showPrices={!!customer}
+            />
           </li>
         ))}
       </ul>

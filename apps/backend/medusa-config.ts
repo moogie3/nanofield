@@ -11,6 +11,13 @@ module.exports = defineConfig({
       authCors: process.env.AUTH_CORS!,
       jwtSecret: process.env.JWT_SECRET,
       cookieSecret: process.env.COOKIE_SECRET,
+      // Customer email verification (emailpass): login/register returns
+      // verification_required until the customer confirms via the
+      // verify-account page. The verification email itself is sent by the
+      // auth-verification subscriber through Resend/Mailtrap.
+      authVerificationsPerActor: {
+        customer: [{ entity_type: "email", auth_provider: "emailpass" }],
+      },
     }
   },
   modules: [
@@ -22,6 +29,9 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/sender-profile",
+    },
+    {
+      resolve: "./src/modules/audit-log",
     },
     {
       resolve: "@medusajs/medusa/fulfillment",
@@ -91,6 +101,7 @@ module.exports = defineConfig({
                     // Single-sender verification: must be exactly the
                     // verified address, otherwise Resend rejects the send.
                     from: process.env.RESEND_FROM,
+                    channels: ["email"],
                     storeName: process.env.STORE_NAME,
                     whatsapp: process.env.STORE_PHONE,
                     supportEmail: process.env.STORE_EMAIL,
@@ -112,6 +123,7 @@ module.exports = defineConfig({
                     user: process.env.MAILTRAP_USER,
                     pass: process.env.MAILTRAP_PASS,
                     from: process.env.MAILTRAP_FROM,
+                    channels: ["email"],
                     storeName: process.env.STORE_NAME,
                     whatsapp: process.env.STORE_PHONE,
                     supportEmail: process.env.STORE_EMAIL,

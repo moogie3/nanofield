@@ -73,6 +73,23 @@ describe("customer email templates", () => {
     expect(rendered.html).toContain("Nanofield")
     expect(rendered.html).not.toContain("undefined")
   })
+
+  it("verification carries the verify link with a button fallback", () => {
+    const rendered = TEMPLATES["nanofield-email-verification"]({
+      verifyUrl: "http://localhost:8000/id/verify-account?token=abc123",
+    })
+    expect(rendered.subject).toContain("Verify")
+    expect(rendered.html).toContain("Verify my email")
+    expect(rendered.html).toContain("token=abc123")
+    expect(rendered.html).toContain("Paste this link")
+    expect(rendered.text).toContain("token=abc123")
+  })
+
+  it("verification degrades gracefully without a link", () => {
+    const rendered = TEMPLATES["nanofield-email-verification"]({})
+    expect(rendered.html).toContain("Verify your email")
+    expect(rendered.html).not.toContain("undefined")
+  })
 })
 
 describe("email provider wiring", () => {

@@ -8,6 +8,8 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import SignInGateModal from "@modules/account/components/sign-in-gate-modal"
+import { retrieveCustomer } from "@lib/data/customer"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   CreditCardIcon,
@@ -28,7 +30,7 @@ type SuggestItem = { id: string; handle: string; title: string }
 
 const PAGES = [
   { label: "Home", href: "/", icon: House02Icon },
-  { label: "Product catalog", href: "/store", icon: Store02Icon },
+  { label: "Store", href: "/store", icon: Store02Icon },
   { label: "Cart", href: "/cart", icon: ShoppingBag01Icon },
   { label: "Checkout", href: "/checkout", icon: CreditCardIcon },
   { label: "Account", href: "/account", icon: UserCircleIcon },
@@ -53,6 +55,35 @@ const BACKEND_URL =
   process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
 
+// Member-only destinations render with a lock badge for guests (visible
+// teaser, same as Instagram's locked rows) — tapping one opens the
+// sign-in gate modal instead of navigating to a dead-end page.
+const GATED_HREFS = new Set([
+  "/account/orders",
+  "/account/notifications",
+  "/account/addresses",
+  "/account/profile",
+  "/checkout",
+])
+
+const LockBadge = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-label="Members only"
+    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+  >
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+)
+
 // Site-wide search in a shadcn Dialog: products (ranked, live) + storefront
 // pages. The Dialog portals to <body>, locks background scroll, and keeps a
 // persistent dark overlay — so the backdrop stays dark no matter how far the
@@ -64,9 +95,35 @@ const SiteSearch = () => {
   const [items, setItems] = useState<SuggestItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
+  const [gateOpen, setGateOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { countryCode } = useParams()
+
+  // Membership check per open (cheap, cached by the data layer): drives
+  // the lock badges + gate modal below. Unknown (null) fails open so the
+  // dialog never restricts anyone during load.
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    let cancelled = false
+    retrieveCustomer()
+      .then((customer) => {
+        if (!cancelled) {
+          setLoggedIn(!!customer)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLoggedIn(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open])
 
   useEffect(() => {
     const q = value.trim()
@@ -119,7 +176,22 @@ const SiteSearch = () => {
       : PAGES
   const showResults = value.trim().length >= 2
 
+  const isLocked = (href: string) => loggedIn === false && GATED_HREFS.has(href)
+
+  // Guests tapping a locked shortcut get the gate modal (and the search
+  // dialog closes beneath it) instead of a dead-end page.
+  const handlePageClick = (e: React.MouseEvent, href: string) => {
+    if (isLocked(href)) {
+      e.preventDefault()
+      setOpen(false)
+      setGateOpen(true)
+    } else {
+      setOpen(false)
+    }
+  }
+
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <button
         onClick={() => setOpen(true)}
@@ -196,7 +268,7 @@ const SiteSearch = () => {
                 <LocalizedClientLink
                   key={p.href}
                   href={p.href}
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => handlePageClick(e, p.href)}
                   className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <HugeiconsIcon
@@ -204,7 +276,8 @@ const SiteSearch = () => {
                     strokeWidth={1.8}
                     className="h-4 w-4 shrink-0"
                   />
-                  {p.label}
+                  <span className="flex-1">{p.label}</span>
+                  {isLocked(p.href) && <LockBadge />}
                 </LocalizedClientLink>
               ))}
             </>
@@ -220,6 +293,8 @@ const SiteSearch = () => {
         </div>
       </DialogContent>
     </Dialog>
+      <SignInGateModal open={gateOpen} onClose={() => setGateOpen(false)} />
+    </>
   )
 }
 

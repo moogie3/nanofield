@@ -6,22 +6,31 @@ import { Spinner } from "@medusajs/icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PlusSignIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { addToCart } from "@lib/data/cart"
+import SignInGateModal from "@modules/account/components/sign-in-gate-modal"
 import { useCartCount } from "@modules/common/components/cart-count"
 
 export default function QuickAddButton({
   variantId,
   countryCode,
+  isLoggedIn = true,
 }: {
   variantId: string
   countryCode: string
+  isLoggedIn?: boolean
 }) {
   const [isAdding, setIsAdding] = useState(false)
   const [added, setAdded] = useState(false)
+  const [gateOpen, setGateOpen] = useState(false)
   const { bump } = useCartCount()
 
   const handleAdd = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    // Guests never touch the cart — intent gate instead.
+    if (!isLoggedIn) {
+      setGateOpen(true)
+      return
+    }
     if (isAdding || added) {
       return
     }
@@ -42,18 +51,21 @@ export default function QuickAddButton({
   }
 
   return (
-    <Button
-      size="icon-sm"
-      onClick={handleAdd}
-      disabled={isAdding}
-      aria-label={added ? "Added to cart" : "Add to cart"}
-      className="shrink-0 transition-transform duration-200 hover:scale-110 hover:shadow-lg active:scale-95"
-    >
-      {isAdding ? (
-        <Spinner className="animate-spin" />
-      ) : (
-        <HugeiconsIcon icon={added ? Tick02Icon : PlusSignIcon} strokeWidth={2} />
-      )}
-    </Button>
+    <>
+      <Button
+        size="icon-sm"
+        onClick={handleAdd}
+        disabled={isAdding}
+        aria-label={added ? "Added to cart" : "Add to cart"}
+        className="shrink-0 transition-transform duration-200 hover:scale-110 hover:shadow-lg active:scale-95"
+      >
+        {isAdding ? (
+          <Spinner className="animate-spin" />
+        ) : (
+          <HugeiconsIcon icon={added ? Tick02Icon : PlusSignIcon} strokeWidth={2} />
+        )}
+      </Button>
+      <SignInGateModal open={gateOpen} onClose={() => setGateOpen(false)} />
+    </>
   )
 }

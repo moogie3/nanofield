@@ -12,6 +12,7 @@ import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
+import SignInGateModal from "@modules/account/components/sign-in-gate-modal"
 import MobileActions from "./mobile-actions"
 import { useRouter } from "next/navigation"
 
@@ -19,6 +20,8 @@ type ProductActionsProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   disabled?: boolean
+  // Guests get the price CTA + intent-gate modal instead of buying.
+  showPrices?: boolean
 }
 
 const optionsAsKeymap = (
@@ -33,6 +36,7 @@ const optionsAsKeymap = (
 export default function ProductActions({
   product,
   disabled,
+  showPrices = true,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -41,6 +45,7 @@ export default function ProductActions({
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
   const [added, setAdded] = useState(false)
+  const [gateOpen, setGateOpen] = useState(false)
   const countryCode = useParams().countryCode as string
 
   // If there is only 1 variant, preselect the options
@@ -125,6 +130,11 @@ export default function ProductActions({
 
   // add the selected variant to the cart
   const handleAddToCart = async () => {
+    // Guests never touch the cart — intent gate instead.
+    if (!showPrices) {
+      setGateOpen(true)
+      return
+    }
     if (!selectedVariant?.id) return null
 
     setIsAdding(true)
@@ -224,16 +234,21 @@ export default function ProductActions({
           )}
         </div>
 
-        <ProductPrice product={product} variant={selectedVariant} />
+        <ProductPrice
+          product={product}
+          variant={selectedVariant}
+          showPrices={showPrices}
+        />
 
         <Button
           onClick={handleAddToCart}
           disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
+            showPrices &&
+            (!inStock ||
+              !selectedVariant ||
+              !!disabled ||
+              isAdding ||
+              !isValidVariant)
           }
           variant="primary"
           className="w-full h-10 transition-transform active:scale-[0.98]"
@@ -245,6 +260,8 @@ export default function ProductActions({
               <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} />
               Added to cart
             </span>
+          ) : !showPrices ? (
+            "Sign in to buy"
           ) : !selectedVariant ? (
             "Select variant"
           ) : !inStock || !isValidVariant ? (
@@ -253,6 +270,7 @@ export default function ProductActions({
             "Add to cart"
           )}
         </Button>
+        <SignInGateModal open={gateOpen} onClose={() => setGateOpen(false)} />
         <MobileActions
           product={product}
           variant={selectedVariant}
@@ -263,6 +281,7 @@ export default function ProductActions({
           isAdding={isAdding}
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
+          showPrices={showPrices}
         />
       </div>
     </>

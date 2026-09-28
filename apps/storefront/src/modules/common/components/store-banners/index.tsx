@@ -20,6 +20,14 @@ export default async function StoreBanners() {
       className="content-container relative pt-6 pb-10"
       data-testid="store-banners"
     >
+      <div className="mb-5 text-center">
+        <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
+          Spotlight
+        </p>
+        <h2 className="font-heading text-xl font-bold tracking-tight text-foreground small:text-2xl">
+          Featured
+        </h2>
+      </div>
       <ImageBannerCarousel banners={image} />
     </div>
   )

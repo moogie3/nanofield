@@ -2,6 +2,7 @@ import { Text } from "@modules/common/components/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import SignInForPrice from "@modules/common/components/sign-in-for-price"
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
 import QuickAddButton from "./quick-add"
@@ -13,12 +14,15 @@ export default async function ProductPreview({
   region: _region,
   countryCode,
   layout = "grid",
+  showPrices = true,
 }: {
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
   region: HttpTypes.StoreRegion
   countryCode?: string
   layout?: "grid" | "list"
+  // Guests see a sign-in CTA instead of prices (price-on-login gate).
+  showPrices?: boolean
 }) {
   // const pricedProduct = await listProducts({
   //   regionId: region.id,
@@ -106,14 +110,19 @@ export default async function ProductPreview({
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <div className="flex min-w-0 items-center gap-x-2">
-              {cheapestPrice && (
-                <PreviewPrice price={cheapestPrice} className="text-[13px]" />
+              {showPrices ? (
+                cheapestPrice && (
+                  <PreviewPrice price={cheapestPrice} className="text-[13px]" />
+                )
+              ) : (
+                <SignInForPrice />
               )}
             </div>
             {firstVariant?.id && countryCode && (
               <QuickAddButton
                 variantId={firstVariant.id}
                 countryCode={countryCode}
+                isLoggedIn={showPrices}
               />
             )}
           </div>
@@ -163,14 +172,19 @@ export default async function ProductPreview({
           </LocalizedClientLink>
           <div className="mt-2 flex items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-x-2">
-              {cheapestPrice && (
-                <PreviewPrice price={cheapestPrice} className="text-[13px]" />
+              {showPrices ? (
+                cheapestPrice && (
+                  <PreviewPrice price={cheapestPrice} className="text-[13px]" />
+                )
+              ) : (
+                <SignInForPrice />
               )}
             </div>
             {firstVariant?.id && countryCode && (
               <QuickAddButton
                 variantId={firstVariant.id}
                 countryCode={countryCode}
+                isLoggedIn={showPrices}
               />
             )}
           </div>

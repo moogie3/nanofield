@@ -60,8 +60,11 @@ const timelineText = (active: number): string =>
     i < active ? `[x] ${stage}` : i === active ? `[>] ${stage}` : `[ ] ${stage}`
   ).join("  ")
 
+const FONT_STACK =
+  "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+
 const buttonHtml = (href: string, label: string): string =>
-  `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#0E7C8C" style="border-radius:6px;"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:12px 28px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">${esc(label)}</a></td></tr></table>`
+  `<table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td align="center" bgcolor="#0E7C8C" style="border-radius:8px;"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:${FONT_STACK};font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;">${esc(label)}</a></td></tr></table>`
 
 const shell = (
   title: string,
@@ -74,15 +77,15 @@ const shell = (
   const address = contact?.address ? `<br>${esc(contact.address)}` : ""
   return (
     `<!DOCTYPE html><html><head><meta charset="utf-8"></head>` +
-    `<body style="margin:0;padding:0;background-color:#f4f4f5;">` +
+    `<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:${FONT_STACK};">` +
     `<span style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</span>` +
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px;">` +
-    `<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:8px;overflow:hidden;">` +
-    `<tr><td style="padding:28px 32px 0;text-align:center;font-size:22px;font-weight:bold;letter-spacing:4px;color:#0E7C8C;">NANOFIELD</td></tr>` +
-    `<tr><td style="padding:8px 32px 0;"><div style="border-top:2px solid #0E7C8C;">&nbsp;</div></td></tr>` +
-    `<tr><td style="padding:20px 32px 8px;font-size:20px;font-weight:bold;color:#111111;">${esc(title)}</td></tr>` +
-    `<tr><td style="padding:0 32px 8px;font-size:14px;line-height:1.6;color:#333333;">${bodyHtml}</td></tr>` +
-    `<tr><td style="padding:20px 32px;font-size:12px;line-height:1.6;color:#888888;border-top:1px solid #eeeeee;">Nanofield — precision electronic components${wa}${email}${address}</td></tr>` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 12px;">` +
+    `<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">` +
+    `<tr><td style="padding:32px 40px 0;text-align:center;font-size:22px;font-weight:bold;letter-spacing:6px;color:#0E7C8C;">NANOFIELD</td></tr>` +
+    `<tr><td style="padding:12px 40px 0;"><div style="border-top:2px solid #0E7C8C;">&nbsp;</div></td></tr>` +
+    `<tr><td style="padding:24px 40px 8px;font-size:22px;font-weight:bold;color:#111111;text-align:center;">${esc(title)}</td></tr>` +
+    `<tr><td style="padding:0 40px 8px;font-size:15px;line-height:1.7;color:#333333;">${bodyHtml}</td></tr>` +
+    `<tr><td style="padding:24px 40px;font-size:12px;line-height:1.6;color:#888888;border-top:1px solid #eeeeee;">Nanofield — precision electronic components${wa}${email}${address}</td></tr>` +
     `</table></td></tr></table></body></html>`
   )
 }
@@ -274,6 +277,34 @@ const returnUpdate = (data: TemplateData): RenderedTemplate => {
   }
 }
 
+const emailVerification = (data: TemplateData): RenderedTemplate => {
+  const verifyUrl = String(data.verifyUrl ?? "")
+  const cta = verifyUrl
+    ? `<p style="margin:24px 0 8px;text-align:center;">${buttonHtml(verifyUrl, "Verify my email")}</p>`
+    : ""
+  const bodyHtml =
+    `<p style="margin:0 0 12px;">Welcome to Nanofield — one more step to unlock prices, checkout, and order tracking.</p>` +
+    cta +
+    (verifyUrl
+      ? `<p style="margin:16px 0 0;font-size:12px;color:#888888;">Button not working? Paste this link into your browser:<br><span style="word-break:break-all;">${esc(verifyUrl)}</span></p>`
+      : "") +
+    `<p style="margin:16px 0 0;font-size:13px;color:#666666;">This link expires soon. Didn't sign up? Just ignore this email.</p>`
+  return {
+    subject: "Verify your Nanofield email",
+    html: shell(
+      "Verify your email",
+      "Confirm your inbox to unlock your Nanofield account.",
+      bodyHtml,
+      data.contact
+    ),
+    text: [
+      "Welcome to Nanofield — verify your email to unlock prices, checkout, and order tracking.",
+      ...(verifyUrl ? [`Verify here: ${verifyUrl}`] : []),
+      "This link expires soon. Didn't sign up? Just ignore this email.",
+    ].join("\n"),
+  }
+}
+
 export const TEMPLATES: Record<
   string,
   (data: TemplateData) => RenderedTemplate
@@ -285,4 +316,5 @@ export const TEMPLATES: Record<
   "nanofield-return-requested": returnRequested,
   "nanofield-return-received": returnReceived,
   "nanofield-return-update": returnUpdate,
+  "nanofield-email-verification": emailVerification,
 }

@@ -1,4 +1,5 @@
 import { listProducts } from "@lib/data/products"
+import { retrieveCustomer } from "@lib/data/customer"
 import { HttpTypes } from "@medusajs/types"
 import ProductActions from "@modules/products/components/product-actions"
 
@@ -21,5 +22,14 @@ export default async function ProductActionsWrapper({
     return null
   }
 
-  return <ProductActions product={product} region={region} />
+  // Price-on-login gate: guests get the price CTA + intent-gate modal.
+  const customer = await retrieveCustomer().catch(() => null)
+
+  return (
+    <ProductActions
+      product={product}
+      region={region}
+      showPrices={!!customer}
+    />
+  )
 }
