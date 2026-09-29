@@ -1,11 +1,13 @@
+import { getTranslations } from "next-intl/server"
 import repeat from "@lib/util/repeat"
 import SkeletonProductPreview from "@modules/skeletons/components/skeleton-product-preview"
 
-const SkeletonProductGrid = ({
+const SkeletonProductGrid = async ({
   numberOfProducts = 8,
 }: {
   numberOfProducts?: number
 }) => {
+  const t = await getTranslations("common")
   return (
     <div>
       <div
@@ -18,7 +20,7 @@ const SkeletonProductGrid = ({
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
         </span>
         <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-          Scanning catalog
+          {t("scanning")}
         </span>
         <span className="relative h-px flex-1 overflow-hidden bg-border">
           <span className="animate-hero-scanline absolute inset-y-0 w-1/3 bg-primary" />

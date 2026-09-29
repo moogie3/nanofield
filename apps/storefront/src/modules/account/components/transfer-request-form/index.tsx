@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 import { createTransferRequest } from "@lib/data/orders"
 import { CheckCircleMiniSolid, XCircleSolid } from "@medusajs/icons"
 import { Heading, IconButton, Input, Text } from "@modules/common/components/ui"
@@ -9,6 +10,7 @@ import { useEffect, useState } from "react"
 
 export default function TransferRequestForm() {
   const [showSuccess, setShowSuccess] = useState(false)
+  const t = useTranslations("account.requestTransfer")
 
   const [state, formAction] = useActionState(createTransferRequest, {
     success: false,
@@ -30,11 +32,10 @@ export default function TransferRequestForm() {
             level="h3"
             className="!text-sm font-semibold text-foreground"
           >
-            Order transfers
+            {t("title")}
           </Heading>
           <p className="text-small-regular text-muted-foreground">
-            Can&apos;t find the order you are looking for?
-            <br /> Connect an order to your account.
+            {t("subtitle")}
           </p>
         </div>
         <form
@@ -42,13 +43,17 @@ export default function TransferRequestForm() {
           className="flex flex-col gap-y-1 sm:items-end"
         >
           <div className="flex flex-col gap-y-2 w-full">
-            <Input className="w-full" name="order_id" placeholder="Order ID" />
+            <Input
+              className="w-full"
+              name="order_id"
+              placeholder={t("orderIdPlaceholder")}
+            />
             <SubmitButton
               variant="secondary"
               size="small"
               className="w-fit whitespace-nowrap self-end"
             >
-              Request transfer
+              {t("request")}
             </SubmitButton>
           </div>
         </form>
@@ -64,10 +69,10 @@ export default function TransferRequestForm() {
             <CheckCircleMiniSolid className="w-4 h-4 text-emerald-500" />
             <div className="flex flex-col gap-y-1">
               <Text className="text-medim-pl text-foreground">
-                Transfer for order {state.order?.id} requested
+                {t("requested", { id: state.order?.id ?? "" })}
               </Text>
               <Text className="text-base-regular text-muted-foreground">
-                Transfer request email sent to {state.order?.email}
+                {t("emailSent", { email: state.order?.email ?? "" })}
               </Text>
             </div>
           </div>

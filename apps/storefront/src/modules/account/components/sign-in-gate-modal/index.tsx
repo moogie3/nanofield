@@ -2,6 +2,7 @@
 
 import { Fragment } from "react"
 import { Dialog, Transition } from "@headlessui/react"
+import { useTranslations } from "next-intl"
 import { usePathname } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -17,6 +18,7 @@ export default function SignInGateModal({
 }) {
   const pathname = usePathname()
   const href = `/account?return_to=${encodeURIComponent(pathname)}`
+  const t = useTranslations("auth")
 
   return (
     <Transition appear show={open} as={Fragment}>
@@ -70,25 +72,24 @@ export default function SignInGateModal({
                   as="h2"
                   className="mt-4 font-heading text-xl font-bold tracking-tight text-foreground"
                 >
-                  Sign in required
+                  {t("gateTitle")}
                 </Dialog.Title>
                 <p className="mt-2 text-small-regular text-ui-fg-subtle">
-                  Prices and checkout are for Nanofield members. Sign in or
-                  create a verified account to continue.
+                  {t("gateBody")}
                 </p>
                 <div className="mt-6 flex flex-col gap-2">
                   <LocalizedClientLink
                     href={href}
                     className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold uppercase tracking-widest text-primary-foreground transition-colors hover:opacity-90"
                   >
-                    Sign in
+                    {t("signIn")}
                   </LocalizedClientLink>
                   <button
                     type="button"
                     onClick={onClose}
                     className="inline-flex h-10 items-center justify-center rounded-full border border-border px-6 text-sm font-bold uppercase tracking-widest text-ui-fg-base transition-colors hover:bg-muted"
                   >
-                    Keep browsing
+                    {t("keepBrowsing")}
                   </button>
                 </div>
               </Dialog.Panel>

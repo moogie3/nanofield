@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
 import { XMark } from "@medusajs/icons"
 import {
@@ -27,7 +28,7 @@ const seenKey = (customerId: string) => `nf-cust-feed-seen-${customerId}`
 // Short relative stamp ("5m", "3h", "2d"); falls back to the date when the
 // timestamp is missing or unparseable. Bell-only helper — nowhere else
 // needs relative time.
-const timeAgo = (iso?: string): string => {
+const timeAgo = (iso: string | undefined, nowLabel: string): string => {
   if (!iso) {
     return ""
   }
@@ -37,7 +38,7 @@ const timeAgo = (iso?: string): string => {
   }
   const mins = Math.max(0, Math.round((Date.now() - t) / 60000))
   if (mins < 1) {
-    return "now"
+    return nowLabel
   }
   if (mins < 60) {
     return `${mins}m`
@@ -73,6 +74,7 @@ export default function NotificationBell({
       return null
     }
   })
+  const t = useTranslations("account.notifications")
 
   // Failed polls keep the stale list: only fresh rows replace. This is
   // what used to blank the panel seconds after opening (one failed fetch
@@ -144,9 +146,7 @@ export default function NotificationBell({
         <>
           <PopoverButton
             aria-label={
-              unread > 0
-                ? `Notifications (${unread} unread)`
-                : "Notifications"
+              unread > 0 ? t("bellUnread", { count: unread }) : t("bellTitle")
             }
             data-testid="nav-notification-button"
             onClick={() => {
@@ -175,11 +175,11 @@ export default function NotificationBell({
               {/* No header close button by decision: clicking the bell icon
                   toggles the panel, per-row X dismisses single items. */}
               <div className="p-3 flex items-center justify-center">
-                <h3 className="text-large-semi">Notifications</h3>
+                <h3 className="text-large-semi">{t("bellTitle")}</h3>
               </div>
               {!shown.length ? (
                 <p className="px-4 pb-5 text-center text-small-regular text-ui-fg-subtle">
-                  You are all caught up.
+                  {t("caughtUp")}
                 </p>
               ) : (
                 <ul className="overflow-y-scroll max-h-[402px] px-3 no-scrollbar p-px flex flex-col">
@@ -192,7 +192,7 @@ export default function NotificationBell({
                       <>
                         {n.broadcast && (
                           <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-primary">
-                            Announcement
+                            {t("announcement")}
                           </span>
                         )}
                         <span className="flex items-start justify-between gap-2">
@@ -210,12 +210,12 @@ export default function NotificationBell({
                               <span className="h-2 w-2 rounded-full bg-primary" />
                             )}
                             <span className="text-small-regular text-ui-fg-subtle">
-                              {timeAgo(n.created_at)}
+                              {timeAgo(n.created_at, t("now"))}
                             </span>
                             <button
                               type="button"
                               onClick={(e) => onDismissRow(e, n.id)}
-                              aria-label={`Dismiss: ${n.title}`}
+                              aria-label={t("dismiss", { title: n.title })}
                               className="rounded p-0.5 text-ui-fg-subtle hover:bg-muted hover:text-ui-fg-base focus:outline-none"
                             >
                               <XMark className="h-3.5 w-3.5" />
@@ -259,7 +259,9 @@ export default function NotificationBell({
                 <div className="border-t border-border p-3 flex items-center justify-center gap-3">
                   {visible.length > PANEL_LIMIT && (
                     <span className="text-small-regular text-ui-fg-subtle">
-                      +{visible.length - PANEL_LIMIT} more
+                      {t("moreCount", {
+                        count: visible.length - PANEL_LIMIT,
+                      })}
                     </span>
                   )}
                   <LocalizedClientLink
@@ -267,7 +269,7 @@ export default function NotificationBell({
                     onClick={close}
                     className="text-small-semi text-primary hover:underline"
                   >
-                    View all
+                    {t("viewAll")}
                   </LocalizedClientLink>
                 </div>
               )}

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { HttpTypes } from "@medusajs/types"
 import { Table, Text } from "@modules/common/components/ui"
 
@@ -11,7 +12,8 @@ type ItemProps = {
   currencyCode: string
 }
 
-const Item = ({ item, currencyCode }: ItemProps) => {
+const Item = async ({ item, currencyCode }: ItemProps) => {
+  const t = await getTranslations("product")
   return (
     <Table.Row className="w-full" data-testid="product-row">
       <Table.Cell className="!pl-0 p-4 w-24">
@@ -40,6 +42,7 @@ const Item = ({ item, currencyCode }: ItemProps) => {
               item={item}
               style="tight"
               currencyCode={currencyCode}
+              originalLabel={t("original")}
             />
           </span>
 
@@ -47,6 +50,7 @@ const Item = ({ item, currencyCode }: ItemProps) => {
             item={item}
             style="tight"
             currencyCode={currencyCode}
+            originalLabel={t("original")}
           />
         </span>
       </Table.Cell>

@@ -1,4 +1,5 @@
 "use client"
+import { useLocale, useTranslations } from "next-intl"
 import { Radio, RadioGroup } from "@headlessui/react"
 import { setShippingMethod } from "@lib/data/cart"
 import { calculatePriceForShippingOption } from "@lib/data/fulfillment"
@@ -92,6 +93,9 @@ const Shipping: React.FC<ShippingProps> = ({
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations("checkout.delivery")
+  // Locale-aware unit formatting (id-ID uses "." thousands separators).
+  const numLocale = useLocale() === "id" ? "id-ID" : "en-US"
 
   const isOpen = searchParams.get("step") === "delivery"
 
@@ -224,7 +228,7 @@ const Shipping: React.FC<ShippingProps> = ({
             },
           )}
         >
-          Delivery
+          {t("title")}
           {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
             <CheckCircleSolid />
           )}
@@ -239,7 +243,7 @@ const Shipping: React.FC<ShippingProps> = ({
                 className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
                 data-testid="edit-delivery-button"
               >
-                Edit
+                {t("edit")}
               </button>
             </Text>
           )}
@@ -249,10 +253,10 @@ const Shipping: React.FC<ShippingProps> = ({
           <div className="grid">
             <div className="flex flex-col">
               <span className="font-medium txt-medium text-ui-fg-base">
-                Shipping method
+                {t("method")}
               </span>
               <span className="mb-4 text-ui-fg-muted txt-medium">
-                How would you like you order delivered
+                {t("methodHint")}
               </span>
             </div>
             <div data-testid="delivery-options-container">
@@ -286,7 +290,7 @@ const Shipping: React.FC<ShippingProps> = ({
                           checked={showPickupOptions === PICKUP_OPTION_ON}
                         />
                         <span className="text-base-regular">
-                          Pick up your order
+                          {t("pickup")}
                         </span>
                       </div>
                       <span className="justify-self-end text-ui-fg-base">
@@ -356,9 +360,14 @@ const Shipping: React.FC<ShippingProps> = ({
                 </RadioGroup>
                 {gatedOutCargo.length > 0 && (
                   <p className="text-small-regular text-ui-fg-subtle mt-2">
-                    Cargo shipping (JNE JTR) unlocks above{" "}
-                    {(CARGO_MIN_WEIGHT_G / 1000).toLocaleString("en-US")} kg —
-                    this cart is ≈{(weightG / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })} kg.
+                    {t("cargoNote", {
+                      min: (CARGO_MIN_WEIGHT_G / 1000).toLocaleString(
+                        numLocale
+                      ),
+                      weight: (weightG / 1000).toLocaleString(numLocale, {
+                        maximumFractionDigits: 1,
+                      }),
+                    })}
                   </p>
                 )}
               </div>
@@ -369,10 +378,10 @@ const Shipping: React.FC<ShippingProps> = ({
             <div className="grid">
               <div className="flex flex-col">
                 <span className="font-medium txt-medium text-ui-fg-base">
-                  Store
+                  {t("store")}
                 </span>
                 <span className="mb-4 text-ui-fg-muted txt-medium">
-                  Choose a store near you
+                  {t("storeHint")}
                 </span>
               </div>
               <div data-testid="delivery-options-container">
@@ -456,7 +465,7 @@ const Shipping: React.FC<ShippingProps> = ({
               disabled={!cart.shipping_methods?.[0]}
               data-testid="submit-delivery-option-button"
             >
-              Continue to payment
+              {t("continue")}
             </Button>
           </div>
         </>
@@ -466,7 +475,7 @@ const Shipping: React.FC<ShippingProps> = ({
             {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
               <div className="flex flex-col w-1/3">
                 <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                  Method
+                  {t("methodLabel")}
                 </Text>
                 <Text className="txt-medium text-ui-fg-subtle">
                   {cart.shipping_methods!.at(-1)!.name}{" "}

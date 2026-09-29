@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Button } from "@modules/common/components/ui"
 
 import OrderCard from "../order-card"
@@ -15,6 +16,7 @@ const OrderOverview = ({
   hasMore?: boolean
   nextLimit?: number
 }) => {
+  const t = useTranslations("account.orders")
   if (orders?.length) {
     return (
       <div className="flex flex-col gap-y-8 w-full">
@@ -33,7 +35,7 @@ const OrderOverview = ({
               passHref
             >
               <Button data-testid="show-more-orders-button" variant="secondary">
-                Show more orders
+                {t("showMore")}
               </Button>
             </LocalizedClientLink>
           </div>
@@ -47,14 +49,12 @@ const OrderOverview = ({
       className="w-full flex flex-col items-center gap-y-4"
       data-testid="no-orders-container"
     >
-      <h2 className="text-large-semi">Nothing to see here</h2>
-      <p className="text-base-regular">
-        You don&apos;t have any orders yet, let us change that {":)"}
-      </p>
+      <h2 className="text-large-semi">{t("emptyTitle")}</h2>
+      <p className="text-base-regular">{t("emptyBody")}</p>
       <div className="mt-4">
         <LocalizedClientLink href="/" passHref>
           <Button data-testid="continue-shopping-button">
-            Continue shopping
+            {t("continueShopping")}
           </Button>
         </LocalizedClientLink>
       </div>

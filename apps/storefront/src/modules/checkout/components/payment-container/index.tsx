@@ -1,6 +1,8 @@
 import { Radio as RadioGroupOption } from "@headlessui/react"
 import { Text, clx } from "@modules/common/components/ui"
+import { useTranslations } from "next-intl"
 import React, { useContext, type JSX } from "react"
+import { getPaymentTitle } from "@modules/checkout/components/payment-title"
 
 import Radio from "@modules/common/components/radio"
 
@@ -26,6 +28,7 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
   children,
 }) => {
   const isDevelopment = process.env.NODE_ENV === "development"
+  const t = useTranslations("checkout.payment")
 
   return (
     <RadioGroupOption
@@ -44,7 +47,11 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
         <div className="flex items-center gap-x-4">
           <Radio checked={selectedPaymentOptionId === paymentProviderId} />
           <Text className="text-base-regular">
-            {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
+            {getPaymentTitle(
+              paymentProviderId,
+              (k) => t(`providers.${k}`),
+              paymentInfoMap[paymentProviderId]?.title
+            )}
           </Text>
           {isManual(paymentProviderId) && isDevelopment && (
             <PaymentTest className="hidden small:block" />
@@ -76,6 +83,7 @@ export const StripePaymentContainer = ({
   setPaymentComplete: (complete: boolean) => void
 }) => {
   const stripeReady = useContext(StripeContext)
+  const t = useTranslations("checkout.payment")
 
   return (
     <PaymentContainer
@@ -88,7 +96,7 @@ export const StripePaymentContainer = ({
         (stripeReady ? (
           <div className="my-4 transition-all duration-150 ease-in-out">
             <Text className="txt-medium-plus text-ui-fg-base mb-1">
-              Enter your payment details:
+              {t("cardDetails")}
             </Text>
             <PaymentElement
               options={{ layout: "accordion" }}
@@ -102,9 +110,7 @@ export const StripePaymentContainer = ({
               // error slot instead.
               onLoadError={(e) => {
                 setPaymentComplete(false)
-                setError(
-                  e.error?.message ?? "Could not load the payment methods."
-                )
+                setError(e.error?.message ?? t("loadFailed"))
               }}
             />
           </div>

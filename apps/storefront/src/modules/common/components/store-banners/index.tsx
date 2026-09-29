@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { listStoreBanners } from "@lib/data/banners"
 import ImageBannerCarousel from "./image-banner-carousel"
 
@@ -15,6 +16,8 @@ export default async function StoreBanners() {
     return null
   }
 
+  const t = await getTranslations("common")
+
   return (
     <div
       className="content-container relative pt-6 pb-10"
@@ -22,10 +25,10 @@ export default async function StoreBanners() {
     >
       <div className="mb-5 text-center">
         <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-          Spotlight
+          {t("spotlight")}
         </p>
         <h2 className="font-heading text-xl font-bold tracking-tight text-foreground small:text-2xl">
-          Featured
+          {t("featured")}
         </h2>
       </div>
       <ImageBannerCarousel banners={image} />

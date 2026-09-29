@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { HttpTypes } from "@medusajs/types"
 import { Container } from "@modules/common/components/ui"
 import DefaultProductImage from "@modules/products/components/default-product-image"
@@ -14,6 +15,7 @@ type ImageGalleryProps = {
 
 const ImageGallery = ({ images }: ImageGalleryProps) => {
   const [activeIndex, setActiveIndex] = useState(0)
+  const t = useTranslations("product")
 
   if (!images.length) {
     return (
@@ -46,7 +48,10 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               src={active.url}
               priority
               className="absolute inset-0 rounded-rounded"
-              alt={`Product image ${activeIndex + 1} of ${total}`}
+              alt={t("productImageAlt", {
+                current: activeIndex + 1,
+                total,
+              })}
               fill
               sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
               style={{
@@ -59,7 +64,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               <button
                 type="button"
                 onClick={() => goTo(activeIndex - 1)}
-                aria-label="Previous image"
+                aria-label={t("prevImage")}
                 className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/80 backdrop-blur transition hover:bg-background"
               >
                 <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} />
@@ -67,7 +72,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               <button
                 type="button"
                 onClick={() => goTo(activeIndex + 1)}
-                aria-label="Next image"
+                aria-label={t("nextImage")}
                 className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/80 backdrop-blur transition hover:bg-background"
               >
                 <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} />
@@ -81,7 +86,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
                     key={image.id ?? index}
                     type="button"
                     onClick={() => goTo(index)}
-                    aria-label={`Go to image ${index + 1}`}
+                    aria-label={t("goToImage", { index: index + 1 })}
                     className={`h-1.5 rounded-full transition-all ${
                       index === activeIndex
                         ? "w-5 bg-primary"

@@ -7,8 +7,10 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { Text, clx } from "@modules/common/components/ui"
 import { Fragment } from "react"
+import { useTranslations } from "next-intl"
 import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
+import LocaleToggle from "../locale-toggle"
 import { MenuNavIcon, SideMenuIcons, SideMenuItemIcon } from "../nav-icons"
 import { Locale } from "@lib/data/locales"
 
@@ -34,6 +36,7 @@ type SideMenuProps = {
 const SideMenu = ({ regions, locales, currentLocale, isLoggedIn }: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
+  const t = useTranslations("sideMenu")
   // Login-gated entry: guests have no feed, so no dead-end item. No unread
   // dot here — the desktop bell owns badge state; this just navigates.
   const items: SideMenuItem[] = isLoggedIn
@@ -49,7 +52,7 @@ const SideMenu = ({ regions, locales, currentLocale, isLoggedIn }: SideMenuProps
               <div className="relative flex h-full">
                 <Popover.Button
                   data-testid="nav-menu-button"
-                  aria-label="Menu"
+                  aria-label={t("menu")}
                   className="relative h-full flex items-center rounded-md transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] focus:outline-none hover:text-ui-fg-base hover:scale-110 active:scale-95"
                 >
                   <MenuNavIcon open={open} />
@@ -95,13 +98,19 @@ const SideMenu = ({ regions, locales, currentLocale, isLoggedIn }: SideMenuProps
                               data-testid={`${name.toLowerCase()}-link`}
                             >
                               <SideMenuItemIcon name={name} />
-                              {name}
+                              {t(name.toLowerCase())}
                             </LocalizedClientLink>
                           </li>
                         )
                       })}
                     </ul>
                     <div className="flex flex-col gap-y-6">
+                      {/* UI language (URL locale). The backend-locale
+                          LanguageSelect below only appears when the backend
+                          has locales configured. */}
+                      <div className="flex justify-start">
+                        <LocaleToggle />
+                      </div>
                       {!!locales?.length && (
                         <div
                           className="flex justify-between"
@@ -140,8 +149,7 @@ const SideMenu = ({ regions, locales, currentLocale, isLoggedIn }: SideMenuProps
                         />
                       </div>
                       <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} Nanofield. All rights
-                        reserved.
+                        {t("rights", { year: new Date().getFullYear() })}
                       </Text>
                     </div>
                   </div>

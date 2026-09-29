@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { XMark } from "@medusajs/icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Megaphone01Icon } from "@hugeicons/core-free-icons"
@@ -16,6 +17,7 @@ const dismissKey = (banner: StoreBanner) =>
 export default function AnnouncementStrip({ banner }: { banner: StoreBanner }) {
   const [mounted, setMounted] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const t = useTranslations("common")
 
   useEffect(() => {
     try {
@@ -67,7 +69,7 @@ export default function AnnouncementStrip({ banner }: { banner: StoreBanner }) {
           e.stopPropagation()
           dismiss()
         }}
-        aria-label="Dismiss announcement"
+        aria-label={t("dismissAnnouncement")}
         className="shrink-0 rounded-md p-1 text-ui-fg-subtle hover:bg-muted hover:text-ui-fg-base focus:outline-none"
       >
         <XMark />

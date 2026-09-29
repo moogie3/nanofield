@@ -1,4 +1,5 @@
 import { deleteLineItem } from "@lib/data/cart"
+import { useTranslations } from "next-intl"
 import { Spinner, Trash } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
 import { useCartCount } from "@modules/common/components/cart-count"
@@ -21,6 +22,7 @@ const DeleteButton = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const { bump } = useCartCount()
+  const t = useTranslations("cart")
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
@@ -45,7 +47,9 @@ const DeleteButton = ({
       <button
         className="flex gap-x-1 text-ui-fg-subtle hover:text-ui-fg-base cursor-pointer"
         onClick={() => handleDelete(id)}
-        aria-label={typeof children === "string" ? children : "Remove item"}
+        aria-label={
+          typeof children === "string" ? children : t("removeItem")
+        }
         data-testid={dataTestid}
       >
         {isDeleting ? <Spinner className="animate-spin" /> : <Trash />}

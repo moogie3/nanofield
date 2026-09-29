@@ -15,6 +15,7 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "./locale-actions"
+import { localizeServerPath } from "@lib/util/server-locale"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -419,7 +420,11 @@ export async function placeOrder(cartId?: string) {
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
+    redirect(
+      await localizeServerPath(
+        `/${countryCode}/order/${cartRes?.order.id}/confirmed`
+      )
+    )
   }
 
   return cartRes.cart
@@ -453,7 +458,7 @@ export async function updateRegion(countryCode: string, currentPath: string) {
 
   const suffix =
     !currentPath || currentPath === "/" ? "" : currentPath.startsWith("/") ? currentPath : `/${currentPath}`
-  redirect(`/${normalizedCountry}${suffix}`)
+  redirect(await localizeServerPath(`/${normalizedCountry}${suffix}`))
 }
 
 export async function listCartOptions() {

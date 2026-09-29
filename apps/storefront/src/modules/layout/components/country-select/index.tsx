@@ -11,6 +11,7 @@ import { Fragment, useEffect, useMemo, useState } from "react"
 import ReactCountryFlag from "react-country-flag"
 
 import { StateType } from "@lib/hooks/use-toggle-state"
+import { useTranslations } from "next-intl"
 import { useParams, usePathname } from "next/navigation"
 import { updateRegion } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
@@ -28,8 +29,16 @@ type CountrySelectProps = {
 
 const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
   const [current, setCurrent] = useState<CountryOption | undefined>(undefined)
+  const t = useTranslations("nav")
 
   const params = useParams()
+  const rawLocale = params?.locale
+  const locale =
+    typeof rawLocale === "string"
+      ? rawLocale.toLowerCase()
+      : Array.isArray(rawLocale)
+        ? rawLocale[0]?.toLowerCase()
+        : undefined
   const rawCountryCode = params?.countryCode
   const countryCode =
     typeof rawCountryCode === "string"
@@ -38,11 +47,18 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
         ? rawCountryCode[0]?.toLowerCase()
         : undefined
   const pathname = usePathname()
-  // Strip only the leading /<countryCode> segment. The old
+  // Strip the leading /<locale>/<countryCode> segments. The old
   // `split(`/${countryCode}`)[1]` broke when the code appeared elsewhere
   // in the path and produced `undefined` on non-localized routes.
-  const currentPath = countryCode
-    ? pathname.replace(new RegExp(`^/${countryCode}`, "i"), "") || "/"
+  // currentPath keeps NO locale — updateRegion re-adds it server-side.
+  const localePrefix =
+    locale && countryCode
+      ? new RegExp(`^/${locale}/${countryCode}`, "i")
+      : countryCode
+        ? new RegExp(`^/${countryCode}`, "i")
+        : null
+  const currentPath = localePrefix
+    ? pathname.replace(localePrefix, "") || "/"
     : pathname
 
   const { state, close } = toggleState
@@ -90,7 +106,7 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
       >
         <ListboxButton className="py-1 w-full">
           <div className="txt-compact-small flex items-start gap-x-2">
-            <span>Shipping to:</span>
+            <span>{t("shippingTo")}</span>
             {current && (
               <span className="txt-compact-small flex items-center gap-x-2">
                 <ReactCountryFlag

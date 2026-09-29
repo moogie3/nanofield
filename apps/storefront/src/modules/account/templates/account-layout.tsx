@@ -1,4 +1,5 @@
 import React from "react"
+import { getTranslations } from "next-intl/server"
 
 import UnderlineLink from "@modules/common/components/interactive-link"
 import PageBackdrop from "@modules/common/components/page-backdrop"
@@ -11,10 +12,11 @@ interface AccountLayoutProps {
   children: React.ReactNode
 }
 
-const AccountLayout: React.FC<AccountLayoutProps> = ({
+const AccountLayout: React.FC<AccountLayoutProps> = async ({
   customer,
   children,
 }) => {
+  const t = await getTranslations("account.help")
   return (
     <div className="relative flex-1 small:py-12" data-testid="account-page">
       <PageBackdrop />
@@ -25,15 +27,12 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({
         </div>
         <div className="flex flex-col small:flex-row items-end justify-between small:border-t border-border py-12 gap-8">
           <div>
-            <h3 className="text-xl-semi mb-4">Got questions?</h3>
-            <span className="txt-medium">
-              You can find frequently asked questions and answers on our
-              customer service page.
-            </span>
+            <h3 className="text-xl-semi mb-4">{t("title")}</h3>
+            <span className="txt-medium">{t("body")}</span>
           </div>
           <div>
             <UnderlineLink href="/customer-service">
-              Customer Service
+              {t("link")}
             </UnderlineLink>
           </div>
         </div>

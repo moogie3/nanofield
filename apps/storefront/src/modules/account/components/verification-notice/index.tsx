@@ -1,7 +1,12 @@
+"use client"
+
+import { useTranslations } from "next-intl"
+
 // Prominent "check your inbox" panel shown after register/login returns
 // verification_required. Register renders it instead of the form; login
 // renders it above the form. Testid is caller-specific so existing
-// specs keep passing.
+// specs keep passing. Client-side (hook) because both callers live in the
+// client login/register tree — an async server component cannot render here.
 export default function VerificationNotice({
   email,
   testId,
@@ -9,6 +14,7 @@ export default function VerificationNotice({
   email: string
   testId: string
 }) {
+  const t = useTranslations("account.notice")
   return (
     <div
       className="w-full flex flex-col items-center text-center gap-y-3 rounded-2xl border border-primary/30 bg-primary/10 px-6 py-8"
@@ -31,15 +37,12 @@ export default function VerificationNotice({
         </svg>
       </span>
       <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-        Check your inbox
+        {t("title")}
       </h2>
       <p className="text-base-regular text-ui-fg-base">
-        We sent a verification link to <strong>{email}</strong>.
+        {t("body", { email })}
       </p>
-      <p className="text-small-regular text-ui-fg-subtle">
-        Click the link in the email to verify your address, then sign in.
-        Didn&apos;t get it? Check spam, or sign in again to resend.
-      </p>
+      <p className="text-small-regular text-ui-fg-subtle">{t("hint")}</p>
     </div>
   )
 }

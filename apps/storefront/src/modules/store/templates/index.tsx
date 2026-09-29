@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { getLocale, getTranslations } from "next-intl/server"
 
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import { SpecSelection } from "@lib/util/product-spec-filters"
@@ -11,7 +12,7 @@ import SearchField from "@modules/store/components/search-field"
 
 import PaginatedProducts from "./paginated-products"
 
-const StoreTemplate = ({
+const StoreTemplate = async ({
   sortBy,
   page,
   view,
@@ -34,6 +35,8 @@ const StoreTemplate = ({
   query?: string
   productsIds?: string[]
 }) => {
+  const locale = await getLocale()
+  const t = await getTranslations("store")
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
@@ -87,22 +90,18 @@ const StoreTemplate = ({
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
               </span>
-              Index online
+              {t("indexOnline")}
             </span>
             <span aria-hidden className="text-border">
               /
             </span>
-            <span>ICs · Transistors · MOSFETs · Passives — 900+ parts indexed</span>
+            <span>{t("indexStats")}</span>
           </div>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-            Product Catalog
+            {t("title")}
           </h1>
           <p className="text-small-regular max-w-none text-ui-fg-subtle">
-            Search by part number (e.g. IC-0399, TRS-0051), filter by category,
-            manufacturer, or specifications. 900+ spare parts in stock —
-            electronic components (ICs, transistors, MOSFETs, capacitors),
-            appliance spare parts, hand tools, repair tools, and more. Your
-            universal source for repair &amp; maintenance parts.
+            {t("description")}
           </p>
         </div>
       </div>
@@ -113,13 +112,15 @@ const StoreTemplate = ({
             <SearchField initialValue={query ?? ""} />
             {query && (
               <p className="shrink-0 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                {(productsIds ?? []).length} result
-                {(productsIds ?? []).length === 1 ? "" : "s"} for &ldquo;{query}&rdquo;{" "}
+                {t("resultsFor", {
+                  count: (productsIds ?? []).length,
+                  query,
+                })}{" "}
                 <a
-                  href={`/${countryCode}/store`}
+                  href={`/${locale}/${countryCode}/store`}
                   className="text-primary underline underline-offset-2"
                 >
-                  clear
+                  {t("clear")}
                 </a>
               </p>
             )}

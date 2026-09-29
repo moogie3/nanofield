@@ -1,4 +1,5 @@
 import { useMemo } from "react"
+import { useLocale, useTranslations } from "next-intl"
 
 import Thumbnail from "@modules/products/components/thumbnail"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -14,6 +15,8 @@ const chip =
   "inline-flex items-center rounded-full border border-border bg-ui-bg-subtle px-3 py-1 text-xs font-medium text-ui-fg-base shadow-sm"
 
 const OrderCard = ({ order }: OrderCardProps) => {
+  const t = useTranslations("account.card")
+  const localeTag = useLocale() === "id" ? "id-ID" : "en-US"
   const numberOfLines = useMemo(() => {
     return (
       order.items?.reduce((acc, item) => {
@@ -49,16 +52,20 @@ const OrderCard = ({ order }: OrderCardProps) => {
   const address = order.shipping_address
   const canceled = order.status === "canceled"
 
-  const paymentLabel = canceled ? "Canceled" : paid ? "Paid" : "Awaiting payment"
+  const paymentLabel = canceled
+    ? t("canceled")
+    : paid
+      ? t("paid")
+      : t("awaitingPayment")
   const shippingLabel = canceled
-    ? "Canceled"
+    ? t("canceled")
     : trackingNumber === "delivered"
-      ? "Delivered"
+      ? t("delivered")
       : trackingNumber === "shipped"
-        ? `Shipped${courier ? ` via ${courier}` : ""}`
+        ? `${t("shipped")}${courier ? t("via", { courier }) : ""}`
         : trackingNumber === "packed"
-          ? "Packed"
-          : "Preparing"
+          ? t("packed")
+          : t("preparing")
 
   return (
     <div
@@ -69,15 +76,16 @@ const OrderCard = ({ order }: OrderCardProps) => {
       
       <div>
         <div className="text-large-semi mb-3 break-all">
-          Order ID: <span className="font-mono text-sm" data-testid="order-raw-id">{order.id}</span>
+          {t("orderId")}{" "}
+          <span className="font-mono text-sm" data-testid="order-raw-id">{order.id}</span>
         </div>
         <div className="flex items-center divide-x divide-border text-small-regular text-ui-fg-base">
           <div className="flex flex-col pr-3 gap-y-0.5">
             <span data-testid="order-created-at">
-              {new Date(order.created_at).toDateString()}
+              {new Date(order.created_at).toLocaleDateString(localeTag)}
             </span>
             <span className="uppercase text-ui-fg-subtle text-[10px] font-medium" data-testid="order-display-id">
-              Order #{order.display_id}
+              {t("orderNum", { id: order.display_id })}
             </span>
           </div>
           <span className="px-3" data-testid="order-amount">
@@ -86,9 +94,9 @@ const OrderCard = ({ order }: OrderCardProps) => {
               currency_code: order.currency_code,
             })}
           </span>
-          <span className="pl-3">{`${numberOfLines} ${
-            numberOfLines > 1 ? "items" : "item"
-          }`}</span>
+          <span className="pl-3">
+            {t("items", { count: numberOfLines })}
+          </span>
         </div>
         <div className="flex flex-wrap gap-2 mt-3">
           <span className={chip} data-testid="order-payment-status">
@@ -137,14 +145,14 @@ const OrderCard = ({ order }: OrderCardProps) => {
         })}
         {(order.items?.length ?? 0) > 4 && (
           <span className="text-small-regular text-ui-fg-subtle">
-            + {(order.items?.length ?? 0) - 4} more products
+            {t("moreProducts", { count: (order.items?.length ?? 0) - 4 })}
           </span>
         )}
       </div>
       <div className="flex flex-col gap-y-1 text-small-regular text-ui-fg-base border-t border-border pt-4">
         {address && (
           <span data-testid="order-shipping-address">
-            Ship to: {address.address_1}
+            {t("shipTo")} {address.address_1}
             {address.city && `, ${address.city}`}
             {address.province && `, ${address.province}`}{" "}
             {address.postal_code}
@@ -152,29 +160,31 @@ const OrderCard = ({ order }: OrderCardProps) => {
         )}
         <span data-testid="order-tracking">
           {trackingNumber === "delivered"
-            ? "Delivered — enjoy your components."
+            ? t("trackingDelivered")
             : trackingNumber === "shipped"
-              ? `On its way${courier ? ` with ${courier}` : ""} — AWB is booked manually, ask support for the number.`
+              ? t("trackingShipped", {
+                  withCourier: courier ? t("via", { courier }) : "",
+                })
               : trackingNumber === "packed"
-                ? "Packed — handing over to the courier."
+                ? t("trackingPacked")
                 : canceled
-                  ? "Order canceled — no shipment."
-                  : "Tracking: seller is preparing your shipment."}
+                  ? t("trackingCanceled")
+                  : t("trackingPreparing")}
         </span>
       </div>
       <div className="flex justify-between items-end mt-2">
         <div className="flex flex-col gap-y-1">
-          <span className="text-ui-fg-subtle text-xs font-semibold uppercase tracking-wider">Scan to Track</span>
+          <span className="text-ui-fg-subtle text-xs font-semibold uppercase tracking-wider">{t("scanToTrack")}</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://nanofield.com/order/${order.id}`)}`} 
-            alt="Track Order QR" 
-            className="w-16 h-16 rounded-md border border-border p-1 bg-white" 
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://nanofield.com/order/${order.id}`)}`}
+            alt={t("qrAlt")}
+            className="w-16 h-16 rounded-md border border-border p-1 bg-white"
           />
         </div>
         <LocalizedClientLink href={`/account/orders/details/${order.id}`}>
           <Button data-testid="order-details-link" variant="secondary">
-            See details
+            {t("seeDetails")}
           </Button>
         </LocalizedClientLink>
       </div>

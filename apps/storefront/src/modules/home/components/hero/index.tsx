@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import SearchField from "@modules/store/components/search-field"
-
-const STATS = ["900+ parts in stock", "34 categories", "Datasheet-backed"]
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 const symbolProps = {
   viewBox: "0 0 64 64",
@@ -706,6 +706,7 @@ const DraggableSymbol = ({
   } | null>(null)
   const offset = useRef({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
+  const t = useTranslations("home")
 
   useEffect(() => {
     const saved = loadDragStore()[id]
@@ -762,7 +763,7 @@ const DraggableSymbol = ({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onDoubleClick={resetPosition}
-      title="Drag to move · double-click to reset"
+      title={t("dragHint")}
       className={`absolute touch-none pointer-events-auto before:absolute before:-inset-3 before:content-[""] ${
         dragging ? "cursor-grabbing" : "cursor-grab"
       } ${className}`}
@@ -786,6 +787,8 @@ const Hero = () => {
   const coordRef = useRef<HTMLSpanElement | null>(null)
   const reducedMotion = useRef(false)
   const [inside, setInside] = useState(false)
+  const t = useTranslations("home")
+  const stats = t.raw("stats") as string[]
 
   useEffect(() => {
     reducedMotion.current = window.matchMedia(
@@ -907,7 +910,7 @@ const Hero = () => {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
           </span>
-          Open for orders — 900+ parts in stock
+          {t("badge")}
         </p>
         <h1
           className="animate-hero-rise font-heading text-5xl font-bold tracking-tight text-foreground small:text-7xl"
@@ -919,9 +922,7 @@ const Hero = () => {
           className="animate-hero-rise text-base-regular max-w-2xl text-ui-fg-subtle small:text-large-regular"
           style={{ animationDelay: "180ms" }}
         >
-          Precision Electronic Components &amp; Appliance Spare Parts. Search
-          by IC part number, browse datasheets, and check real-time B2B/B2C
-          stock.
+          {t("subtitle")}
         </p>
         <div
           className="animate-hero-rise flex w-full justify-center px-4"
@@ -938,14 +939,16 @@ const Hero = () => {
             size="lg"
             className="font-bold uppercase tracking-widest"
           >
-            <a href="/store">Enter Catalog</a>
+            <LocalizedClientLink href="/store">
+              {t("enterCatalog")}
+            </LocalizedClientLink>
           </Button>
         </div>
         <dl
           className="animate-hero-rise mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
           style={{ animationDelay: "360ms" }}
         >
-          {STATS.map((stat, i) => (
+          {stats.map((stat, i) => (
             <div key={stat} className="flex items-center gap-6">
               {i > 0 && (
                 <span aria-hidden className="text-border">

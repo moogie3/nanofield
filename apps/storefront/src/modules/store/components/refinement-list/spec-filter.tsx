@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import clsx from "clsx"
 import {
   useCachedFetch,
@@ -24,6 +25,7 @@ const SpecFilter = ({
 }: SpecFilterProps) => {
   const [facets, setFacets] = useState<SpecFacet[]>([])
   const [mounted, setMounted] = useState(false)
+  const t = useTranslations("store.filters")
 
   useEffect(() => {
     setMounted(true)
@@ -67,7 +69,7 @@ const SpecFilter = ({
     <div className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between px-1">
         <span className="txt-compact-small-plus text-ui-fg-subtle">
-          Specifications
+          {t("specifications")}
         </span>
       </div>
       <div className="flex max-h-72 flex-col gap-y-3 overflow-y-auto pr-1">

@@ -5,8 +5,10 @@ import { getLocale } from "@lib/data/locale-actions"
 import { retrieveCustomer } from "@lib/data/customer"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
+import { getTranslations } from "next-intl/server"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
+import LocaleToggle from "@modules/layout/components/locale-toggle"
 import NotificationButton from "@modules/layout/components/notification-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import SiteSearch from "@modules/layout/components/site-search"
@@ -27,6 +29,7 @@ export default async function Nav() {
   // Login gate for the mobile side-menu entry (the desktop bell gates
   // itself). Never throws — guests simply get no entry.
   const customer = await retrieveCustomer().catch(() => null)
+  const t = await getTranslations("nav")
 
   return (
     <StickyNav banner={<AnnouncementBanner />}>
@@ -60,7 +63,7 @@ export default async function Nav() {
             <LocalizedClientLink
               className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95"
               href="/account"
-              aria-label="Account"
+              aria-label={t("account")}
               data-testid="nav-account-link"
             >
               <AccountNavIcon />
@@ -71,7 +74,7 @@ export default async function Nav() {
               <LocalizedClientLink
                 className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95"
                 href="/cart"
-                aria-label="Cart"
+                aria-label={t("cart")}
                 data-testid="nav-cart-link"
               >
                 <CartNavIcon />
@@ -87,6 +90,9 @@ export default async function Nav() {
             <Suspense fallback={null}>
               <NotificationButton />
             </Suspense>
+          </div>
+          <div className="hidden small:flex items-center">
+            <LocaleToggle />
           </div>
           <div className="flex items-center">
             <ThemeToggle />

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import Back from "@modules/common/icons/back"
 import FastDelivery from "@modules/common/icons/fast-delivery"
 import Refresh from "@modules/common/icons/refresh"
@@ -32,32 +33,33 @@ const metaStr = (
 }
 
 const ProductTabs = ({ product }: ProductTabsProps) => {
+  const t = useTranslations("product")
   // Same rule as the gallery button: explicit datasheet_url always wins,
   // `no_datasheet` opts out (hand tools, consumables), otherwise a
   // searchable identifier falls back to a datasheet search link.
   const hasDatasheet = getDatasheetInfo(product) !== null
   const tabs = [
     {
-      label: "Specifications",
+      label: t("tabs.specifications"),
       component: <SpecificationsTab product={product} />,
     },
     ...(hasDatasheet
       ? [
           {
-            label: "Datasheet & Sourcing",
+            label: t("tabs.datasheet"),
             component: <DatasheetTab product={product} />,
           },
         ]
       : []),
     {
-      label: "Shipping & Returns",
+      label: t("tabs.shipping"),
       component: <ShippingInfoTab />,
     },
   ]
 
   return (
     <div className="w-full">
-      <Accordion type="multiple" defaultValue={["Specifications"]}>
+      <Accordion type="multiple" defaultValue={[tabs[0].label]}>
         {tabs.map((tab) => (
           <AccordionItem key={tab.label} value={tab.label}>
             <AccordionTrigger>{tab.label}</AccordionTrigger>
@@ -70,6 +72,7 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
 }
 
 const SpecificationsTab = ({ product }: ProductTabsProps) => {
+  const t = useTranslations("product")
   // Extract specs from metadata - these would be populated from your import script
   const metadata = product.metadata
   // Same truth as the buy button: any purchasable variant means In Stock.
@@ -80,11 +83,13 @@ const SpecificationsTab = ({ product }: ProductTabsProps) => {
       v.allow_backorder ||
       (typeof v.inventory_quantity === "number" && v.inventory_quantity > 0)
   )
+  // Importer-provided status strings are data (left as-is); computed
+  // statuses use raw keys mapped through product.compliance below.
   const stockStatus = explicitStock
     ? explicitStock
     : anyInStock
-      ? "In Stock"
-      : "Out of Stock"
+      ? t("compliance.inStock")
+      : t("compliance.outOfStock")
   const specs: Record<string, string> = {
     "Part Number": product.handle?.toUpperCase() || "-",
     Manufacturer: metaStr(metadata, "manufacturer"),
@@ -123,15 +128,15 @@ const SpecificationsTab = ({ product }: ProductTabsProps) => {
         : "-",
     "RoHS Status":
       metadata?.rohs === "true"
-        ? "Compliant"
+        ? t("compliance.compliant")
         : metadata?.rohs === "false"
-          ? "Non-Compliant"
+          ? t("compliance.nonCompliant")
           : "-",
     "Lead Free":
       metadata?.lead_free === "true"
-        ? "Yes"
+        ? t("compliance.yes")
         : metadata?.lead_free === "false"
-          ? "No"
+          ? t("compliance.no")
           : "-",
     Weight: product.weight ? `${product.weight} g` : "-",
     "Dimensions (L×W×H)":
@@ -164,23 +169,31 @@ const SpecificationsTab = ({ product }: ProductTabsProps) => {
       </div>
       {displaySpecs.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          <p className="font-medium">No detailed specifications available</p>
-          <p className="text-sm mt-1">
-            Contact our technical team for datasheet requests.
-          </p>
+          <p className="font-medium">{t("noSpecs")}</p>
+          <p className="text-sm mt-1">{t("specsContact")}</p>
         </div>
       )}
     </div>
   )
 }
 
-const triState = (value: unknown, yes = "Compliant", no = "Non-Compliant") =>
-  value === "true" ? yes : value === "false" ? no : "Unknown"
+// Raw compliance keys — DatasheetTab maps them through product.compliance
+// for display, and matches Badge variants on the raw keys (locale-proof).
+type ComplianceKey =
+  | "compliant"
+  | "nonCompliant"
+  | "yes"
+  | "no"
+  | "unknown"
 
-const yesNoUnknown = (value: unknown) =>
-  value === "true" ? "Yes" : value === "false" ? "No" : "Unknown"
+const triState = (value: unknown): ComplianceKey =>
+  value === "true" ? "compliant" : value === "false" ? "nonCompliant" : "unknown"
+
+const yesNoUnknown = (value: unknown): ComplianceKey =>
+  value === "true" ? "yes" : value === "false" ? "no" : "unknown"
 
 const DatasheetTab = ({ product }: ProductTabsProps) => {
+  const t = useTranslations("product")
   const metadata = (product.metadata || {}) as Record<string, any>
   const datasheet = getDatasheetInfo(product)
   // Manufacturer part name first (e.g. TIP41C) — internal SKU codes mean
@@ -193,30 +206,56 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
   // entered manually from manufacturer docs at import time; it is never
   // scraped or guessed (datasheet sites block bots and carry no license
   // for reuse).
-  const complianceItems = [
-    { label: "RoHS", value: triState(metadata.rohs) },
-    { label: "REACH", value: triState(metadata.reach) },
-    { label: "Lead Free", value: yesNoUnknown(metadata.lead_free) },
-    { label: "Halogen Free", value: yesNoUnknown(metadata.halogen_free) },
+  // Certified importer data stays raw; only the tri-state statuses use
+  // locale-proof keys. Unknowns are hidden, never badge-walled.
+  const complianceItems: { label: string; raw: string; display: string }[] = [
+    { label: "RoHS", raw: triState(metadata.rohs), display: "" },
+    { label: "REACH", raw: triState(metadata.reach), display: "" },
+    { label: "Lead Free", raw: yesNoUnknown(metadata.lead_free), display: "" },
+    {
+      label: "Halogen Free",
+      raw: yesNoUnknown(metadata.halogen_free),
+      display: "",
+    },
     {
       label: "MSL Level",
-      value:
-        typeof metadata.msl === "string" && metadata.msl ? metadata.msl : "Unknown",
+      raw:
+        typeof metadata.msl === "string" && metadata.msl
+          ? metadata.msl
+          : "unknown",
+      display: "",
     },
     {
       label: "ESD Rating",
-      value:
+      raw:
         typeof metadata.esd_rating === "string" && metadata.esd_rating
           ? metadata.esd_rating
-          : "Unknown",
+          : "unknown",
+      display: "",
     },
-    { label: "UL Recognized", value: yesNoUnknown(metadata.ul_recognized) },
+    {
+      label: "UL Recognized",
+      raw: yesNoUnknown(metadata.ul_recognized),
+      display: "",
+    },
     {
       label: "Country of Origin",
-      value:
-        product.origin_country || metadata.country_of_origin || "Unknown",
+      raw: product.origin_country || metadata.country_of_origin || "unknown",
+      display: "",
     },
-  ].filter((item) => item.value !== "Unknown")
+  ]
+    .filter((item) => item.raw !== "unknown")
+    .map((item) => ({
+      ...item,
+      display:
+        item.raw === "compliant" ||
+        item.raw === "nonCompliant" ||
+        item.raw === "yes" ||
+        item.raw === "no" ||
+        item.raw === "unknown"
+          ? t(`compliance.${item.raw}`)
+          : item.raw,
+    }))
 
   // Direct-from-China sourcing: we are not in the authorized-distributor
   // channel, so distributor stock/pricing links (which convert our traffic
@@ -225,8 +264,8 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
   const sources = [
     {
       label: metadata.datasheet_url
-        ? "Open Datasheet"
-        : `Find ${partNumber} datasheet`,
+        ? t("openDatasheet")
+        : t("findDatasheet", { part: partNumber }),
       note: "alldatasheet.com",
       href: datasheetUrl,
     },
@@ -235,9 +274,7 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
   return (
     <div className="text-small-regular py-8 space-y-6">
       <div className="border border-border rounded-lg p-6 bg-muted/50">
-        <h4 className="font-semibold text-foreground mb-4">
-          Datasheets & Documents
-        </h4>
+        <h4 className="font-semibold text-foreground mb-4">{t("docs")}</h4>
         <div className="space-y-3">
           {sources.map((source) => (
             <a
@@ -290,7 +327,7 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span className="text-sm underline">Application Note</span>
+              <span className="text-sm underline">{t("appNote")}</span>
             </a>
           )}
           {metadata.cad_model_url && (
@@ -313,18 +350,16 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
                   d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
                 />
               </svg>
-              <span className="text-sm underline">
-                3D CAD Model (STEP/IGES)
-              </span>
+              <span className="text-sm underline">{t("cadModel")}</span>
             </a>
           )}
           {!datasheet &&
             !metadata.application_note_url &&
             !metadata.cad_model_url && (
               <p className="text-muted-foreground text-sm">
-                No technical documents linked for this part yet.{" "}
+                {t("noDocs")}{" "}
                 <LocalizedClientLink href="/contact" className="underline">
-                  Ask our technical team ↗
+                  {t("askTeam")}
                 </LocalizedClientLink>
               </p>
             )}
@@ -334,12 +369,11 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
       {complianceItems.length > 0 && (
         <div className="border border-border rounded-lg p-6 bg-muted/50">
           <h4 className="font-semibold text-foreground mb-1">
-            Compliance & Certifications
+            {t("complianceTitle")}
           </h4>
           <>
             <p className="text-xs text-muted-foreground mb-4">
-              Sourced from the manufacturer datasheet — always confirm against
-              the official datasheet linked above before production use.
+              {t("complianceNote")}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {complianceItems.map((item, i) => (
@@ -350,14 +384,14 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
                   <span className="text-muted-foreground">{item.label}</span>
                   <Badge
                     variant={
-                      item.value === "Compliant" || item.value === "Yes"
+                      item.raw === "compliant" || item.raw === "yes"
                         ? "default"
-                        : item.value === "Non-Compliant" || item.value === "No"
+                        : item.raw === "nonCompliant" || item.raw === "no"
                           ? "destructive"
                           : "secondary"
                     }
                   >
-                    {item.value}
+                    {item.display}
                   </Badge>
                 </div>
               ))}
@@ -368,7 +402,7 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
 
       <div className="border border-border rounded-lg p-6 bg-muted/50">
         <h4 className="font-semibold text-foreground mb-4">
-          Cross References & Alternatives
+          {t("crossRef")}
         </h4>
         <div className="space-y-2">
           {metadata.cross_references ? (
@@ -381,7 +415,7 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
             </div>
           ) : (
             <p className="text-muted-foreground text-sm">
-              No cross-references documented.
+              {t("noCrossRef")}
             </p>
           )}
         </div>
@@ -391,38 +425,29 @@ const DatasheetTab = ({ product }: ProductTabsProps) => {
 }
 
 const ShippingInfoTab = () => {
+  const t = useTranslations("product")
   return (
     <div className="text-small-regular py-8">
       <div className="grid grid-cols-1 gap-y-8">
         <div className="flex items-start gap-x-2">
           <FastDelivery />
           <div>
-            <span className="font-semibold">Fast delivery</span>
-            <p className="max-w-sm">
-              Your package will arrive in 3-5 business days at your pick up
-              location or in the comfort of your home.
-            </p>
+            <span className="font-semibold">{t("fastDelivery")}</span>
+            <p className="max-w-sm">{t("fastDeliveryBody")}</p>
           </div>
         </div>
         <div className="flex items-start gap-x-2">
           <Refresh />
           <div>
-            <span className="font-semibold">Simple exchanges</span>
-            <p className="max-w-sm">
-              Is the fit not quite right? No worries - we&apos;ll exchange your
-              product for a new one.
-            </p>
+            <span className="font-semibold">{t("exchanges")}</span>
+            <p className="max-w-sm">{t("exchangesBody")}</p>
           </div>
         </div>
         <div className="flex items-start gap-x-2">
           <Back />
           <div>
-            <span className="font-semibold">Easy returns</span>
-            <p className="max-w-sm">
-              Just return your product and we&apos;ll refund your money. No
-              questions asked – we&apos;ll do our best to make sure your return
-              is hassle-free.
-            </p>
+            <span className="font-semibold">{t("returns")}</span>
+            <p className="max-w-sm">{t("returnsBody")}</p>
           </div>
         </div>
       </div>

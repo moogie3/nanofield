@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@medusajs/icons"
@@ -22,6 +23,7 @@ export default function QuickAddButton({
   const [added, setAdded] = useState(false)
   const [gateOpen, setGateOpen] = useState(false)
   const { bump } = useCartCount()
+  const t = useTranslations("product")
 
   const handleAdd = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -56,7 +58,7 @@ export default function QuickAddButton({
         size="icon-sm"
         onClick={handleAdd}
         disabled={isAdding}
-        aria-label={added ? "Added to cart" : "Add to cart"}
+        aria-label={added ? t("addedToCart") : t("addToCart")}
         className="shrink-0 transition-transform duration-200 hover:scale-110 hover:shadow-lg active:scale-95"
       >
         {isAdding ? (

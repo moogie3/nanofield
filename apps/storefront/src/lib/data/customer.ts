@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { FetchError } from "@medusajs/js-sdk"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { localizeServerPath } from "@lib/util/server-locale"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -260,7 +261,7 @@ export async function signout(countryCode: string) {
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
 
-  redirect(`/${countryCode}/account`)
+  redirect(await localizeServerPath(`/${countryCode}/account`))
 }
 
 export async function transferCart() {

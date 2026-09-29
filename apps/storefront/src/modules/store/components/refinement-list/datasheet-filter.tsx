@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import clsx from "clsx"
 import {
   useCachedFetch,
@@ -20,6 +21,7 @@ const DatasheetFilter = ({
 }: DatasheetFilterProps) => {
   const [count, setCount] = useState<number | null>(null)
   const [mounted, setMounted] = useState(false)
+  const t = useTranslations("store.filters")
 
   useEffect(() => {
     setMounted(true)
@@ -45,7 +47,7 @@ const DatasheetFilter = ({
     <div className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between px-1">
         <span className="txt-compact-small-plus text-ui-fg-subtle">
-          Documentation
+          {t("documentation")}
         </span>
       </div>
       <div className="flex items-center gap-2.5 py-1.5">
@@ -63,7 +65,7 @@ const DatasheetFilter = ({
               checked ? "text-ui-fg-base font-medium" : "text-ui-fg-muted"
             )}
           >
-            Has datasheet
+            {t("hasDatasheet")}
           </span>
           {typeof count === "number" && (
             <span className="shrink-0 font-mono text-[11px] text-ui-fg-muted">

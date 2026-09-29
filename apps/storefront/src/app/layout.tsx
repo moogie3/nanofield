@@ -1,5 +1,7 @@
 import { getBaseURL } from "@lib/util/env"
+import { isLocale } from "@lib/util/locale-path"
 import { Metadata } from "next"
+import { headers } from "next/headers"
 import "styles/globals.css"
 import { Outfit, Manrope } from "next/font/google"
 import { cn } from "@/lib/utils"
@@ -14,17 +16,34 @@ const manropeHeading = Manrope({
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" })
 
-export const metadata: Metadata = {
-  metadataBase: new URL(getBaseURL()),
-  title: "Nanofield | Precision Electronic Components",
-  description:
-    "Indonesia's premier standalone store for electronic components, ICs, transistors, and appliance spare parts.",
+export async function generateMetadata(): Promise<Metadata> {
+  // Root layout cannot read route params — locale arrives via the
+  // middleware-set header (same source as <html lang> below).
+  const headerStore = await headers()
+  const headerLocale = headerStore.get("x-nanofield-locale")
+  const lang = isLocale(headerLocale) ? headerLocale! : "id"
+  const messages = (
+    await import(`../messages/${lang}.json`)
+  ).default as typeof import("../messages/en.json")
+  return {
+    metadataBase: new URL(getBaseURL()),
+    title: messages.meta.siteTitle,
+    description: messages.meta.siteDesc,
+  }
 }
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default async function RootLayout(props: {
+  children: React.ReactNode
+}) {
+  // Locale comes from the URL (via middleware-set header); the root layout
+  // cannot read route params, so the header is the source of truth.
+  const headerStore = await headers()
+  const headerLocale = headerStore.get("x-nanofield-locale")
+  const lang = isLocale(headerLocale) ? headerLocale! : "id"
+
   return (
     <html
-      lang="en"
+      lang={lang}
       suppressHydrationWarning
       className={cn("font-sans", outfit.variable, manropeHeading.variable)}
     >

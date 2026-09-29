@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
@@ -7,13 +8,14 @@ import PageBackdrop from "@modules/common/components/page-backdrop"
 import PageHeader from "@modules/common/components/page-header"
 import { HttpTypes } from "@medusajs/types"
 
-const CartTemplate = ({
+const CartTemplate = async ({
   cart,
   customer,
 }: {
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
 }) => {
+  const t = await getTranslations("cart")
   return (
     <div className="relative py-12">
       <PageBackdrop />
@@ -22,9 +24,9 @@ const CartTemplate = ({
           <>
             <div className="mb-8">
               <PageHeader
-                eyebrow="Shop"
-                title="Cart"
-                subtitle="Review the parts in your cart. Shipping and taxes are calculated at checkout."
+                eyebrow={t("eyebrow")}
+                title={t("title")}
+                subtitle={t("subtitle")}
               />
             </div>
             <div className="grid grid-cols-1 small:grid-cols-[1fr_360px] gap-x-8 gap-y-8">

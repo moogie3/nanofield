@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { usePathname } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -12,6 +13,7 @@ export default function SignInForPrice({
 }) {
   const pathname = usePathname()
   const href = `/account?return_to=${encodeURIComponent(pathname)}`
+  const t = useTranslations("auth")
 
   return (
     <LocalizedClientLink
@@ -22,7 +24,7 @@ export default function SignInForPrice({
       }
       data-testid="sign-in-for-price"
     >
-      Sign in for price
+      {t("signInForPrice")}
     </LocalizedClientLink>
   )
 }

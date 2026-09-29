@@ -33,9 +33,10 @@
                                  │ regions, shipping options)
                                  │
                     ┌────────────┴────────────┐
-                    │  Next.js storefront     │
-                    │  (apps/storefront,      │
-                    │   :8000 → /id/…)        │
+                     │  Next.js storefront     │
+                     │  (apps/storefront,      │
+                     │   :8000 → /id/id/…,     │
+                     │   /en/… — see §8)       │
                     └────────────┬────────────┘
                                  ▲
                                  │ browse, search,
@@ -214,3 +215,9 @@ Middleware region map: in-memory + fetch cache, 1-hour TTL
 ```
 
 Nothing dashed is required for launch; nothing solid may be skipped before it.
+
+## 8. Storefront locales — ID/EN (Sep 29)
+
+URLs are `/{locale}/{countryCode}/…` (`next-intl`, `localePrefix: "always"`, Indonesian default): language and region vary independently (`/en/id/` = English UI, IDR prices). Dictionaries live in `apps/storefront/src/messages/{en,id}.json`; the ID|EN toggle swaps the URL prefix and syncs the backend cart locale best-effort. SEO surfaces are per-locale (hreflang + canonicals, translated titles, `sitemap.xml`, `robots.txt`).
+
+Two load-bearing details: `src/middleware.ts` forwards the URL locale in the `X-NEXT-INTL-LOCALE` request header — `setRequestLocale()` alone does not reach message resolution (React 18 at root vs React 19 in the storefront splits the `cache()` it writes through), so removing the header silently reverts every page to Indonesian. Error boundaries read messages from that header (`getRequestMessages`), never from requestLocale. Backend-driven content (product/category/banner text) is not translated — that is the deferred backend phase.

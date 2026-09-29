@@ -2,6 +2,7 @@
 
 import * as Accordion from "@radix-ui/react-accordion"
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { ChevronDownMini } from "@medusajs/icons"
 import clsx from "clsx"
 import { HttpTypes } from "@medusajs/types"
@@ -20,6 +21,7 @@ const CategoryFilter = ({
   >([])
   const [openItems, setOpenItems] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
+  const t = useTranslations("store.filters")
 
   useEffect(() => {
     setMounted(true)
@@ -138,7 +140,7 @@ const CategoryFilter = ({
     <div className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between px-1">
         <span className="txt-compact-small-plus text-ui-fg-subtle">
-          Categories
+          {t("categories")}
         </span>
       </div>
       <div className="flex flex-col gap-y-2 pr-1">
@@ -155,7 +157,7 @@ const CategoryFilter = ({
                 : "text-ui-fg-muted hover:text-ui-fg-base",
             )}
           >
-            All products
+            {t("allProducts")}
           </button>
         </div>
         {topLevelCategories.map((category) => renderCategoryNode(category))}

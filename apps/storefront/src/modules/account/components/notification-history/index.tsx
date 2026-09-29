@@ -1,5 +1,6 @@
 "use client"
 
+import { useLocale, useTranslations } from "next-intl"
 import { useState, type MouseEvent as ReactMouseEvent } from "react"
 import { XMark } from "@medusajs/icons"
 import type { CustomerNotification } from "@lib/data/notifications"
@@ -28,6 +29,8 @@ export default function NotificationHistory({
   const [dismissed, setDismissed] = useState<string[]>(() =>
     getDismissedIds()
   )
+  const t = useTranslations("account.notifications")
+  const localeTag = useLocale() === "id" ? "id-ID" : "en-GB"
   const visible = notifications.filter((n) => !dismissed.includes(n.id))
 
   const onDismissRow = (e: ReactMouseEvent, id: string) => {
@@ -44,10 +47,7 @@ export default function NotificationHistory({
         newest={notifications[0]?.created_at}
       />
       {!visible.length ? (
-        <p className="text-small-regular text-ui-fg-subtle">
-          No notifications yet. Order updates and store announcements will
-          appear here.
-        </p>
+        <p className="text-small-regular text-ui-fg-subtle">{t("empty")}</p>
       ) : (
         <ul className="flex flex-col">
           {visible.map((n) => (
@@ -85,7 +85,7 @@ export default function NotificationHistory({
             href={`/account/notifications?limit=${nextLimit}`}
             className="text-small-semi text-primary hover:underline"
           >
-            Show more notifications
+            {t("showMoreLong")}
           </LocalizedClientLink>
         </div>
       )}
@@ -99,23 +99,26 @@ const NotificationRow = ({
 }: {
   notification: CustomerNotification
   onDismiss: (e: ReactMouseEvent, id: string) => void
-}) => (
-  <>
-    {n.broadcast && (
-      <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-primary">
-        Announcement
-      </span>
-    )}
-    <span className="flex items-start justify-between gap-2">
-      <span className="text-base-regular text-ui-fg-base">{n.title}</span>
-      <span className="flex items-center gap-1.5 shrink-0 pt-0.5">
-        <span className="text-small-regular text-ui-fg-subtle">
-          {formatDate(n.created_at)}
+}) => {
+  const t = useTranslations("account.notifications")
+  const localeTag = useLocale() === "id" ? "id-ID" : "en-GB"
+  return (
+    <>
+      {n.broadcast && (
+        <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-primary">
+          {t("announcement")}
         </span>
-        <button
-          type="button"
-          onClick={(e) => onDismiss(e, n.id)}
-          aria-label={`Dismiss: ${n.title}`}
+      )}
+      <span className="flex items-start justify-between gap-2">
+        <span className="text-base-regular text-ui-fg-base">{n.title}</span>
+        <span className="flex items-center gap-1.5 shrink-0 pt-0.5">
+          <span className="text-small-regular text-ui-fg-subtle">
+            {formatDate(n.created_at, localeTag)}
+          </span>
+          <button
+            type="button"
+            onClick={(e) => onDismiss(e, n.id)}
+            aria-label={t("dismiss", { title: n.title })}
           className="rounded p-0.5 text-ui-fg-subtle hover:bg-muted hover:text-ui-fg-base focus:outline-none"
         >
           <XMark className="h-3.5 w-3.5" />
@@ -127,12 +130,13 @@ const NotificationRow = ({
         {n.description}
       </span>
     )}
-  </>
-)
+    </>
+  )
+}
 
 // Absolute date on the history page (the bell panel uses relative stamps) —
 // history is scanned, not glanced.
-const formatDate = (iso?: string): string => {
+const formatDate = (iso: string | undefined, localeTag: string): string => {
   if (!iso) {
     return ""
   }
@@ -140,7 +144,7 @@ const formatDate = (iso?: string): string => {
   if (!Number.isFinite(t.getTime())) {
     return ""
   }
-  return t.toLocaleDateString("en-GB", {
+  return t.toLocaleDateString(localeTag, {
     day: "numeric",
     month: "short",
     year: "numeric",

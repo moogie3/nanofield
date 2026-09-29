@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
@@ -15,6 +16,7 @@ export function Pagination({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const t = useTranslations("store")
 
   // Helper function to generate an array of numbers within a range
   const arrayRange = (start: number, stop: number) =>
@@ -35,7 +37,7 @@ export function Pagination({
   ) => (
     <button
       key={p}
-      aria-label={`Go to page ${p}`}
+      aria-label={t("goToPage", { page: p })}
       aria-current={isCurrent ? "page" : undefined}
       className={clx(
         "flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium transition-colors",
@@ -129,30 +131,30 @@ export function Pagination({
 
   return (
     <nav
-      aria-label="Product catalog pages"
+      aria-label={t("pages")}
       className="mt-12 flex w-full flex-col items-center gap-3"
     >
       <div className="flex flex-wrap items-center justify-center gap-2" data-testid={dataTestid}>
         <button
-          aria-label="Go to previous page"
+          aria-label={t("prevPage")}
           className={navButtonClass(canPrev)}
           disabled={!canPrev}
           onClick={() => canPrev && handlePageChange(page - 1)}
         >
-          <span aria-hidden>←</span> Prev
+          <span aria-hidden>←</span> {t("prev")}
         </button>
         {renderPageButtons()}
         <button
-          aria-label="Go to next page"
+          aria-label={t("nextPage")}
           className={navButtonClass(canNext)}
           disabled={!canNext}
           onClick={() => canNext && handlePageChange(page + 1)}
         >
-          Next <span aria-hidden>→</span>
+          {t("next")} <span aria-hidden>→</span>
         </button>
       </div>
       <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-muted">
-        Page {page} of {totalPages}
+        {t("pageOf", { page, total: totalPages })}
       </p>
     </nav>
   )

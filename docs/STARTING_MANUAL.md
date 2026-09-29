@@ -102,7 +102,7 @@ A channel is a storefront surface — it determines which products, prices, loca
 The Store is the singleton record holding the shop name, the default channel, and the **supported currencies**. A region may only use a currency supported by the store — for this reason IDR is added (F2) before the Indonesia region is created (F4). The importer adds a missing IDR currency automatically as a fallback, and manual configuration never conflicts with it. **Consequence of absence:** region creation fails; prices cannot be expressed in IDR.
 
 ### 5. Regions
-A region is the combination of a currency, a set of countries, and payment providers. It drives the storefront URL (`/id/...`, `/dk/...`), price selection, and checkout eligibility. At Nanofield, **Indonesia** (IDR, `id`) is the live region, while **Europe** (EUR) is starter scaffolding that is retained rather than deleted. The importer creates a missing Indonesia/IDR region automatically and reuses an existing matching one, so manual creation and import runs never produce duplicates. **Consequence of absence:** the middleware has no country to route toward; carts cannot resolve prices.
+A region is the combination of a currency, a set of countries, and payment providers. It drives the country segment of the storefront URL (`/id/id/...`, `/en/dk/...` — locale first, country second), price selection, and checkout eligibility. At Nanofield, **Indonesia** (IDR, `id`) is the live region, while **Europe** (EUR) is starter scaffolding that is retained rather than deleted. The importer creates a missing Indonesia/IDR region automatically and reuses an existing matching one, so manual creation and import runs never produce duplicates. **Consequence of absence:** the middleware has no country to route toward; carts cannot resolve prices.
 
 ### 6. Payment providers assigned to a region
 Each region declares which payment methods it accepts. The Indonesia region accepts **Midtrans** (`pp_midtrans_midtrans`, Snap checkout: QRIS, GoPay, bank transfer; signed webhook drives authorize/capture/refund), while regions without it keep **`pp_system_default`** (the built-in manual/system provider). **Consequence of absence:** region creation is rejected and checkout cannot complete payment.
@@ -379,7 +379,7 @@ REVALIDATE_SECRET=<same value as backend>
 npm run storefront:dev   # from the repository root; alternatively `npm run dev` for all applications
 ```
 
-Open `http://localhost:8000/id/store` (prices exist only in IDR, therefore `/dk/` renders blank prices).
+Open `http://localhost:8000/id/id/store` (prices exist only in IDR, therefore `/dk/` regions render blank prices; the old `/id/store` form still works — it redirects). Verify both languages: `/id/id/...` renders Indonesian, `/en/id/...` English (the ID|EN toggle in the navbar flips the URL prefix while keeping the page).
 
 **Restart rules (to be consulted before reporting stale data or anomalous URLs):**
 
@@ -479,7 +479,7 @@ The administration is served at `http://localhost:9000/app`. Section I.1 lists t
 ### I.3. Settings menus (gear icon)
 
 **Store** (`/app/settings/store`)
-- Detail and edit forms: store name, default sales channel, default currency and region. **Currencies tab** (add/remove supported currencies — the F2 step). **Locales tab** (add content locales). Metadata editor. Purpose: shop identity and monetary foundation.
+- Detail and edit forms: store name, default sales channel, default currency and region. **Currencies tab** (add/remove supported currencies — the F2 step). **Locales tab** (add content locales — backend store locales; unrelated to the storefront's ID/EN UI translation, which is URL-driven and needs no configuration here). Metadata editor. Purpose: shop identity and monetary foundation.
 
 **Regions** (`/app/settings/regions`)
 - *List page:* region table (name, currency, country count). Rows navigate to detail. Purpose: regional inventory of the shop's commercial territories.

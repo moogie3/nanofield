@@ -1,3 +1,4 @@
+import { getLocale, getTranslations } from "next-intl/server"
 import { Container, Heading, Text } from "@modules/common/components/ui"
 
 import ChevronDown from "@modules/common/icons/chevron-down"
@@ -16,22 +17,24 @@ type OverviewProps = {
   orders: HttpTypes.StoreOrder[] | null
 }
 
-const Overview = ({ customer, orders }: OverviewProps) => {
+const Overview = async ({ customer, orders }: OverviewProps) => {
+  const t = await getTranslations("account.overview")
+  const localeTag = (await getLocale()) === "id" ? "id-ID" : "en-US"
   return (
     <div data-testid="overview-page-wrapper">
       <div className="hidden small:block">
         <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-subtle">
-          Account
+          {t("eyebrow")}
         </span>
         <Heading
           level="h2"
           className="flex justify-between items-center mb-4 text-3xl-regular"
         >
-          <span data-testid="welcome-message" data-value={customer?.first_name}>
-            Hello {customer?.first_name}
-          </span>
-          <span className="text-small-regular font-normal text-ui-fg-base">
-            Signed in as:{" "}
+            <span data-testid="welcome-message" data-value={customer?.first_name}>
+              {t("hello", { name: customer?.first_name ?? "" })}
+            </span>
+            <span className="text-small-regular font-normal text-ui-fg-base">
+              {t("signedInAs")}{" "}
             <span
               className="font-semibold"
               data-testid="customer-email"
@@ -42,8 +45,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
           </span>
         </Heading>
         <Text className="text-base-regular mb-4 text-ui-fg-subtle">
-          Track your orders, manage your profile, and keep your addresses up
-          to date.
+          {t("intro")}
         </Text>
         <div className="flex flex-col py-8 border-t border-border">
           <div className="flex flex-col gap-y-4 h-full col-span-1 row-span-2 flex-1">
@@ -51,7 +53,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
               <div className="flex flex-col gap-y-4">
                 <h3 className="text-large-semi flex items-center gap-2">
                   <SectionIcon icon={FaceIdIcon} />
-                  Profile
+                  {t("profile")}
                 </h3>
                 <div className="flex items-end gap-x-2">
                   <span
@@ -62,7 +64,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                     {getProfileCompletion(customer)}%
                   </span>
                   <span className="uppercase text-base-regular text-ui-fg-subtle">
-                    Completed
+                    {t("completed")}
                   </span>
                 </div>
               </div>
@@ -70,7 +72,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
               <div className="flex flex-col gap-y-4">
                 <h3 className="text-large-semi flex items-center gap-2">
                   <SectionIcon icon={Location01Icon} />
-                  Addresses
+                  {t("addresses")}
                 </h3>
                 <div className="flex items-end gap-x-2">
                   <span
@@ -81,7 +83,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                     {customer?.addresses?.length || 0}
                   </span>
                   <span className="uppercase text-base-regular text-ui-fg-subtle">
-                    Saved
+                    {t("saved")}
                   </span>
                 </div>
               </div>
@@ -91,7 +93,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
               <div className="flex items-center gap-x-2">
                 <h3 className="text-large-semi flex items-center gap-2">
                   <SectionIcon icon={PackageIcon} />
-                  Recent orders
+                  {t("recentOrders")}
                 </h3>
               </div>
               <ul
@@ -111,15 +113,19 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                         >
                           <Container className="bg-muted flex justify-between items-center p-4">
                             <div className="grid grid-cols-3 grid-rows-2 text-small-regular gap-x-4 flex-1">
-                              <span className="font-semibold">Date placed</span>
                               <span className="font-semibold">
-                                Order number
+                                {t("datePlaced")}
                               </span>
                               <span className="font-semibold">
-                                Total amount
+                                {t("orderNumber")}
+                              </span>
+                              <span className="font-semibold">
+                                {t("totalAmount")}
                               </span>
                               <span data-testid="order-created-date">
-                                {new Date(order.created_at).toDateString()}
+                                {new Date(order.created_at).toLocaleDateString(
+                                  localeTag
+                                )}
                               </span>
                               <span
                                 data-testid="order-id"
@@ -139,7 +145,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                               data-testid="open-order-button"
                             >
                               <span className="sr-only">
-                                Go to order #{order.display_id}
+                                {t("goToOrder", { id: order.display_id })}
                               </span>
                               <ChevronDown className="-rotate-90" />
                             </button>
@@ -149,7 +155,9 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                     )
                   })
                 ) : (
-                  <span data-testid="no-orders-message">No recent orders</span>
+                  <span data-testid="no-orders-message">
+                    {t("noOrders")}
+                  </span>
                 )}
               </ul>
             </div>

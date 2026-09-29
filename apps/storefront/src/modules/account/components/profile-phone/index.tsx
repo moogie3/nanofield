@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useActionState } from "react";
+import { useTranslations } from "next-intl"
 
 import Input from "@modules/common/components/input"
 
@@ -35,6 +36,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     error: null as string | null,
     success: false,
   })
+  const t = useTranslations("account.profile")
 
   const clearState = () => {
     setSuccessState(false)
@@ -47,7 +49,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
   return (
     <form action={formAction} className="w-full">
       <AccountInfo
-        label="Phone"
+        label={t("phone")}
         currentInfo={`${customer.phone}`}
         isSuccess={successState}
         isError={!!state.error}
@@ -57,7 +59,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
       >
         <div className="grid grid-cols-1 gap-y-2">
           <Input
-            label="Phone"
+            label={t("phone")}
             name="phone"
             type="phone"
             autoComplete="phone"

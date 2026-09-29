@@ -6,12 +6,16 @@ type LineItemUnitPriceProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
   style?: "default" | "tight"
   currencyCode: string
+  // Translated "Original: " label — passed by the caller because this shared
+  // module renders in both server and client trees (no i18n hooks allowed).
+  originalLabel?: string
 }
 
 const LineItemUnitPrice = ({
   item,
   style = "default",
   currencyCode,
+  originalLabel = "Original: ",
 }: LineItemUnitPriceProps) => {
   const total = item.total ?? 0
   const original_total = item.original_total ?? 0
@@ -27,7 +31,7 @@ const LineItemUnitPrice = ({
         <>
           <p>
             {style === "default" && (
-              <span className="text-ui-fg-muted">Original: </span>
+              <span className="text-ui-fg-muted">{originalLabel}</span>
             )}
             <span
               className="line-through"

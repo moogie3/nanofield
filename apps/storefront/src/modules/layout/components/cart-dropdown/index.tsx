@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import {
   Popover,
   PopoverButton,
@@ -29,6 +30,7 @@ const DropdownLineItem = ({
   currencyCode: string
 }) => {
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations("cart")
 
   // Same stock cap as the cart page: + grays out exactly at available
   // stock instead of failing silently on the server round-trip.
@@ -96,7 +98,7 @@ const DropdownLineItem = ({
                   stockLimited &&
                   item.quantity >= maxQuantity && (
                     <span className="text-[11px] text-ui-fg-subtle">
-                      Only {maxQuantity} available in stock
+                      {t("onlyMax", { max: maxQuantity })}
                     </span>
                   )
                 )}
@@ -194,6 +196,7 @@ const CartDropdown = ({
   }, [activeTimer])
 
   const pathname = usePathname()
+  const t = useTranslations("cart")
 
   // open cart dropdown when modifying the cart items, but only if we're not on the cart page
   useEffect(() => {
@@ -214,11 +217,13 @@ const CartDropdown = ({
           <LocalizedClientLink
             className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95"
             href="/cart"
-            aria-label={`Cart (${displayedItems})`}
+            aria-label={t("cartCount", { count: displayedItems })}
             data-testid="nav-cart-link"
           >
             <CartNavIcon count={displayedItems} />
-            <span className="sr-only">{`Cart (${displayedItems})`}</span>
+            <span className="sr-only">
+              {t("cartCount", { count: displayedItems })}
+            </span>
           </LocalizedClientLink>
         </PopoverButton>
         <Transition
@@ -237,7 +242,7 @@ const CartDropdown = ({
             data-testid="nav-cart-dropdown"
           >
             <div className="p-3 flex items-center justify-center">
-              <h3 className="text-large-semi">Cart</h3>
+              <h3 className="text-large-semi">{t("title")}</h3>
             </div>
             {cartState && cartState.items?.length ? (
               <>
@@ -259,10 +264,7 @@ const CartDropdown = ({
                 <div className="p-3 flex flex-col gap-y-3 text-small-regular">
                   <div className="flex items-center justify-between">
                     <span className="text-ui-fg-base font-semibold">
-                      Subtotal{" "}
-                      <span className="font-normal">
-                        (excl. shipping and taxes)
-                      </span>
+                      {t("totals.subtotal")}
                     </span>
                     <span
                       className="text-large-semi"
@@ -277,7 +279,9 @@ const CartDropdown = ({
                   </div>
                   {!!discount && (
                     <div className="flex items-center justify-between">
-                      <span className="text-ui-fg-base">Discount</span>
+                      <span className="text-ui-fg-base">
+                        {t("totals.discount")}
+                      </span>
                       <span
                         className="text-ui-fg-interactive"
                         data-testid="cart-discount"
@@ -292,7 +296,9 @@ const CartDropdown = ({
                     </div>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-ui-fg-base font-semibold">Total</span>
+                    <span className="text-ui-fg-base font-semibold">
+                      {t("totals.total")}
+                    </span>
                     <span
                       className="text-large-semi"
                       data-testid="cart-total"
@@ -309,7 +315,7 @@ const CartDropdown = ({
                         className="w-full"
                         data-testid="go-to-cart-button"
                       >
-                        Go to cart
+                        {t("goToCart")}
                       </Button>
                     </LocalizedClientLink>
                 </div>
@@ -320,12 +326,14 @@ const CartDropdown = ({
                   <div className="bg-primary text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-primary-foreground">
                     <span>0</span>
                   </div>
-                  <span>Your shopping bag is empty.</span>
+                  <span>{t("emptyBag")}</span>
                   <div>
                     <LocalizedClientLink href="/store">
                       <>
-                        <span className="sr-only">Go to all products page</span>
-                        <Button onClick={close}>Explore products</Button>
+                        <span className="sr-only">
+                          {t("allProductsPage")}
+                        </span>
+                        <Button onClick={close}>{t("explore")}</Button>
                       </>
                     </LocalizedClientLink>
                   </div>

@@ -1,5 +1,4 @@
-"use client"
-
+import { getTranslations } from "next-intl/server"
 import { XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -16,9 +15,10 @@ type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
 }
 
-const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
+const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = async ({
   order,
 }) => {
+  const t = await getTranslations("order")
   return (
     <div className="flex flex-col justify-center gap-y-4">
       {/* Stacked: the old side-by-side row squeezed the header against the
@@ -29,14 +29,14 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           className="flex gap-2 items-center text-ui-fg-subtle hover:text-ui-fg-base shrink-0"
           data-testid="back-to-overview-button"
         >
-          <XMark /> Back to overview
+          <XMark /> {t("backToOverview")}
         </LocalizedClientLink>
       </div>
       <div>
         <PageHeader
-          eyebrow="Account"
-          title="Order details"
-          subtitle="Track payment, shipment, and items for this order — including its QR code and transfer reference."
+          eyebrow={t("detailsEyebrow")}
+          title={t("detailsTitle")}
+          subtitle={t("detailsSubtitle")}
         />
       </div>
       <div

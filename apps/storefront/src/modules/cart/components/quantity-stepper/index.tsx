@@ -1,6 +1,7 @@
 "use client"
 
 import { updateLineItem } from "@lib/data/cart"
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 import { useCartCount } from "@modules/common/components/cart-count"
 import { useEffect, useState } from "react"
@@ -27,6 +28,7 @@ const QuantityStepper = ({
   // waiting for the server round-trip + cache revalidation.
   const [displayQuantity, setDisplayQuantity] = useState(quantity)
   const { bump } = useCartCount()
+  const t = useTranslations("cart")
 
   // Re-sync when the cart settles (e.g. after revalidation or errors).
   useEffect(() => {
@@ -46,7 +48,7 @@ const QuantityStepper = ({
     const delta = clamped - displayQuantity
     if (delta === 0) {
       if (clampedDown) {
-        onUpdateError?.(`Only ${max} available in stock`)
+        onUpdateError?.(t("onlyMax", { max }))
       }
       return
     }
@@ -62,13 +64,13 @@ const QuantityStepper = ({
       bump(-delta)
       setDisplayQuantity(quantity)
       onUpdateError?.(
-        err instanceof Error ? err.message : "Could not update quantity"
+        err instanceof Error ? err.message : t("updateFailed")
       )
     } finally {
       setUpdating(false)
     }
     if (clampedDown) {
-      onUpdateError?.(`Only ${max} available in stock`)
+      onUpdateError?.(t("onlyMax", { max }))
     }
   }
 
@@ -98,7 +100,7 @@ const QuantityStepper = ({
     >
       <button
         type="button"
-        aria-label="Decrease quantity"
+        aria-label={t("decrease")}
         data-testid="quantity-decrease-button"
         disabled={displayQuantity <= 1 || updating}
         onClick={() => handleChange(displayQuantity - 1)}
@@ -111,7 +113,7 @@ const QuantityStepper = ({
       </button>
       <input
         aria-live="polite"
-        aria-label="Quantity"
+        aria-label={t("quantity")}
         data-testid="quantity-value"
         data-value={displayQuantity}
         inputMode="numeric"
@@ -132,7 +134,7 @@ const QuantityStepper = ({
       />
       <button
         type="button"
-        aria-label="Increase quantity"
+        aria-label={t("increase")}
         data-testid="quantity-increase-button"
         disabled={displayQuantity >= max || updating}
         onClick={() => handleChange(displayQuantity + 1)}

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { useParams, useRouter } from "next/navigation"
 import {
   Dialog,
@@ -29,27 +30,27 @@ import {
 type SuggestItem = { id: string; handle: string; title: string }
 
 const PAGES = [
-  { label: "Home", href: "/", icon: House02Icon },
-  { label: "Store", href: "/store", icon: Store02Icon },
-  { label: "Cart", href: "/cart", icon: ShoppingBag01Icon },
-  { label: "Checkout", href: "/checkout", icon: CreditCardIcon },
-  { label: "Account", href: "/account", icon: UserCircleIcon },
-  { label: "Orders", href: "/account/orders", icon: Package02Icon },
+  { key: "home", href: "/", icon: House02Icon },
+  { key: "store", href: "/store", icon: Store02Icon },
+  { key: "cart", href: "/cart", icon: ShoppingBag01Icon },
+  { key: "checkout", href: "/checkout", icon: CreditCardIcon },
+  { key: "account", href: "/account", icon: UserCircleIcon },
+  { key: "orders", href: "/account/orders", icon: Package02Icon },
   {
-    label: "Notifications",
+    key: "notifications",
     href: "/account/notifications",
     icon: Notification01Icon,
   },
-  { label: "Addresses", href: "/account/addresses", icon: Location01Icon },
-  { label: "Profile", href: "/account/profile", icon: FaceIdIcon },
-  { label: "FAQ", href: "/faq", icon: HelpCircleIcon },
-  { label: "Contact us", href: "/contact", icon: CustomerService01Icon },
+  { key: "addresses", href: "/account/addresses", icon: Location01Icon },
+  { key: "profile", href: "/account/profile", icon: FaceIdIcon },
+  { key: "faq", href: "/faq", icon: HelpCircleIcon },
+  { key: "contact", href: "/contact", icon: CustomerService01Icon },
   {
-    label: "Returns & Exchanges",
+    key: "returns",
     href: "/returns",
     icon: ReturnRequestIcon,
   },
-]
+] as const
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -66,7 +67,7 @@ const GATED_HREFS = new Set([
   "/checkout",
 ])
 
-const LockBadge = () => (
+const LockBadge = ({ label }: { label: string }) => (
   <svg
     width="14"
     height="14"
@@ -76,7 +77,7 @@ const LockBadge = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    aria-label="Members only"
+    aria-label={label}
     className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
   >
     <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -99,7 +100,9 @@ const SiteSearch = () => {
   const [gateOpen, setGateOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
-  const { countryCode } = useParams()
+  const { locale, countryCode } = useParams()
+  const t = useTranslations("search")
+  const tc = useTranslations("common")
 
   // Membership check per open (cheap, cached by the data layer): drives
   // the lock badges + gate modal below. Unknown (null) fails open so the
@@ -164,16 +167,25 @@ const SiteSearch = () => {
     setOpen(false)
     router.push(
       q
-        ? `/${countryCode}/store?q=${encodeURIComponent(q)}`
-        : `/${countryCode}/store`
+        ? `/${locale}/${countryCode}/store?q=${encodeURIComponent(q)}`
+        : `/${locale}/${countryCode}/store`
     )
   }
 
+  // Translated page shortcuts — filtering matches the visible labels.
+  const labeledPages = useMemo(
+    () =>
+      PAGES.map((p) => ({
+        ...p,
+        label: t(`pagesList.${p.key}`),
+      })),
+    [t]
+  )
   const q = value.trim().toLowerCase()
   const pageHits =
     q.length >= 2
-      ? PAGES.filter((p) => p.label.toLowerCase().includes(q))
-      : PAGES
+      ? labeledPages.filter((p) => p.label.toLowerCase().includes(q))
+      : labeledPages
   const showResults = value.trim().length >= 2
 
   const isLocked = (href: string) => loggedIn === false && GATED_HREFS.has(href)
@@ -195,7 +207,7 @@ const SiteSearch = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <button
         onClick={() => setOpen(true)}
-        aria-label="Search"
+        aria-label={t("label")}
         data-testid="nav-search-button"
         className="hover:text-ui-fg-base flex items-center rounded-md p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-muted active:scale-95"
       >
@@ -215,7 +227,7 @@ const SiteSearch = () => {
       </button>
       <DialogOverlay className="bg-black/60" />
       <DialogContent
-        aria-label="Site search"
+        aria-label={t("dialogLabel")}
         onOpenAutoFocus={(e) => {
           e.preventDefault()
           inputRef.current?.focus()
@@ -228,8 +240,8 @@ const SiteSearch = () => {
             type="search"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Search part number, IC, specs…"
-            aria-label="Site search"
+            placeholder={tc("searchPlaceholder")}
+            aria-label={t("dialogLabel")}
             className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
           />
         </form>
@@ -237,10 +249,10 @@ const SiteSearch = () => {
           {showResults && (
             <p className="px-2 pb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               {loading
-                ? "Searching…"
+                ? t("searching")
                 : total > 0
-                  ? `${total} product${total === 1 ? "" : "s"}`
-                  : "No products found"}
+                  ? t("productsFound", { count: total })
+                  : t("noProducts")}
             </p>
           )}
           {showResults &&
@@ -262,7 +274,7 @@ const SiteSearch = () => {
           {pageHits.length > 0 && (
             <>
               <p className="px-2 pb-2 pt-3 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Pages
+                {t("pages")}
               </p>
               {pageHits.map((p) => (
                 <LocalizedClientLink
@@ -277,7 +289,7 @@ const SiteSearch = () => {
                     className="h-4 w-4 shrink-0"
                   />
                   <span className="flex-1">{p.label}</span>
-                  {isLocked(p.href) && <LockBadge />}
+                  {isLocked(p.href) && <LockBadge label={t("membersOnly")} />}
                 </LocalizedClientLink>
               ))}
             </>
@@ -287,7 +299,7 @@ const SiteSearch = () => {
               onClick={() => goCatalog()}
               className="mt-2 w-full rounded-xl bg-primary py-2.5 text-xs font-bold uppercase tracking-widest text-primary-foreground hover:opacity-90"
             >
-              See all {total} results
+              {t("seeAll", { count: total })}
             </button>
           )}
         </div>

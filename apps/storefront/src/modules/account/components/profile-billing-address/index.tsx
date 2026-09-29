@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useActionState, useEffect, useMemo } from "react"
+import { useTranslations } from "next-intl"
 
 import Input from "@modules/common/components/input"
 import NativeSelect from "@modules/common/components/native-select"
@@ -18,6 +19,9 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
   customer,
   regions,
 }) => {
+  const t = useTranslations("account.profile")
+  const ta = useTranslations("account.address")
+  const tf = useTranslations("checkout.form")
   const regionOptions = useMemo(() => {
     return (
       regions
@@ -63,7 +67,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
 
   const currentInfo = useMemo(() => {
     if (!billingAddress) {
-      return "No billing address"
+      return ta("noBilling")
     }
 
     const country =
@@ -87,7 +91,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
         <span>{country}</span>
       </div>
     )
-  }, [billingAddress, regionOptions])
+  }, [billingAddress, regionOptions, ta])
 
   return (
     <form action={formAction} onReset={() => clearState()} className="w-full">
@@ -97,7 +101,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
         defaultValue={billingAddress?.id}
       />
       <AccountInfo
-        label="Billing address"
+        label={t("billingAddress")}
         currentInfo={currentInfo}
         isSuccess={successState}
         isError={!!state.error}
@@ -112,14 +116,14 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
         <div className="grid grid-cols-1 gap-y-2">
           <div className="grid grid-cols-2 gap-x-2">
             <Input
-              label="First name"
+              label={tf("firstName")}
               name="first_name"
               defaultValue={billingAddress?.first_name || undefined}
               required
               data-testid="billing-first-name-input"
             />
             <Input
-              label="Last name"
+              label={tf("lastName")}
               name="last_name"
               defaultValue={billingAddress?.last_name || undefined}
               required
@@ -127,13 +131,13 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
             />
           </div>
           <Input
-            label="Company"
+            label={tf("company")}
             name="company"
             defaultValue={billingAddress?.company || undefined}
             data-testid="billing-company-input"
           />
           <Input
-            label="Phone"
+            label={tf("phone")}
             name="phone"
             type="tel"
             autoComplete="tel"
@@ -142,28 +146,28 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
             data-testid="billing-phone-input"
           />
           <Input
-            label="Address"
+            label={tf("address")}
             name="address_1"
             defaultValue={billingAddress?.address_1 || undefined}
             required
             data-testid="billing-address-1-input"
           />
           <Input
-            label="Apartment, suite, etc."
+            label={ta("line2")}
             name="address_2"
             defaultValue={billingAddress?.address_2 || undefined}
             data-testid="billing-address-2-input"
           />
           <div className="grid grid-cols-[144px_1fr] gap-x-2">
             <Input
-              label="Postal code"
+              label={tf("postal")}
               name="postal_code"
               defaultValue={billingAddress?.postal_code || undefined}
               required
               data-testid="billing-postcal-code-input"
             />
             <Input
-              label="City"
+              label={tf("city")}
               name="city"
               defaultValue={billingAddress?.city || undefined}
               required
@@ -171,7 +175,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
             />
           </div>
           <Input
-            label="Province"
+            label={tf("province")}
             name="province"
             defaultValue={billingAddress?.province || undefined}
             data-testid="billing-province-input"

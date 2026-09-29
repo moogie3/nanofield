@@ -1,3 +1,4 @@
+import { getLocale, getTranslations } from "next-intl/server"
 import { listProductsWithSort } from "@lib/data/products"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getRegion } from "@lib/data/regions"
@@ -49,6 +50,8 @@ export default async function PaginatedProducts({
   query?: string
   view?: "grid" | "list"
 }) {
+  const locale = await getLocale()
+  const t = await getTranslations("store")
   const queryParams: PaginatedProductsParams = {
     limit: PRODUCT_LIMIT,
   }
@@ -116,37 +119,37 @@ export default async function PaginatedProducts({
   if (products.length === 0) {
     const blockers: string[] = []
     if (query) {
-      blockers.push(`the search for \u201c${query}\u201d`)
+      blockers.push(t("searchBlocker", { query }))
     }
     for (const pair of spec ?? []) {
-      blockers.push(`the ${formatSpecLabel(pair)} filter`)
+      blockers.push(t("specBlocker", { label: formatSpecLabel(pair) }))
     }
     if (hasDatasheet) {
-      blockers.push("the Has datasheet filter")
+      blockers.push(t("datasheetBlocker"))
     }
     if (optionValueIds?.length) {
-      blockers.push("the selected option values")
+      blockers.push(t("optionsBlocker"))
     }
     if (finalCategoryIds?.length) {
       blockers.push(
-        `${finalCategoryIds.length} categor${finalCategoryIds.length === 1 ? "y" : "ies"}`
+        t("categoryBlocker", { count: finalCategoryIds.length })
       )
     }
     return (
       <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-border bg-card px-6 py-16 text-center">
         <p className="font-heading text-xl font-bold text-foreground">
-          No products match these filters
+          {t("noMatchTitle")}
         </p>
         <p className="text-small-regular max-w-md text-ui-fg-subtle">
           {blockers.length
-            ? `Nothing matches ${blockers.join(" + ")} — try removing one filter at a time.`
-            : "The selected categories returned nothing — they may have been removed or renamed. Clear the filters to browse the full catalog."}
+            ? t("noMatchHint", { blockers: blockers.join(" + ") })
+            : t("noMatchEmpty")}
         </p>
         <a
-          href={`/${countryCode}/store`}
+          href={`/${locale}/${countryCode}/store`}
           className="inline-flex h-10 items-center rounded-full bg-primary px-6 text-sm font-bold uppercase tracking-widest text-primary-foreground transition-colors hover:opacity-90"
         >
-          Show all products
+          {t("showAll")}
         </a>
       </div>
     )

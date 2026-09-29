@@ -1,6 +1,7 @@
 import { listCategories } from "@lib/data/categories"
 import { mapsUrl, STORE_CONTACT, whatsappUrl } from "@lib/store-contact"
 import { Text, clx } from "@modules/common/components/ui"
+import { getTranslations } from "next-intl/server"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -29,6 +30,7 @@ export default async function Footer() {
 
   const whatsappLink = whatsappUrl()
   const mapsLink = mapsUrl()
+  const t = await getTranslations("footer")
 
   return (
     <footer className="relative w-full border-t border-border bg-background">
@@ -46,8 +48,7 @@ export default async function Footer() {
               Nanofield
             </LocalizedClientLink>
             <p className="text-small-regular mt-3 text-ui-fg-subtle">
-              Precision electronic components &amp; appliance spare parts —
-              indexed by part number, backed by datasheets.
+              {t("tagline")}
             </p>
             <p className="mt-4 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
@@ -60,7 +61,7 @@ export default async function Footer() {
           <div className="flex flex-wrap gap-10 small:gap-12">
             <div className="flex flex-col gap-y-3">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
-                Catalog
+                {t("catalog")}
               </span>
               <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
                 <li>
@@ -68,7 +69,7 @@ export default async function Footer() {
                     className="hover:text-foreground"
                     href="/store"
                   >
-                    All parts
+                    {t("allParts")}
                   </LocalizedClientLink>
                 </li>
                 {catalogCategories.map((c) => (
@@ -86,7 +87,7 @@ export default async function Footer() {
             </div>
             <div className="flex flex-col gap-y-3">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
-                Account
+                {t("account")}
               </span>
               <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
                 <li>
@@ -94,7 +95,7 @@ export default async function Footer() {
                     className="hover:text-foreground"
                     href="/cart"
                   >
-                    Cart
+                    {t("cart")}
                   </LocalizedClientLink>
                 </li>
                 <li>
@@ -102,14 +103,14 @@ export default async function Footer() {
                     className="hover:text-foreground"
                     href="/account"
                   >
-                    Orders
+                    {t("orders")}
                   </LocalizedClientLink>
                 </li>
               </ul>
             </div>
             <div className="flex flex-col gap-y-3">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
-                Support
+                {t("support")}
               </span>
               <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
                 <li>
@@ -125,7 +126,7 @@ export default async function Footer() {
                     className="hover:text-foreground"
                     href="/contact"
                   >
-                    Contact us
+                    {t("contactUs")}
                   </LocalizedClientLink>
                 </li>
                 <li>
@@ -133,14 +134,14 @@ export default async function Footer() {
                     className="hover:text-foreground"
                     href="/returns"
                   >
-                    Returns & Exchanges
+                    {t("returns")}
                   </LocalizedClientLink>
                 </li>
               </ul>
             </div>
             <div className="flex flex-col gap-y-3">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
-                Contact
+                {t("contact")}
               </span>
               <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
                 <li>
@@ -169,10 +170,10 @@ export default async function Footer() {
         </div>
         <div className="flex w-full flex-col gap-2 border-t border-border py-6 text-ui-fg-muted small:flex-row small:items-center small:justify-between">
           <Text className="txt-compact-small">
-            © {new Date().getFullYear()} Nanofield. All rights reserved.
+            © {new Date().getFullYear()} Nanofield. {t("rights")}
           </Text>
           <Text className="font-mono text-[11px] uppercase tracking-[0.2em]">
-            Repair &amp; maintenance sourcing
+            {t("sourcing")}
           </Text>
         </div>
       </div>

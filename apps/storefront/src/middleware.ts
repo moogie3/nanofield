@@ -1,9 +1,29 @@
 import { HttpTypes } from "@medusajs/types"
 import { NextRequest, NextResponse } from "next/server"
+import { routing } from "@/i18n/routing"
+import {
+  LOCALE_COOKIE_NAME,
+  detectLocaleFromHeader,
+} from "@/i18n/locale-cookie"
+
+// Re-exported here so the edge runtime only pulls the pure helpers.
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "dk"
+
+const LOCALES = routing.locales as unknown as string[]
+const DEFAULT_LOCALE = routing.defaultLocale
+const LOCALE_HEADER = "x-nanofield-locale"
+// next-intl's own header (see next-intl/dist shared/constants HEADER_LOCALE_NAME).
+// Set alongside ours so getRequestLocale() resolves from the header instead
+// of React cache: setRequestLocale() writes through `cache()` from the React
+// copy next-intl resolves (root React 18), while the App Router renders with
+// the storefront's React 19 — the write is invisible across that split, so
+// requestLocale came back undefined and every page fell back to Indonesian.
+// The header path has no cache involvement and is deterministic.
+const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE"
+const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
@@ -74,15 +94,15 @@ async function getRegionMap(cacheId: string) {
  * @param response
  */
 async function getCountryCode(
+  urlCountryCode: string | undefined,
   request: NextRequest,
   regionMap: Map<string, HttpTypes.StoreRegion | number>
 ) {
   let countryCode
 
-  const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
-
   // Cloudflare Workers provides country via request.cf.country
-  const cloudflareCountryCode = (request as { cf?: { country?: string } }).cf?.country?.toLowerCase()
+  const cloudflareCountryCode = (request as { cf?: { country?: string } }).cf
+    ?.country?.toLowerCase()
 
   // Vercel provides x-vercel-ip-country header
   const vercelCountryCode = request.headers
@@ -104,43 +124,104 @@ async function getCountryCode(
   return countryCode
 }
 
+/** Pass-through response carrying the locale header + cookie downstream. */
+function localizedNext(
+  request: NextRequest,
+  locale: string,
+  cacheId: string,
+  cacheIdCookie: { value: string } | undefined
+) {
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set(LOCALE_HEADER, locale)
+  requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale)
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  })
+
+  response.cookies.set(LOCALE_COOKIE_NAME, locale, {
+    maxAge: LOCALE_COOKIE_MAX_AGE,
+    path: "/",
+  })
+
+  if (!cacheIdCookie) {
+    response.cookies.set("_medusa_cache_id", cacheId, {
+      maxAge: 60 * 60 * 24,
+    })
+  }
+
+  return response
+}
+
 /**
- * Middleware to handle region selection and onboarding status.
+ * Middleware handling locale selection, region selection, and onboarding status.
+ * URL shape: /<locale>/<countryCode>/... (e.g. /id/id/store, /en/us/cart).
  */
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.includes(".")) {
     return NextResponse.next()
   }
 
+  const segments = request.nextUrl.pathname.split("/").filter(Boolean)
+  const firstSegment = segments[0]?.toLowerCase()
+
+  // 1. Locale: must be the first segment. Missing/unknown -> detect and redirect.
+  if (!firstSegment || !LOCALES.includes(firstSegment)) {
+    const cookieLocale = request.cookies
+      .get(LOCALE_COOKIE_NAME)
+      ?.value?.toLowerCase()
+    const detected =
+      cookieLocale && LOCALES.includes(cookieLocale)
+        ? cookieLocale
+        : detectLocaleFromHeader(
+            request.headers.get("accept-language"),
+            LOCALES,
+            DEFAULT_LOCALE
+          )
+
+    const url = request.nextUrl.clone()
+    const rest =
+      request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
+    url.pathname = `/${detected}${rest}`
+
+    const response = NextResponse.redirect(url, 307)
+    response.cookies.set(LOCALE_COOKIE_NAME, detected, {
+      maxAge: LOCALE_COOKIE_MAX_AGE,
+      path: "/",
+    })
+    return response
+  }
+
+  const locale = firstSegment
+
+  // 2. Region: same logic as before, shifted one segment right.
   const cacheIdCookie = request.cookies.get("_medusa_cache_id")
   const cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
   const regionMap = await getRegionMap(cacheId)
-  const countryCode = await getCountryCode(request, regionMap)
+  const urlCountryCode = segments[1]?.toLowerCase()
+  const countryCode = await getCountryCode(urlCountryCode, request, regionMap)
 
   // if the country code is available, use it, otherwise use the default region
   const country = countryCode || DEFAULT_REGION
-  const firstPathSegment = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
-  const urlHasCountry = firstPathSegment === country.toLowerCase()
+  const urlHasCountry = urlCountryCode === country.toLowerCase()
 
   if (urlHasCountry) {
-    if (!cacheIdCookie) {
-      const response = NextResponse.next()
-      response.cookies.set("_medusa_cache_id", cacheId, {
-        maxAge: 60 * 60 * 24,
-      })
-      return response
-    }
-    return NextResponse.next()
+    return localizedNext(request, locale, cacheId, cacheIdCookie)
   }
 
-  // if the url doesn't have the country, redirect to it
-  const redirectPath =
-    request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
+  // if the url doesn't have the country, redirect to it (locale preserved)
+  const restAfterCountry =
+    segments.length > 2 ? `/${segments.slice(2).join("/")}` : ""
   const queryString = request.nextUrl.search || ""
-  const redirectUrl = `${request.nextUrl.origin}/${country}${redirectPath}${queryString}`
+  const redirectUrl = `${request.nextUrl.origin}/${locale}/${country}${restAfterCountry}${queryString}`
 
-  return NextResponse.redirect(redirectUrl, 307)
+  const response = NextResponse.redirect(redirectUrl, 307)
+  response.cookies.set(LOCALE_COOKIE_NAME, locale, {
+    maxAge: LOCALE_COOKIE_MAX_AGE,
+    path: "/",
+  })
+  return response
 }
 
 export const config = {

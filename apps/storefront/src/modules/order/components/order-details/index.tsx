@@ -1,3 +1,4 @@
+import { getLocale, getTranslations } from "next-intl/server"
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@modules/common/components/ui"
 
@@ -6,10 +7,41 @@ type OrderDetailsProps = {
   showStatus?: boolean
 }
 
-const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
-  const formatStatus = (str: string) => {
-    const formatted = str.split("_").join(" ")
+// Backend status enums → translated labels. Unknown future values fall back
+// to the formatted raw enum (English) rather than crashing.
+const STATUS_KEYS = [
+  "notFulfilled",
+  "partiallyFulfilled",
+  "fulfilled",
+  "partiallyShipped",
+  "shipped",
+  "partiallyDelivered",
+  "delivered",
+  "canceled",
+  "requiresAction",
+  "notPaid",
+  "awaiting",
+  "authorized",
+  "partiallyAuthorized",
+  "captured",
+  "partiallyCaptured",
+  "refunded",
+  "partiallyRefunded",
+] as const
 
+const toCamel = (snake: string) =>
+  snake.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())
+
+const OrderDetails = async ({ order, showStatus }: OrderDetailsProps) => {
+  const t = await getTranslations("order")
+  const localeTag = (await getLocale()) === "id" ? "id-ID" : "en-US"
+
+  const formatStatus = (str: string) => {
+    const key = toCamel(str)
+    if ((STATUS_KEYS as readonly string[]).includes(key)) {
+      return t(`status.${key}`)
+    }
+    const formatted = str.split("_").join(" ")
     return formatted.slice(0, 1).toUpperCase() + formatted.slice(1)
   }
 
@@ -17,16 +49,23 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
     <div>
       <div className="flex items-center gap-x-4">
         <Text className="text-ui-fg-interactive">
-          Order ID: <span data-testid="order-raw-id" className="font-mono text-sm">{order.id}</span>
+          {t("orderId")}{" "}
+          <span data-testid="order-raw-id" className="font-mono text-sm">{order.id}</span>
         </Text>
         <Text className="text-xs text-ui-fg-subtle">
-          Order number: <span data-testid="order-id">#{order.display_id}</span>
+          {t("orderNumber")}{" "}
+          <span data-testid="order-id">#{order.display_id}</span>
         </Text>
       </div>
       <Text>
-        Order date:{" "}
+        {t("orderDate")}{" "}
         <span data-testid="order-date">
-          {new Date(order.created_at).toDateString()}
+          {new Date(order.created_at).toLocaleDateString(localeTag, {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
         </span>
       </Text>
 
@@ -34,13 +73,13 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
         {showStatus && (
           <>
             <Text>
-              Order status:{" "}
+              {t("orderStatus")}{" "}
               <span className="text-ui-fg-subtle " data-testid="order-status">
                 {formatStatus(order.fulfillment_status)}
               </span>
             </Text>
             <Text>
-              Payment status:{" "}
+              {t("paymentStatus")}{" "}
               <span
                 className="text-ui-fg-subtle "
                 sata-testid="order-payment-status"
@@ -52,14 +91,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
         )}
       </div>
       <Text className="text-ui-fg-subtle">
-        We have sent the order confirmation details to{" "}
-        <span
-          className="text-ui-fg-medium-plus font-semibold"
-          data-testid="order-email"
-        >
-          {order.email}
-        </span>
-        .
+        {t("confirmationSent", { email: order.email })}
       </Text>
     </div>
   )

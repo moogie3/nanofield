@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@modules/common/components/ui"
@@ -74,6 +75,7 @@ const VerifyAccount = () => {
   // Guard against the effect running twice in React Strict Mode, which would
   // consume the single-use token before the customer sees the result.
   const confirmed = useRef(false)
+  const t = useTranslations("account.verifyResult")
 
   useEffect(() => {
     if (confirmed.current) {
@@ -101,23 +103,22 @@ const VerifyAccount = () => {
       {state === "error" && <ErrorIcon />}
 
       <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground small:text-3xl">
-        {state === "success" ? "Email verified" : "Email verification"}
+        {state === "success" ? t("doneTitle") : t("pendingTitle")}
       </h1>
 
       {state === "verifying" && (
         <p className="text-base-regular text-ui-fg-subtle">
-          Confirming your address — this only takes a moment.
+          {t("verifying")}
         </p>
       )}
 
       {state === "success" && (
         <>
           <p className="text-base-regular text-ui-fg-base">
-            Your email is verified. Sign in to unlock prices, checkout, and
-            order tracking.
+            {t("successBody")}
           </p>
           <LocalizedClientLink href="/account" className="mt-2">
-            <Button variant="primary">Go to sign in</Button>
+            <Button variant="primary">{t("goSignIn")}</Button>
           </LocalizedClientLink>
         </>
       )}
@@ -125,14 +126,13 @@ const VerifyAccount = () => {
       {state === "error" && (
         <>
           <p className="text-base-regular text-ui-fg-base">
-            This verification link is invalid or has expired.
+            {t("errorBody")}
           </p>
           <p className="text-small-regular text-ui-fg-subtle">
-            Sign in with your email and password to receive a fresh
-            verification email.
+            {t("errorHint")}
           </p>
           <LocalizedClientLink href="/account" className="mt-2">
-            <Button variant="secondary">Go to sign in</Button>
+            <Button variant="secondary">{t("goSignIn")}</Button>
           </LocalizedClientLink>
         </>
       )}

@@ -2,6 +2,7 @@
 
 import { isManual, isMidtrans, isStripeLike } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
+import { useTranslations } from "next-intl"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
@@ -26,6 +27,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     (cart.shipping_methods?.length ?? 0) < 1
 
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
+  const t = useTranslations("checkout.buttons")
 
   switch (true) {
     case isStripeLike(paymentSession?.provider_id):
@@ -49,7 +51,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         />
       )
     default:
-      return <Button disabled>Select a payment method</Button>
+      return <Button disabled>{t("selectMethod")}</Button>
   }
 }
 
@@ -64,6 +66,7 @@ const StripePaymentButton = ({
 }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const t = useTranslations("checkout.buttons")
 
   const onPaymentCompleted = async () => {
     await placeOrder()
@@ -154,7 +157,7 @@ const StripePaymentButton = ({
         isLoading={submitting}
         data-testid={dataTestId}
       >
-        Place order
+        {t("placeOrder")}
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -167,6 +170,7 @@ const StripePaymentButton = ({
 const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const t = useTranslations("checkout.buttons")
 
   const onPaymentCompleted = async () => {
     await placeOrder()
@@ -193,7 +197,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         size="large"
         data-testid="submit-order-button"
       >
-        Place order
+        {t("placeOrder")}
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -216,6 +220,7 @@ const MidtransPaymentButton = ({
   "data-testid"?: string
 }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const t = useTranslations("checkout.buttons")
 
   const paymentSession = cart.payment_collection?.payment_sessions?.find(
     (s) => isMidtrans(s.provider_id)
@@ -226,9 +231,7 @@ const MidtransPaymentButton = ({
 
   const handlePayment = () => {
     if (!redirectUrl) {
-      setErrorMessage(
-        "Payment session is not ready yet — reselect the Midtrans method and retry."
-      )
+      setErrorMessage(t("midtransNotReady"))
       return
     }
     window.location.href = redirectUrl
@@ -242,7 +245,7 @@ const MidtransPaymentButton = ({
         size="large"
         data-testid={dataTestId}
       >
-        Pay with Midtrans
+        {t("payMidtrans")}
       </Button>
       <ErrorMessage
         error={errorMessage}

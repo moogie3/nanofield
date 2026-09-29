@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 
 import { getProductPrice } from "@lib/util/get-product-price"
@@ -20,13 +21,15 @@ export default function ProductPrice({
   })
 
   const selectedPrice = variant ? variantPrice : cheapestPrice
+  const t = useTranslations("auth")
+  const tp = useTranslations("product")
 
   if (!showPrices) {
     return (
       <div className="flex flex-col gap-1 text-ui-fg-base">
         <SignInForPrice className="text-large-semi text-primary hover:underline" />
         <span className="text-small-regular text-ui-fg-subtle">
-          Sign in to unlock member prices and checkout.
+          {t("unlockPrices")}
         </span>
       </div>
     )
@@ -43,7 +46,7 @@ export default function ProductPrice({
           "text-ui-fg-interactive": selectedPrice.price_type === "sale",
         })}
       >
-        {!variant && "From "}
+        {!variant && t("fromPrice")}
         <span
           data-testid="product-price"
           data-value={selectedPrice.calculated_price_number}
@@ -54,7 +57,7 @@ export default function ProductPrice({
       {selectedPrice.price_type === "sale" && (
         <>
           <p>
-            <span className="text-ui-fg-subtle">Original: </span>
+            <span className="text-ui-fg-subtle">{tp("original")}</span>
             <span
               className="line-through"
               data-testid="original-product-price"

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import clsx from "clsx"
 import {
   useCachedFetch,
@@ -22,6 +23,7 @@ const OptionFilter = ({
 }: OptionFilterProps) => {
   const [facets, setFacets] = useState<OptionFacet[]>([])
   const [mounted, setMounted] = useState(false)
+  const t = useTranslations("store.filters")
 
   useEffect(() => {
     setMounted(true)
@@ -59,7 +61,7 @@ const OptionFilter = ({
     <div className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between px-1">
         <span className="txt-compact-small-plus text-ui-fg-subtle">
-          Options
+          {t("options")}
         </span>
       </div>
       <div className="flex max-h-64 flex-col gap-y-2 overflow-y-auto pr-1">

@@ -16,9 +16,14 @@ export async function GET(req: NextRequest) {
   )
   const redirectStatus = searchParams.get("redirect_status")
 
-  // Without a country code the middleware resolves the customer's region and
-  // prefixes it; either way every redirect below stays on this origin.
-  const prefix = countryCode ? `/${countryCode}` : ""
+  // Locale comes from the NEXT_LOCALE cookie (middleware skips /api, so no
+  // locale header here). Without a country code the middleware resolves the
+  // customer's region and prefixes it; either way every redirect below stays
+  // on this origin.
+  const cookieLocale = req.cookies.get("NEXT_LOCALE")?.value?.toLowerCase()
+  const locale =
+    cookieLocale === "id" || cookieLocale === "en" ? cookieLocale : "id"
+  const prefix = countryCode ? `/${locale}/${countryCode}` : `/${locale}`
   const rejected = () =>
     NextResponse.redirect(`${origin}${prefix}/cart?error=payment_failed`)
 

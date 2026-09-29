@@ -2,6 +2,7 @@
 
 import { acceptTransferRequest, declineTransferRequest } from "@lib/data/orders"
 import { Button, Text } from "@modules/common/components/ui"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 type TransferStatus = "pending" | "success" | "error"
@@ -15,6 +16,7 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
     accept: null,
     decline: null,
   })
+  const t = useTranslations("order")
 
   const acceptTransfer = async () => {
     setStatus({ accept: "pending", decline: null })
@@ -39,14 +41,10 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
   return (
     <div className="flex flex-col gap-y-4">
       {status?.accept === "success" && (
-        <Text className="text-emerald-500">
-          Order transferred successfully!
-        </Text>
+        <Text className="text-emerald-500">{t("transferAccepted")}</Text>
       )}
       {status?.decline === "success" && (
-        <Text className="text-emerald-500">
-          Order transfer declined successfully!
-        </Text>
+        <Text className="text-emerald-500">{t("transferDeclined")}</Text>
       )}
       {status?.accept !== "success" && status?.decline !== "success" && (
         <div className="flex gap-x-4">
@@ -58,7 +56,7 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
               status?.accept === "pending" || status?.decline === "pending"
             }
           >
-            Accept transfer
+            {t("acceptTransfer")}
           </Button>
           <Button
             size="large"
@@ -69,7 +67,7 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
               status?.accept === "pending" || status?.decline === "pending"
             }
           >
-            Decline transfer
+            {t("declineTransfer")}
           </Button>
         </div>
       )}

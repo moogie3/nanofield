@@ -1,0 +1,797 @@
+{
+  "common": {
+    "search": "Search",
+    "searchPlaceholder": "Search part number, IC, specs…",
+    "account": "Account",
+    "cart": "Cart",
+    "close": "Close",
+    "loading": "Loading…",
+    "dismissAnnouncement": "Dismiss announcement",
+    "previousBanner": "Previous banner",
+    "nextBanner": "Next banner",
+    "bannerCount": "Banner {current} of {total}",
+    "scanning": "Scanning catalog",
+    "loadingStore": "Loading store",
+    "loadingCheckout": "Loading checkout",
+    "spotlight": "Spotlight",
+    "featured": "Featured"
+  },
+  "nav": {
+    "home": "Home",
+    "store": "Store",
+    "collections": "Collections",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "shippingTo": "Shipping to:",
+    "account": "Account",
+    "cart": "Cart"
+  },
+  "locale": {
+    "label": "Language",
+    "indonesian": "Indonesian",
+    "english": "English",
+    "switchToIndonesian": "Switch to Indonesian",
+    "switchToEnglish": "Switch to English",
+    "shortIndonesian": "ID",
+    "shortEnglish": "EN"
+  },
+  "sideMenu": {
+    "home": "Home",
+    "store": "Store",
+    "account": "Account",
+    "cart": "Cart",
+    "notifications": "Notifications",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "rights": "© {year} Nanofield. All rights reserved."
+  },
+  "footer": {
+    "tagline": "Precision electronic components & appliance spare parts — indexed by part number, backed by datasheets.",
+    "catalog": "Catalog",
+    "allParts": "All parts",
+    "account": "Account",
+    "cart": "Cart",
+    "orders": "Orders",
+    "support": "Support",
+    "contactUs": "Contact us",
+    "returns": "Returns & Exchanges",
+    "contact": "Contact",
+    "rights": "All rights reserved.",
+    "sourcing": "Repair & maintenance sourcing"
+  },
+  "home": {
+    "badge": "Open for orders — 900+ parts in stock",
+    "subtitle": "Precision Electronic Components & Appliance Spare Parts. Search by IC part number, browse datasheets, and check real-time B2B/B2C stock.",
+    "enterCatalog": "Enter Catalog",
+    "stats": ["900+ parts in stock", "34 categories", "Datasheet-backed"],
+    "dragHint": "Drag to move · double-click to reset",
+    "freshStock": "Fresh stock",
+    "recentlyAdded": "Recently added",
+    "viewAll": "View all →"
+  },
+  "store": {
+    "title": "Product Catalog",
+    "description": "Browse our catalog of 900+ electronic components, ICs, transistors, and appliance spare parts. Search by part number, filter by specifications.",
+    "indexOnline": "Index online",
+    "indexStats": "ICs · Transistors · MOSFETs · Passives — 900+ parts indexed",
+    "resultsFor": "{count, plural, one {# result} other {# results}} for “{query}”",
+    "clear": "clear",
+    "noMatchTitle": "No products match these filters",
+    "noMatchHint": "Nothing matches {blockers} — try removing one filter at a time.",
+    "noMatchEmpty": "The selected categories returned nothing — they may have been removed or renamed. Clear the filters to browse the full catalog.",
+    "showAll": "Show all products",
+    "searchBlocker": "the search for “{query}”",
+    "specBlocker": "the {label} filter",
+    "datasheetBlocker": "the Has datasheet filter",
+    "optionsBlocker": "the selected option values",
+    "categoryBlocker": "{count, plural, one {# category} other {# categories}}",
+    "sortBy": "Sort by",
+    "sortLatest": "Latest Arrivals",
+    "sortPriceAsc": "Price: Low → High",
+    "sortPriceDesc": "Price: High → Low",
+    "view": "View",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "pages": "Product catalog pages",
+    "goToPage": "Go to page {page}",
+    "prevPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "prev": "Prev",
+    "next": "Next",
+    "pageOf": "Page {page} of {total}",
+    "filters": {
+      "categories": "Categories",
+      "allProducts": "All products",
+      "documentation": "Documentation",
+      "hasDatasheet": "Has datasheet",
+      "options": "Options",
+      "specifications": "Specifications"
+    }
+  },
+  "product": {
+    "tabs": {
+      "specifications": "Specifications",
+      "datasheet": "Datasheet & Sourcing",
+      "shipping": "Shipping & Returns"
+    },
+    "noSpecs": "No detailed specifications available",
+    "specsContact": "Contact our technical team for datasheet requests.",
+    "compliance": {
+      "compliant": "Compliant",
+      "nonCompliant": "Non-Compliant",
+      "yes": "Yes",
+      "no": "No",
+      "unknown": "Unknown",
+      "inStock": "In Stock",
+      "outOfStock": "Out of Stock"
+    },
+    "docs": "Datasheets & Documents",
+    "openDatasheet": "Open Datasheet",
+    "findDatasheet": "Find {part} datasheet",
+    "appNote": "Application Note",
+    "cadModel": "3D CAD Model (STEP/IGES)",
+    "noDocs": "No technical documents linked for this part yet.",
+    "askTeam": "Ask our technical team ↗",
+    "complianceTitle": "Compliance & Certifications",
+    "complianceNote": "Sourced from the manufacturer datasheet — always confirm against the official datasheet linked above before production use.",
+    "crossRef": "Cross References & Alternatives",
+    "noCrossRef": "No cross-references documented.",
+    "fastDelivery": "Fast delivery",
+    "fastDeliveryBody": "Your package will arrive in 3-5 business days at your pick up location or in the comfort of your home.",
+    "exchanges": "Simple exchanges",
+    "exchangesBody": "Is the fit not quite right? No worries - we'll exchange your product for a new one.",
+    "returns": "Easy returns",
+    "returnsBody": "Just return your product and we'll refund your money. No questions asked – we'll do our best to make sure your return is hassle-free.",
+    "inStockCount": "In stock · {count} available",
+    "inStock": "In stock",
+    "outOfStock": "Out of stock",
+    "addedToCart": "Added to cart",
+    "signInToBuy": "Sign in to buy",
+    "selectVariant": "Select variant",
+    "addToCart": "Add to cart",
+    "selectOption": "Select {title}",
+    "original": "Original: ",
+    "prevImage": "Previous image",
+    "nextImage": "Next image",
+    "selectOptions": "Select Options",
+    "goToImage": "Go to image {index}",
+    "productImageAlt": "Product image {current} of {total}"
+  },
+  "cart": {
+    "eyebrow": "Shop",
+    "title": "Cart",
+    "subtitle": "Review the parts in your cart. Shipping and taxes are calculated at checkout.",
+    "summary": "Summary",
+    "goToCheckout": "Go to checkout",
+    "headers": {
+      "item": "Item",
+      "quantity": "Quantity",
+      "price": "Price",
+      "total": "Total"
+    },
+    "emptyTitle": "Cart",
+    "emptyBody": "You don't have anything in your cart. Let's change that, use the link below to start browsing our products.",
+    "explore": "Explore products",
+    "signInTitle": "Sign in to check out",
+    "signInBody": "Checkout is for members — sign in with your verified account to place this order.",
+    "signIn": "Sign in",
+    "totals": {
+      "subtotal": "Subtotal (excl. shipping and taxes)",
+      "shipping": "Shipping",
+      "tbd": "TBD",
+      "discount": "Discount",
+      "taxes": "Taxes",
+      "total": "Total"
+    },
+    "removeItem": "Remove item",
+    "mismatchBody": "Something went wrong when we tried to transfer your cart",
+    "retry": "Run transfer again",
+    "retrying": "Transferring..",
+    "goToCart": "Go to cart",
+    "emptyBag": "Your shopping bag is empty.",
+    "allProductsPage": "Go to all products page",
+    "cartCount": "Cart ({count})",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "quantity": "Quantity",
+    "onlyMax": "Only {max} available in stock",
+    "updateFailed": "Could not update quantity"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "eyebrow": "Shop",
+    "subtitle": "Enter your shipping address and payment details to place your order.",
+    "inCart": "In your Cart",
+    "discount": {
+      "addLabel": "Add Promotion Code(s)",
+      "apply": "Apply",
+      "applied": "Promotion(s) applied:",
+      "removePromo": "Remove discount code from order"
+    },
+    "address": {
+      "title": "Shipping Address",
+      "edit": "Edit",
+      "billingTitle": "Billing address",
+      "continue": "Continue to delivery",
+      "contact": "Contact",
+      "billing": "Billing Address",
+      "sameAs": "Billing and delivery address are the same.",
+      "savedPrompt": "Hi {name}, do you want to use one of your saved addresses?",
+      "chooseAddress": "Choose an address"
+    },
+    "form": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "address": "Address",
+      "company": "Company",
+      "postal": "Postal code",
+      "city": "City",
+      "country": "Country",
+      "province": "State / Province",
+      "email": "Email",
+      "emailHint": "Enter a valid email address.",
+      "phone": "Phone",
+      "sameBilling": "Billing address same as shipping address"
+    },
+    "delivery": {
+      "title": "Delivery",
+      "edit": "Edit",
+      "method": "Shipping method",
+      "methodHint": "How would you like your order delivered",
+      "pickup": "Pick up your order",
+      "store": "Store",
+      "storeHint": "Choose a store near you",
+      "continue": "Continue to payment",
+      "methodLabel": "Method",
+      "cargoNote": "Cargo shipping (JNE JTR) unlocks above {min} kg — this cart is ≈{weight} kg."
+    },
+    "payment": {
+      "title": "Payment",
+      "edit": "Edit",
+      "method": "Payment method",
+      "details": "Payment details",
+      "anotherStep": "Another step will appear",
+      "giftcard": "Gift card",
+      "enterDetails": "Enter payment details",
+      "continue": "Continue to review",
+      "cardDetails": "Enter your payment details:",
+      "loadFailed": "Could not load the payment methods.",
+      "providers": {
+        "card": "Credit card",
+        "manual": "Manual Payment",
+        "midtrans": "QRIS, GoPay & Bank Transfer"
+      }
+    },
+    "review": {
+      "title": "Review",
+      "terms": "By clicking the Place Order button, you confirm that you have read, understand and accept our Terms of Use, Terms of Sale and Returns Policy and acknowledge that you have read Nanofield's Privacy Policy."
+    },
+    "buttons": {
+      "selectMethod": "Select a payment method",
+      "placeOrder": "Place order",
+      "payMidtrans": "Pay with Midtrans",
+      "midtransNotReady": "Payment session is not ready yet — reselect the Midtrans method and retry."
+    },
+    "testBadge": "Attention: For testing purposes only."
+  },
+  "account": {
+    "nav": {
+      "account": "Account",
+      "overview": "Overview",
+      "profile": "Profile",
+      "addresses": "Addresses",
+      "orders": "Orders",
+      "notifications": "Notifications",
+      "logout": "Log out",
+      "hello": "Hello {name}"
+    },
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to access an enhanced shopping experience.",
+      "email": "Email",
+      "emailHint": "Enter a valid email address.",
+      "password": "Password",
+      "signIn": "Sign in",
+      "notMember": "Not a member?",
+      "join": "Join us"
+    },
+    "register": {
+      "title": "Create your Nanofield account",
+      "subtitle": "Join Nanofield for live prices, checkout, and order tracking.",
+      "backToSignIn": "Back to sign in",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "password": "Password",
+      "agreePrefix": "By creating an account, you agree to Nanofield's",
+      "privacy": "Privacy Policy",
+      "and": "and",
+      "terms": "Terms of Use",
+      "join": "Join",
+      "alreadyMember": "Already a member?",
+      "signIn": "Sign in"
+    },
+    "overview": {
+      "eyebrow": "Account",
+      "hello": "Hello {name}",
+      "signedInAs": "Signed in as:",
+      "intro": "Track your orders, manage your profile, and keep your addresses up to date.",
+      "profile": "Profile",
+      "completed": "Completed",
+      "addresses": "Addresses",
+      "saved": "Saved",
+      "recentOrders": "Recent orders",
+      "datePlaced": "Date placed",
+      "orderNumber": "Order number",
+      "totalAmount": "Total amount",
+      "goToOrder": "Go to order #{id}",
+      "noOrders": "No recent orders"
+    },
+    "info": {
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "updated": "{label} updated successfully",
+      "defaultError": "An error occurred, please try again"
+    },
+    "address": {
+      "new": "New address",
+      "add": "Add address",
+      "edit": "Edit address",
+      "remove": "Remove",
+      "editBtn": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "line2": "Apartment, suite, etc.",
+      "province": "Province / State",
+      "noBilling": "No billing address"
+    },
+    "profile": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "password": "Password",
+      "passwordHidden": "The password is not shown for security reasons",
+      "oldPassword": "Old password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "billingAddress": "Billing address"
+    },
+    "orders": {
+      "title": "Orders",
+      "subtitle": "Overview of your previous orders.",
+      "emptyTitle": "Nothing to see here",
+      "emptyBody": "You don't have any orders yet, let us change that :)",
+      "continueShopping": "Continue shopping",
+      "showMore": "Show more orders"
+    },
+    "card": {
+      "orderId": "Order ID:",
+      "orderNum": "Order #{id}",
+      "items": "{count, plural, one {# item} other {# items}}",
+      "moreProducts": "+ {count} more products",
+      "shipTo": "Ship to:",
+      "scanToTrack": "Scan to Track",
+      "qrAlt": "Track Order QR",
+      "seeDetails": "See details",
+      "canceled": "Canceled",
+      "paid": "Paid",
+      "awaitingPayment": "Awaiting payment",
+      "delivered": "Delivered",
+      "shipped": "Shipped",
+      "via": " via {courier}",
+      "packed": "Packed",
+      "preparing": "Preparing",
+      "trackingPreparing": "Tracking: seller is preparing your shipment.",
+      "trackingShipped": "On its way{withCourier} — AWB is booked manually, ask support for the number.",
+      "trackingDelivered": "Delivered — enjoy your components.",
+      "trackingPacked": "Packed — handing over to the courier.",
+      "trackingCanceled": "Order canceled — no shipment."
+    },
+    "requestTransfer": {
+      "title": "Order transfers",
+      "subtitle": "Can't find the order you are looking for? Connect an order to your account.",
+      "orderIdPlaceholder": "Order ID",
+      "request": "Request transfer",
+      "requested": "Transfer for order {id} requested",
+      "emailSent": "Transfer request email sent to {email}"
+    },
+    "notice": {
+      "title": "Check your inbox",
+      "body": "We sent a verification link to {email}.",
+      "hint": "Click the link in the email to verify your address, then sign in. Didn't get it? Check spam, or sign in again to resend."
+    },
+    "transfer": {
+      "title": "Transfer order",
+      "subtitle": "Send this order to another account by email.",
+      "email": "Email",
+      "send": "Send transfer request",
+      "sent": "Transfer request sent to {email}.",
+      "error": "Could not send the transfer request. Please try again."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Order updates and store announcements.",
+      "empty": "No notifications yet. Order updates and store announcements will appear here.",
+      "showMore": "Show more",
+      "showMoreLong": "Show more notifications",
+      "announcement": "Announcement",
+      "dismiss": "Dismiss: {title}",
+      "markRead": "Mark as read",
+      "bellTitle": "Notifications",
+      "bellUnread": "Notifications ({count} unread)",
+      "caughtUp": "You are all caught up.",
+      "viewAll": "View all",
+      "moreCount": "+{count} more",
+      "now": "now",
+      "justNow": "just now",
+      "minutesAgo": "{count, plural, one {# minute ago} other {# minutes ago}}",
+      "hoursAgo": "{count, plural, one {# hour ago} other {# hours ago}}",
+      "daysAgo": "{count, plural, one {# day ago} other {# days ago}}"
+    },
+    "pages": {
+      "profileEyebrow": "Account",
+      "profileTitle": "Profile",
+      "profileSubtitle": "View and update your profile information, including your name, email, and phone number. You can also update your billing address, or change your password.",
+      "addressesTitle": "Shipping Addresses",
+      "addressesSubtitle": "View and update your shipping addresses, you can add as many as you like. Saving your addresses will make them available during checkout.",
+      "notificationsTitle": "Notifications",
+      "notificationsSubtitle": "Order updates and store announcements. Newest first."
+    },
+    "help": {
+      "title": "Got questions?",
+      "body": "You can find frequently asked questions and answers on our customer service page.",
+      "link": "Customer Service"
+    },
+    "verifyResult": {
+      "verifyingShort": "Verifying your email...",
+      "doneTitle": "Email verified",
+      "pendingTitle": "Email verification",
+      "verifying": "Confirming your address — this only takes a moment.",
+      "successBody": "Your email is verified. Sign in to unlock prices, checkout, and order tracking.",
+      "goSignIn": "Go to sign in",
+      "errorBody": "This verification link is invalid or has expired.",
+      "errorHint": "Sign in with your email and password to receive a fresh verification email."
+    },
+    "verify": {
+      "title": "Verify your account",
+      "subtitle": "Enter the code we sent to {email}.",
+      "code": "Verification code",
+      "submit": "Verify account",
+      "resend": "Resend code",
+      "sent": "A new code was sent to {email}.",
+      "success": "Account verified — you can now sign in.",
+      "backToSignIn": "Back to sign in"
+    }
+  },
+  "shipping": {
+    "unlocked": "Free Shipping unlocked!",
+    "unlock": "Unlock Free Shipping",
+    "onlyAway": "Only {amount} away",
+    "viewCart": "View cart",
+    "viewProducts": "View products"
+  },
+  "order": {
+    "thanks": "Thank you!",
+    "placed": "Your order was placed successfully.",
+    "summary": "Summary",
+    "orderId": "Order ID:",
+    "orderNumber": "Order number:",
+    "orderDate": "Order date:",
+    "orderStatus": "Order status:",
+    "paymentStatus": "Payment status:",
+    "confirmationSent": "We have sent the order confirmation details to {email}.",
+    "detailsEyebrow": "Account",
+    "detailsTitle": "Order details",
+    "detailsSubtitle": "Track payment, shipment, and items for this order — including its QR code and transfer reference.",
+    "backToOverview": "Back to overview",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Shipping",
+    "taxes": "Taxes",
+    "total": "Total",
+    "delivery": "Delivery",
+    "shippingAddress": "Shipping Address",
+    "contact": "Contact",
+    "method": "Method",
+    "shipment": "Shipment",
+    "shipDelivered": "Delivered — enjoy your components.",
+    "shipShipped": "On its way{withCourier} — the AWB is booked manually, ask support for the number.",
+    "shipWith": " with {courier}",
+    "shipPacked": "Packed — handing over to the courier.",
+    "shipPreparing": "Seller is preparing your shipment.",
+    "shipCanceled": "Order canceled — no shipment.",
+    "payment": "Payment",
+    "paymentMethod": "Payment method",
+    "paymentDetails": "Payment details",
+    "paidAt": "{amount} paid at {date}",
+    "awaiting": "Awaiting payment of {amount}",
+    "helpTitle": "Need help?",
+    "helpContact": "Contact",
+    "helpReturns": "Returns & Exchanges",
+    "transferPage": {
+      "title": "Transfer request for order {id}",
+      "body1": "You've received a request to transfer ownership of your order ({id}). If you agree to this request, you can approve the transfer by clicking the button below.",
+      "body2": "If you accept, the new owner will take over all responsibilities and permissions associated with this order.",
+      "body3": "If you do not recognize this request or wish to retain ownership, no further action is required.",
+      "acceptedTitle": "Order transferred!",
+      "acceptedBody": "Order {id} has been successfully transferred to the new owner.",
+      "acceptError": "There was an error accepting the transfer. Please try again.",
+      "errorLabel": "Error message: {error}",
+      "declinedTitle": "Order transfer declined!",
+      "declinedBody": "Transfer of order {id} has been successfully declined.",
+      "declineError": "There was an error declining the transfer. Please try again."
+    },
+    "transferAccepted": "Order transferred successfully!",
+    "transferDeclined": "Order transfer declined successfully!",
+    "acceptTransfer": "Accept transfer",
+    "declineTransfer": "Decline transfer",
+    "midtrans": {
+      "received": "Payment received",
+      "status": "Payment status",
+      "settledBody": "Midtrans confirms transaction {id} as {status}. Complete your order below — your items are still reserved in your cart.",
+      "pendingBody": "Your payment is still pending{txn}. Finish it in your e-wallet or bank app then complete the order — unpaid carts expire automatically.",
+      "pendingTxn": " (transaction {id})",
+      "failedBody": "This payment did not complete{status}. No order was placed and no money moved — pick another method or retry.",
+      "failedStatus": " (status: {status})",
+      "complete": "Complete my order",
+      "backToCart": "Back to cart",
+      "myOrders": "My orders"
+    },
+    "status": {
+      "notFulfilled": "Not fulfilled",
+      "partiallyFulfilled": "Partially fulfilled",
+      "fulfilled": "Fulfilled",
+      "partiallyShipped": "Partially shipped",
+      "shipped": "Shipped",
+      "partiallyDelivered": "Partially delivered",
+      "delivered": "Delivered",
+      "canceled": "Canceled",
+      "requiresAction": "Requires action",
+      "notPaid": "Not paid",
+      "awaiting": "Awaiting",
+      "authorized": "Authorized",
+      "partiallyAuthorized": "Partially authorized",
+      "captured": "Captured",
+      "partiallyCaptured": "Partially captured",
+      "refunded": "Refunded",
+      "partiallyRefunded": "Partially refunded"
+    }
+  },
+  "auth": {
+    "signInForPrice": "Sign in for price",
+    "unlockPrices": "Sign in to unlock member prices and checkout.",
+    "gateTitle": "Sign in required",
+    "gateBody": "Prices and checkout are for Nanofield members. Sign in or create a verified account to continue.",
+    "signIn": "Sign in",
+    "keepBrowsing": "Keep browsing",
+    "fromPrice": "From "
+  },
+  "support": {
+    "contact": {
+      "eyebrow": "Support",
+      "title": "Contact us",
+      "subtitle": "Questions about stock, part numbers, your order, or a return? Reach us on WhatsApp — for order questions, have your Order ID ready so we can help you faster.",
+      "chatTitle": "Chat with support",
+      "chatBody": "The fastest way to reach us for stock checks, order status, and return requests.",
+      "chatCta": "Chat on WhatsApp",
+      "emailTitle": "Email us",
+      "emailBody": "Best for longer explanations with several attachments.",
+      "visitTitle": "Visit the store",
+      "mapsCta": "Open in Maps",
+      "backFaq": "Back to FAQ"
+    },
+    "faq": {
+      "eyebrow": "Support",
+      "title": "Frequently asked questions",
+      "subtitle": "Everything about your order in one place — tracking, payments, shipping, returns, and how to reach a human when you need one.",
+      "stillTitle": "Still need help?",
+      "stillBody": "Could not find your answer? Reach support directly, or read how returns and exchanges work step by step.",
+      "contactCta": "Still stuck? Contact us",
+      "returnsCta": "Read the returns process",
+      "sections": [
+        {
+          "heading": "Orders & tracking",
+          "items": [
+            {
+              "q": "Where do I find my Order ID?",
+              "a": "Open Account → Orders. Every order card shows the Order ID at the top with its display number underneath. The details page repeats it right under the confirmation message, next to a QR code you can scan to reopen the same order."
+            },
+            {
+              "q": "What do the order statuses mean?",
+              "a": "Preparing means we are getting your parts ready, Packed means the parcel is handed over to the courier, Shipped means it is on its way with a courier, and Delivered means it arrived. Payment has its own status next to it: Awaiting payment, Authorized, or Paid."
+            },
+            {
+              "q": "My tracking (AWB) number is not showing. Why?",
+              "a": "Tracking numbers are booked manually with the courier after handoff, so there can be a short delay between the Shipped status and the AWB appearing. If it still has not shown up, send us your Order ID on WhatsApp and we will look it up."
+            },
+            {
+              "q": "Do I need an account to buy?",
+              "a": "Yes — prices and checkout are for members. Create an account, verify your email through the link we send you, then sign in. Guests can still browse the full catalog, search parts, and read datasheets."
+            },
+            {
+              "q": "My order is under a different email. Where is it?",
+              "a": "Scroll to the order transfer form at the bottom of the Orders page and paste the Order ID from your confirmation. That links the order to your account so you can follow it there."
+            }
+          ]
+        },
+        {
+          "heading": "Payments",
+          "items": [
+            {
+              "q": "How can I pay?",
+              "a": "Checkout supports QRIS, GoPay, and bank transfer through Midtrans. Your order is confirmed once the payment is captured — the order page shows the live status."
+            },
+            {
+              "q": "What is the difference between Authorized and Paid?",
+              "a": "Authorized means your payment method approved the amount but the money has not been captured yet. Paid (captured) means the payment landed and your order moves to preparation."
+            },
+            {
+              "q": "My payment is stuck on Awaiting payment. What should I do?",
+              "a": "Finish the payment in your e-wallet or banking app first — pending Midtrans transactions expire automatically. If you already paid but the status did not move, contact support with your Order ID and payment proof."
+            }
+          ]
+        },
+        {
+          "heading": "Shipping",
+          "items": [
+            {
+              "q": "Which couriers do you use, and what does it cost?",
+              "a": "Courier options and costs are calculated at checkout from the parcel weight and your destination, with J&T Express and JNE among the available services."
+            },
+            {
+              "q": "Can I change the shipping address after ordering?",
+              "a": "Only before the order is packed. Contact support immediately with your Order ID — once the parcel is handed to the courier the address can no longer be changed."
+            }
+          ]
+        },
+        {
+          "heading": "Returns & exchanges",
+          "items": [
+            {
+              "q": "How do I request a return or exchange?",
+              "a": "Reach support by WhatsApp, phone, email, or by visiting the store, with your Order ID, the item(s), the reason, and photos of the item and packaging. Every case is tracked in our system from request to refund or replacement."
+            },
+            {
+              "q": "What if my item arrived damaged or wrong?",
+              "a": "Keep all packaging and take unboxing photos, then report it right away. Damaged and wrong-item cases are filed as claims so we can prioritize a refund or a replacement shipment."
+            },
+            {
+              "q": "How do refunds work?",
+              "a": "Once the returned item is received and checked, the refund goes back to the original payment method you used at checkout."
+            }
+          ]
+        },
+        {
+          "heading": "Parts & stock",
+          "items": [
+            {
+              "q": "How do I find the right part number?",
+              "a": "Search the catalog by part number or specification — many listings include datasheets. If you are unsure, send us the markings on the old part or the appliance model on WhatsApp and we will help you match it."
+            },
+            {
+              "q": "An item I need is out of stock. Can you get it?",
+              "a": "Often yes. Ask support with the exact part number and quantity — we source components regularly and can tell you the lead time."
+            },
+            {
+              "q": "Do you have a physical store?",
+              "a": "Yes — visit us at {address}. For directions, use the Maps link in the footer or on the contact page."
+            }
+          ]
+        }
+      ]
+    },
+    "returns": {
+      "eyebrow": "Support",
+      "title": "Returns & Exchanges",
+      "subtitle": "Changed your mind, received the wrong part, or got a damaged item? Every request is handled as a tracked case in our system — refund, replacement, or claim — and reviewed by the support team. You will need your Order ID to start.",
+      "steps": [
+        {
+          "title": "1. Send a request",
+          "body": "Reach support through any channel below with your Order ID, the item(s) you want to return or exchange, the reason, and photos of the item and packaging."
+        },
+        {
+          "title": "2. Review & approval",
+          "body": "Our team reviews every request against the order record and confirms whether it is approved, along with the return shipping instructions."
+        },
+        {
+          "title": "3. Ship the item back",
+          "body": "Pack the item safely and send it to the address support gives you. Keep the courier receipt until the case is closed."
+        },
+        {
+          "title": "4. Resolution",
+          "body": "Once the returned item is received and checked, we issue a refund to your original payment method or ship your replacement."
+        }
+      ],
+      "conditionsTitle": "Good to know",
+      "conditions": [
+        "Items should be unused and in their original packaging, unless they arrived damaged or different from what you ordered.",
+        "Report damaged, defective, or wrong items as soon as possible after delivery, with unboxing photos.",
+        "Refunds go back to the original payment method used at checkout.",
+        "Shipping fees for approved returns are confirmed case by case with support."
+      ],
+      "channelsTitle": "Where to send your request",
+      "waBody": "Fastest for return requests — photos go through instantly.",
+      "waCta": "Chat on WhatsApp",
+      "waPrefill": "Hi Nanofield, I'd like to request a return/exchange for order ID: ",
+      "emailBody": "Best for longer explanations with several attachments.",
+      "emailSubject": "Return request",
+      "visitTitle": "Visit the store",
+      "visitBody": "Bring the item with its packaging to {address}.",
+      "storeDetails": "Store details",
+      "orderIdTitle": "Still need your Order ID first?",
+      "orderIdBody": "Every request starts with it — grab it from your orders list, then come back here to contact us.",
+      "orderIdCta": "Find your Order ID"
+    }
+  },
+  "search": {
+    "label": "Search",
+    "dialogLabel": "Site search",
+    "searching": "Searching…",
+    "productsFound": "{count, plural, one {# product} other {# products}}",
+    "noProducts": "No products found",
+    "pages": "Pages",
+    "seeAll": "See all {count} results",
+    "membersOnly": "Members only",
+    "pagesList": {
+      "home": "Home",
+      "store": "Store",
+      "cart": "Cart",
+      "checkout": "Checkout",
+      "account": "Account",
+      "orders": "Orders",
+      "notifications": "Notifications",
+      "addresses": "Addresses",
+      "profile": "Profile",
+      "faq": "FAQ",
+      "contact": "Contact us",
+      "returns": "Returns & Exchanges"
+    }
+  },
+  "meta": {
+    "siteTitle": "Nanofield | Precision Electronic Components",
+    "siteDesc": "Indonesia's premier standalone store for electronic components, ICs, transistors, and appliance spare parts.",
+    "homeTitle": "Nanofield | Precision Electronic Components",
+    "homeDesc": "Search by IC part number, browse datasheets, and check real-time stock — 900+ electronic components and appliance spare parts.",
+    "storeTitle": "Product Catalog",
+    "storeDesc": "Browse our catalog of 900+ electronic components, ICs, transistors, and appliance spare parts. Search by part number, filter by specifications.",
+    "cartTitle": "Cart",
+    "cartDesc": "View your cart",
+    "checkoutTitle": "Checkout",
+    "checkoutDesc": "Enter your shipping address and payment details to place your order.",
+    "loginTitle": "Sign in",
+    "loginDesc": "Sign in to your Nanofield account.",
+    "accountTitle": "Account",
+    "accountDesc": "Overview of your account activity.",
+    "profileTitle": "Profile",
+    "profileDesc": "View and edit your Nanofield profile.",
+    "addressesTitle": "Addresses",
+    "addressesDesc": "View your addresses",
+    "ordersTitle": "Orders",
+    "ordersDesc": "Overview of your previous orders.",
+    "notificationsTitle": "Notifications",
+    "notificationsDesc": "Order updates and store announcements.",
+    "verifyTitle": "Verify your email",
+    "verifyDesc": "Verify your email address to complete your registration.",
+    "contactTitle": "Contact us",
+    "contactDesc": "Get in touch with Nanofield customer support.",
+    "faqTitle": "FAQ",
+    "faqDesc": "Answers about orders, payments, shipping, returns, and contacting Nanofield support.",
+    "returnsTitle": "Returns & Exchanges",
+    "returnsDesc": "How returns, exchanges, and damaged-item claims work at Nanofield."
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you tried to access does not exist. It may have been moved, deleted, or you may have followed a broken link.",
+    "forbiddenTitle": "Access denied",
+    "forbiddenBody": "You don't have permission to view this page. Try logging in with a different account, or contact support if you believe this is a mistake.",
+    "frontpage": "Go to frontpage",
+    "errorTitle": "Something went wrong",
+    "errorBody": "An unexpected error occurred while loading this page. Please try again, and contact support if the problem persists.",
+    "retry": "Try again",
+    "cartNotFound": "The cart you tried to access does not exist. Clear your cookies and try again."
+  }
+}

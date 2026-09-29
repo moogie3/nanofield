@@ -9,6 +9,7 @@ import OptionSelect from "@modules/products/components/product-actions/option-se
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Tick02Icon } from "@hugeicons/core-free-icons"
 import { isEqual } from "lodash"
+import { useTranslations } from "next-intl"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
@@ -47,6 +48,7 @@ export default function ProductActions({
   const [added, setAdded] = useState(false)
   const [gateOpen, setGateOpen] = useState(false)
   const countryCode = useParams().countryCode as string
+  const t = useTranslations("product")
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -206,9 +208,11 @@ export default function ProductActions({
               {inStock
                 ? typeof selectedVariant.inventory_quantity === "number" &&
                   selectedVariant.inventory_quantity > 0
-                  ? `In stock · ${selectedVariant.inventory_quantity} available`
-                  : "In stock"
-                : "Out of stock"}
+                  ? t("inStockCount", {
+                      count: selectedVariant.inventory_quantity,
+                    })
+                  : t("inStock")
+                : t("outOfStock")}
             </p>
           )}
         </div>
@@ -258,16 +262,16 @@ export default function ProductActions({
           {added ? (
             <span className="flex items-center gap-2">
               <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} />
-              Added to cart
+              {t("addedToCart")}
             </span>
           ) : !showPrices ? (
-            "Sign in to buy"
+            t("signInToBuy")
           ) : !selectedVariant ? (
-            "Select variant"
+            t("selectVariant")
           ) : !inStock || !isValidVariant ? (
-            "Out of stock"
+            t("outOfStock")
           ) : (
-            "Add to cart"
+            t("addToCart")
           )}
         </Button>
         <SignInGateModal open={gateOpen} onClose={() => setGateOpen(false)} />

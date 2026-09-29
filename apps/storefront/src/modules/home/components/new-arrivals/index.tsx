@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@modules/common/components/ui"
@@ -19,6 +20,8 @@ export default async function NewArrivals({
     },
   })
 
+  const t = await getTranslations("home")
+
   const recent = [...(products ?? [])]
     .sort(
       (a, b) =>
@@ -37,17 +40,17 @@ export default async function NewArrivals({
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-              Fresh stock
+              {t("freshStock")}
             </p>
             <h2 className="font-heading text-xl font-bold tracking-tight text-foreground small:text-2xl">
-              Recently added
+              {t("recentlyAdded")}
             </h2>
           </div>
           <LocalizedClientLink
             href="/store"
             className="text-small-semi shrink-0 text-ui-fg-subtle hover:text-primary"
           >
-            View all →
+            {t("viewAll")}
           </LocalizedClientLink>
         </div>
         <ul className="grid grid-cols-2 gap-x-2 gap-y-3 small:grid-cols-6 small:gap-x-3">

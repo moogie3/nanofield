@@ -1,0 +1,797 @@
+{
+  "common": {
+    "search": "Cari",
+    "searchPlaceholder": "Cari nomor part, IC, spesifikasi…",
+    "account": "Akun",
+    "cart": "Keranjang",
+    "close": "Tutup",
+    "loading": "Memuat…",
+    "dismissAnnouncement": "Tutup pengumuman",
+    "previousBanner": "Banner sebelumnya",
+    "nextBanner": "Banner berikutnya",
+    "bannerCount": "Banner {current} dari {total}",
+    "scanning": "Memindai katalog",
+    "loadingStore": "Memuat katalog",
+    "loadingCheckout": "Memuat checkout",
+    "spotlight": "Sorotan",
+    "featured": "Unggulan"
+  },
+  "nav": {
+    "home": "Beranda",
+    "store": "Katalog",
+    "collections": "Koleksi",
+    "contact": "Kontak",
+    "faq": "FAQ",
+    "shippingTo": "Kirim ke:",
+    "account": "Akun",
+    "cart": "Keranjang"
+  },
+  "locale": {
+    "label": "Bahasa",
+    "indonesian": "Indonesia",
+    "english": "Inggris",
+    "switchToIndonesian": "Ganti ke Bahasa Indonesia",
+    "switchToEnglish": "Ganti ke Bahasa Inggris",
+    "shortIndonesian": "ID",
+    "shortEnglish": "EN"
+  },
+  "sideMenu": {
+    "home": "Beranda",
+    "store": "Katalog",
+    "account": "Akun",
+    "cart": "Keranjang",
+    "notifications": "Notifikasi",
+    "menu": "Menu",
+    "closeMenu": "Tutup menu",
+    "rights": "© {year} Nanofield. Hak cipta dilindungi."
+  },
+  "footer": {
+    "tagline": "Komponen elektronik presisi & suku cadang peralatan — terindeks per nomor part, didukung datasheet.",
+    "catalog": "Katalog",
+    "allParts": "Semua part",
+    "account": "Akun",
+    "cart": "Keranjang",
+    "orders": "Pesanan",
+    "support": "Bantuan",
+    "contactUs": "Hubungi kami",
+    "returns": "Pengembalian & Penukaran",
+    "contact": "Kontak",
+    "rights": "Hak cipta dilindungi.",
+    "sourcing": "Pengadaan perbaikan & perawatan"
+  },
+  "home": {
+    "badge": "Buka untuk pesanan — 900+ part tersedia",
+    "subtitle": "Komponen Elektronik Presisi & Suku Cadang Peralatan. Cari per nomor part IC, jelajahi datasheet, dan cek stok B2B/B2C real-time.",
+    "enterCatalog": "Masuk Katalog",
+    "stats": ["900+ part tersedia", "34 kategori", "Didukung datasheet"],
+    "dragHint": "Seret untuk memindah · klik dua kali untuk reset",
+    "freshStock": "Stok baru",
+    "recentlyAdded": "Baru ditambahkan",
+    "viewAll": "Lihat semua →"
+  },
+  "store": {
+    "title": "Katalog Produk",
+    "description": "Jelajahi katalog 900+ komponen elektronik, IC, transistor, dan suku cadang peralatan. Cari per nomor part, filter per spesifikasi.",
+    "indexOnline": "Indeks online",
+    "indexStats": "IC · Transistor · MOSFET · Pasif — 900+ part terindeks",
+    "resultsFor": "{count} hasil untuk “{query}”",
+    "clear": "hapus",
+    "noMatchTitle": "Tidak ada produk yang cocok dengan filter ini",
+    "noMatchHint": "Tidak ada yang cocok dengan {blockers} — coba hapus satu filter setiap kali.",
+    "noMatchEmpty": "Kategori yang dipilih tidak menghasilkan apa-apa — mungkin telah dihapus atau diganti nama. Hapus filter untuk menjelajahi seluruh katalog.",
+    "showAll": "Tampilkan semua produk",
+    "searchBlocker": "pencarian “{query}”",
+    "specBlocker": "filter {label}",
+    "datasheetBlocker": "filter Ada datasheet",
+    "optionsBlocker": "nilai opsi yang dipilih",
+    "categoryBlocker": "{count} kategori",
+    "sortBy": "Urutkan",
+    "sortLatest": "Paling Baru",
+    "sortPriceAsc": "Harga: Rendah → Tinggi",
+    "sortPriceDesc": "Harga: Tinggi → Rendah",
+    "view": "Tampilan",
+    "gridView": "Tampilan grid",
+    "listView": "Tampilan daftar",
+    "pages": "Halaman katalog produk",
+    "goToPage": "Ke halaman {page}",
+    "prevPage": "Ke halaman sebelumnya",
+    "nextPage": "Ke halaman berikutnya",
+    "prev": "Sblm",
+    "next": "Lanjut",
+    "pageOf": "Halaman {page} dari {total}",
+    "filters": {
+      "categories": "Kategori",
+      "allProducts": "Semua produk",
+      "documentation": "Dokumentasi",
+      "hasDatasheet": "Ada datasheet",
+      "options": "Opsi",
+      "specifications": "Spesifikasi"
+    }
+  },
+  "product": {
+    "tabs": {
+      "specifications": "Spesifikasi",
+      "datasheet": "Datasheet & Sumber",
+      "shipping": "Pengiriman & Pengembalian"
+    },
+    "noSpecs": "Spesifikasi detail tidak tersedia",
+    "specsContact": "Hubungi tim teknis kami untuk permintaan datasheet.",
+    "compliance": {
+      "compliant": "Sesuai",
+      "nonCompliant": "Tidak sesuai",
+      "yes": "Ya",
+      "no": "Tidak",
+      "unknown": "Tidak diketahui",
+      "inStock": "Tersedia",
+      "outOfStock": "Stok habis"
+    },
+    "docs": "Datasheet & Dokumen",
+    "openDatasheet": "Buka Datasheet",
+    "findDatasheet": "Cari datasheet {part}",
+    "appNote": "Catatan Aplikasi",
+    "cadModel": "3D CAD Model (STEP/IGES)",
+    "noDocs": "Belum ada dokumen teknis tertaut untuk part ini.",
+    "askTeam": "Tanya tim teknis kami ↗",
+    "complianceTitle": "Kepatuhan & Sertifikasi",
+    "complianceNote": "Berasal dari datasheet pabrikan — selalu konfirmasi dengan datasheet resmi yang tertaut di atas sebelum dipakai produksi.",
+    "crossRef": "Referensi Silang & Alternatif",
+    "noCrossRef": "Tidak ada referensi silang terdokumentasi.",
+    "fastDelivery": "Pengiriman cepat",
+    "fastDeliveryBody": "Paket Anda tiba dalam 3-5 hari kerja di lokasi pengambilan atau di rumah Anda.",
+    "exchanges": "Penukaran mudah",
+    "exchangesBody": "Ukurannya kurang pas? Jangan khawatir — kami tukar produk Anda dengan yang baru.",
+    "returns": "Pengembalian mudah",
+    "returnsBody": "Kembalikan saja produk Anda dan kami refund uang Anda. Tanpa banyak tanya — kami pastikan pengembalian Anda bebas repot.",
+    "inStockCount": "Tersedia · {count} unit",
+    "inStock": "Tersedia",
+    "outOfStock": "Stok habis",
+    "addedToCart": "Ditambahkan ke keranjang",
+    "signInToBuy": "Masuk untuk membeli",
+    "selectVariant": "Pilih varian",
+    "addToCart": "Tambah ke keranjang",
+    "selectOption": "Pilih {title}",
+    "original": "Awal: ",
+    "prevImage": "Gambar sebelumnya",
+    "nextImage": "Gambar berikutnya",
+    "selectOptions": "Pilih Opsi",
+    "goToImage": "Ke gambar {index}",
+    "productImageAlt": "Gambar produk {current} dari {total}"
+  },
+  "cart": {
+    "eyebrow": "Belanja",
+    "title": "Keranjang",
+    "subtitle": "Periksa part di keranjang Anda. Ongkir dan pajak dihitung saat checkout.",
+    "summary": "Ringkasan",
+    "goToCheckout": "Lanjut ke checkout",
+    "headers": {
+      "item": "Barang",
+      "quantity": "Jumlah",
+      "price": "Harga",
+      "total": "Total"
+    },
+    "emptyTitle": "Keranjang",
+    "emptyBody": "Keranjang Anda masih kosong. Ubah sekarang, gunakan tautan di bawah untuk mulai menjelajahi produk kami.",
+    "explore": "Jelajahi produk",
+    "signInTitle": "Masuk untuk checkout",
+    "signInBody": "Checkout khusus member — masuk dengan akun terverifikasi Anda untuk memesan.",
+    "signIn": "Masuk",
+    "totals": {
+      "subtotal": "Subtotal (di luar ongkir dan pajak)",
+      "shipping": "Pengiriman",
+      "tbd": "TBD",
+      "discount": "Diskon",
+      "taxes": "Pajak",
+      "total": "Total"
+    },
+    "removeItem": "Hapus barang",
+    "mismatchBody": "Terjadi kesalahan saat kami mencoba mentransfer keranjang Anda",
+    "retry": "Jalankan transfer lagi",
+    "retrying": "Mentransfer..",
+    "goToCart": "Ke keranjang",
+    "emptyBag": "Tas belanja Anda kosong.",
+    "allProductsPage": "Ke halaman semua produk",
+    "cartCount": "Keranjang ({count})",
+    "decrease": "Kurangi jumlah",
+    "increase": "Tambah jumlah",
+    "quantity": "Jumlah",
+    "onlyMax": "Hanya tersedia {max}",
+    "updateFailed": "Gagal memperbarui jumlah"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "eyebrow": "Belanja",
+    "subtitle": "Masukkan alamat pengiriman dan detail pembayaran untuk memesan.",
+    "inCart": "Di Keranjang Anda",
+    "discount": {
+      "addLabel": "Tambah Kode Promo",
+      "apply": "Pakai",
+      "applied": "Promo dipakai:",
+      "removePromo": "Hapus kode diskon dari pesanan"
+    },
+    "address": {
+      "title": "Alamat Pengiriman",
+      "edit": "Ubah",
+      "billingTitle": "Alamat penagihan",
+      "continue": "Lanjut ke pengiriman",
+      "contact": "Kontak",
+      "billing": "Alamat Penagihan",
+      "sameAs": "Alamat penagihan dan pengiriman sama.",
+      "savedPrompt": "Halo {name}, ingin memakai salah satu alamat tersimpan?",
+      "chooseAddress": "Pilih alamat"
+    },
+    "form": {
+      "firstName": "Nama depan",
+      "lastName": "Nama belakang",
+      "address": "Alamat",
+      "company": "Perusahaan",
+      "postal": "Kode pos",
+      "city": "Kota",
+      "country": "Negara",
+      "province": "Provinsi",
+      "email": "Email",
+      "emailHint": "Masukkan alamat email yang valid.",
+      "phone": "Telepon",
+      "sameBilling": "Alamat penagihan sama dengan alamat pengiriman"
+    },
+    "delivery": {
+      "title": "Pengiriman",
+      "edit": "Ubah",
+      "method": "Metode pengiriman",
+      "methodHint": "Bagaimana pesanan Anda dikirim",
+      "pickup": "Ambil pesanan Anda",
+      "store": "Toko",
+      "storeHint": "Pilih toko terdekat",
+      "continue": "Lanjut ke pembayaran",
+      "methodLabel": "Metode",
+      "cargoNote": "Kargo (JNE JTR) terbuka di atas {min} kg — keranjang ini ≈{weight} kg."
+    },
+    "payment": {
+      "title": "Pembayaran",
+      "edit": "Ubah",
+      "method": "Metode pembayaran",
+      "details": "Detail pembayaran",
+      "anotherStep": "Langkah lain akan muncul",
+      "giftcard": "Gift card",
+      "enterDetails": "Masukkan detail pembayaran",
+      "continue": "Lanjut ke ulasan",
+      "cardDetails": "Masukkan detail pembayaran Anda:",
+      "loadFailed": "Gagal memuat metode pembayaran.",
+      "providers": {
+        "card": "Kartu kredit",
+        "manual": "Pembayaran Manual",
+        "midtrans": "QRIS, GoPay & Transfer Bank"
+      }
+    },
+    "review": {
+      "title": "Ulasan",
+      "terms": "Dengan mengeklik tombol Buat Pesanan, Anda mengonfirmasi telah membaca, memahami, dan menerima Syarat Penggunaan, Syarat Penjualan, dan Kebijakan Pengembalian kami serta mengakui telah membaca Kebijakan Privasi Nanofield."
+    },
+    "buttons": {
+      "selectMethod": "Pilih metode pembayaran",
+      "placeOrder": "Buat pesanan",
+      "payMidtrans": "Bayar dengan Midtrans",
+      "midtransNotReady": "Sesi pembayaran belum siap — pilih ulang metode Midtrans dan coba lagi."
+    },
+    "testBadge": "Perhatian: Hanya untuk pengujian."
+  },
+  "account": {
+    "nav": {
+      "account": "Akun",
+      "overview": "Ringkasan",
+      "profile": "Profil",
+      "addresses": "Alamat",
+      "orders": "Pesanan",
+      "notifications": "Notifikasi",
+      "logout": "Keluar",
+      "hello": "Halo {name}"
+    },
+    "login": {
+      "title": "Selamat datang kembali",
+      "subtitle": "Masuk untuk pengalaman belanja yang lebih baik.",
+      "email": "Email",
+      "emailHint": "Masukkan alamat email yang valid.",
+      "password": "Kata sandi",
+      "signIn": "Masuk",
+      "notMember": "Belum jadi member?",
+      "join": "Gabung"
+    },
+    "register": {
+      "title": "Buat akun Nanofield Anda",
+      "subtitle": "Gabung Nanofield untuk harga live, checkout, dan pelacakan pesanan.",
+      "backToSignIn": "Kembali masuk",
+      "firstName": "Nama depan",
+      "lastName": "Nama belakang",
+      "email": "Email",
+      "phone": "Telepon",
+      "password": "Kata sandi",
+      "agreePrefix": "Dengan membuat akun, Anda menyetujui",
+      "privacy": "Kebijakan Privasi",
+      "and": "dan",
+      "terms": "Syarat Penggunaan",
+      "join": "Gabung",
+      "alreadyMember": "Sudah jadi member?",
+      "signIn": "Masuk"
+    },
+    "overview": {
+      "eyebrow": "Akun",
+      "hello": "Halo {name}",
+      "signedInAs": "Masuk sebagai:",
+      "intro": "Lacak pesanan, kelola profil, dan perbarui alamat Anda.",
+      "profile": "Profil",
+      "completed": "Lengkap",
+      "addresses": "Alamat",
+      "saved": "Tersimpan",
+      "recentOrders": "Pesanan terkini",
+      "datePlaced": "Tanggal dibuat",
+      "orderNumber": "Nomor pesanan",
+      "totalAmount": "Total",
+      "goToOrder": "Ke pesanan #{id}",
+      "noOrders": "Belum ada pesanan"
+    },
+    "info": {
+      "edit": "Ubah",
+      "cancel": "Batal",
+      "save": "Simpan perubahan",
+      "updated": "{label} berhasil diperbarui",
+      "defaultError": "Terjadi kesalahan, silakan coba lagi"
+    },
+    "address": {
+      "new": "Alamat baru",
+      "add": "Tambah alamat",
+      "edit": "Ubah alamat",
+      "remove": "Hapus",
+      "editBtn": "Ubah",
+      "cancel": "Batal",
+      "save": "Simpan",
+      "line2": "Apartemen, suite, dsb.",
+      "province": "Provinsi",
+      "noBilling": "Belum ada alamat penagihan"
+    },
+    "profile": {
+      "name": "Nama",
+      "phone": "Telepon",
+      "email": "Email",
+      "password": "Kata sandi",
+      "passwordHidden": "Kata sandi tidak ditampilkan demi keamanan",
+      "oldPassword": "Kata sandi lama",
+      "newPassword": "Kata sandi baru",
+      "confirmPassword": "Konfirmasi kata sandi",
+      "billingAddress": "Alamat penagihan"
+    },
+    "orders": {
+      "title": "Pesanan",
+      "subtitle": "Ringkasan pesanan Anda sebelumnya.",
+      "emptyTitle": "Belum ada apa-apa",
+      "emptyBody": "Anda belum punya pesanan, mari ubah itu :)",
+      "continueShopping": "Lanjut belanja",
+      "showMore": "Tampilkan pesanan lain"
+    },
+    "card": {
+      "orderId": "ID Pesanan:",
+      "orderNum": "Pesanan #{id}",
+      "items": "{count} barang",
+      "moreProducts": "+ {count} produk lain",
+      "shipTo": "Kirim ke:",
+      "scanToTrack": "Pindai untuk Lacak",
+      "qrAlt": "QR Lacak Pesanan",
+      "seeDetails": "Lihat detail",
+      "canceled": "Dibatalkan",
+      "paid": "Lunas",
+      "awaitingPayment": "Menunggu pembayaran",
+      "delivered": "Terkirim",
+      "shipped": "Dikirim",
+      "via": " via {courier}",
+      "packed": "Dikemas",
+      "preparing": "Disiapkan",
+      "trackingPreparing": "Pelacakan: penjual menyiapkan pengiriman Anda.",
+      "trackingShipped": "Dalam perjalanan{withCourier} — AWB dicatat manual, tanya nomornya ke support.",
+      "trackingDelivered": "Terkirim — selamat menikmati komponen Anda.",
+      "trackingPacked": "Sudah dikemas — diserahkan ke kurir.",
+      "trackingCanceled": "Pesanan dibatalkan — tidak ada pengiriman."
+    },
+    "requestTransfer": {
+      "title": "Transfer pesanan",
+      "subtitle": "Tidak menemukan pesanan yang dicari? Hubungkan pesanan ke akun Anda.",
+      "orderIdPlaceholder": "ID Pesanan",
+      "request": "Minta transfer",
+      "requested": "Transfer untuk pesanan {id} diminta",
+      "emailSent": "Email permintaan transfer dikirim ke {email}"
+    },
+    "notice": {
+      "title": "Cek kotak masuk Anda",
+      "body": "Kami mengirim tautan verifikasi ke {email}.",
+      "hint": "Klik tautan di email untuk memverifikasi alamat Anda, lalu masuk. Tidak dapat? Cek spam, atau masuk lagi untuk kirim ulang."
+    },
+    "transfer": {
+      "title": "Transfer pesanan",
+      "subtitle": "Kirim pesanan ini ke akun lain via email.",
+      "email": "Email",
+      "send": "Kirim permintaan transfer",
+      "sent": "Permintaan transfer dikirim ke {email}.",
+      "error": "Gagal mengirim permintaan transfer. Silakan coba lagi."
+    },
+    "notifications": {
+      "title": "Notifikasi",
+      "subtitle": "Update pesanan dan pengumuman toko.",
+      "empty": "Belum ada notifikasi. Update pesanan dan pengumuman toko akan muncul di sini.",
+      "showMore": "Tampilkan lebih banyak",
+      "showMoreLong": "Tampilkan notifikasi lain",
+      "announcement": "Pengumuman",
+      "dismiss": "Tutup: {title}",
+      "markRead": "Tandai dibaca",
+      "bellTitle": "Notifikasi",
+      "bellUnread": "Notifikasi ({count} belum dibaca)",
+      "caughtUp": "Semua sudah dibaca.",
+      "viewAll": "Lihat semua",
+      "moreCount": "+{count} lagi",
+      "now": "kini",
+      "justNow": "baru saja",
+      "minutesAgo": "{count} menit lalu",
+      "hoursAgo": "{count} jam lalu",
+      "daysAgo": "{count} hari lalu"
+    },
+    "pages": {
+      "profileEyebrow": "Akun",
+      "profileTitle": "Profil",
+      "profileSubtitle": "Lihat dan perbarui info profil Anda, termasuk nama, email, dan nomor telepon. Anda juga bisa memperbarui alamat penagihan atau mengganti kata sandi.",
+      "addressesTitle": "Alamat Pengiriman",
+      "addressesSubtitle": "Lihat dan perbarui alamat pengiriman Anda, boleh tambah sebanyak yang Anda mau. Alamat tersimpan tersedia saat checkout.",
+      "notificationsTitle": "Notifikasi",
+      "notificationsSubtitle": "Update pesanan dan pengumuman toko. Terbaru dulu."
+    },
+    "help": {
+      "title": "Ada pertanyaan?",
+      "body": "Temukan tanya jawab di halaman layanan pelanggan kami.",
+      "link": "Layanan Pelanggan"
+    },
+    "verifyResult": {
+      "verifyingShort": "Memverifikasi email Anda...",
+      "doneTitle": "Email terverifikasi",
+      "pendingTitle": "Verifikasi email",
+      "verifying": "Mengonfirmasi alamat Anda — hanya sebentar.",
+      "successBody": "Email Anda terverifikasi. Masuk untuk membuka harga, checkout, dan pelacakan pesanan.",
+      "goSignIn": "Ke halaman masuk",
+      "errorBody": "Tautan verifikasi ini tidak valid atau kedaluwarsa.",
+      "errorHint": "Masuk dengan email dan kata sandi untuk menerima email verifikasi baru."
+    },
+    "verify": {
+      "title": "Verifikasi akun Anda",
+      "subtitle": "Masukkan kode yang kami kirim ke {email}.",
+      "code": "Kode verifikasi",
+      "submit": "Verifikasi akun",
+      "resend": "Kirim ulang kode",
+      "sent": "Kode baru dikirim ke {email}.",
+      "success": "Akun terverifikasi — Anda kini bisa masuk.",
+      "backToSignIn": "Kembali masuk"
+    }
+  },
+  "shipping": {
+    "unlocked": "Gratis Ongkir terbuka!",
+    "unlock": "Buka Gratis Ongkir",
+    "onlyAway": "Sisa {amount} lagi",
+    "viewCart": "Lihat keranjang",
+    "viewProducts": "Lihat produk"
+  },
+  "order": {
+    "thanks": "Terima kasih!",
+    "placed": "Pesanan Anda berhasil dibuat.",
+    "summary": "Ringkasan",
+    "orderId": "ID Pesanan:",
+    "orderNumber": "Nomor pesanan:",
+    "orderDate": "Tanggal pesanan:",
+    "orderStatus": "Status pesanan:",
+    "paymentStatus": "Status pembayaran:",
+    "confirmationSent": "Kami telah mengirim detail konfirmasi pesanan ke {email}.",
+    "detailsEyebrow": "Akun",
+    "detailsTitle": "Detail pesanan",
+    "detailsSubtitle": "Lacak pembayaran, pengiriman, dan barang untuk pesanan ini — termasuk kode QR dan referensi transfernya.",
+    "backToOverview": "Kembali ke ringkasan",
+    "orderSummary": "Ringkasan Pesanan",
+    "subtotal": "Subtotal",
+    "discount": "Diskon",
+    "shipping": "Pengiriman",
+    "taxes": "Pajak",
+    "total": "Total",
+    "delivery": "Pengiriman",
+    "shippingAddress": "Alamat Pengiriman",
+    "contact": "Kontak",
+    "method": "Metode",
+    "shipment": "Pengiriman",
+    "shipDelivered": "Terkirim — selamat menikmati komponen Anda.",
+    "shipShipped": "Dalam perjalanan{withCourier} — AWB dicatat manual, tanya nomornya ke support.",
+    "shipWith": " dengan {courier}",
+    "shipPacked": "Sudah dikemas — diserahkan ke kurir.",
+    "shipPreparing": "Penjual menyiapkan pengiriman Anda.",
+    "shipCanceled": "Pesanan dibatalkan — tidak ada pengiriman.",
+    "payment": "Pembayaran",
+    "paymentMethod": "Metode pembayaran",
+    "paymentDetails": "Detail pembayaran",
+    "paidAt": "{amount} dibayar pada {date}",
+    "awaiting": "Menunggu pembayaran {amount}",
+    "helpTitle": "Butuh bantuan?",
+    "helpContact": "Kontak",
+    "helpReturns": "Pengembalian & Penukaran",
+    "transferPage": {
+      "title": "Permintaan transfer untuk pesanan {id}",
+      "body1": "Anda menerima permintaan transfer kepemilikan pesanan Anda ({id}). Jika setuju, Anda bisa menyetujui transfer dengan mengeklik tombol di bawah.",
+      "body2": "Jika diterima, pemilik baru mengambil alih semua tanggung jawab dan izin terkait pesanan ini.",
+      "body3": "Jika tidak mengenali permintaan ini atau ingin mempertahankan kepemilikan, tidak perlu tindakan lanjutan.",
+      "acceptedTitle": "Pesanan berhasil ditransfer!",
+      "acceptedBody": "Pesanan {id} berhasil ditransfer ke pemilik baru.",
+      "acceptError": "Terjadi kesalahan saat menerima transfer. Silakan coba lagi.",
+      "errorLabel": "Pesan kesalahan: {error}",
+      "declinedTitle": "Transfer pesanan ditolak!",
+      "declinedBody": "Transfer pesanan {id} berhasil ditolak.",
+      "declineError": "Terjadi kesalahan saat menolak transfer. Silakan coba lagi."
+    },
+    "transferAccepted": "Pesanan berhasil ditransfer!",
+    "transferDeclined": "Transfer pesanan berhasil ditolak!",
+    "acceptTransfer": "Terima transfer",
+    "declineTransfer": "Tolak transfer",
+    "midtrans": {
+      "received": "Pembayaran diterima",
+      "status": "Status pembayaran",
+      "settledBody": "Midtrans mengonfirmasi transaksi {id} sebagai {status}. Selesaikan pesanan di bawah — barang Anda masih tersimpan di keranjang.",
+      "pendingBody": "Pembayaran Anda masih menunggu{txn}. Selesaikan di e-wallet atau aplikasi bank lalu selesaikan pesanan — keranjang yang belum dibayar kedaluwarsa otomatis.",
+      "pendingTxn": " (transaksi {id})",
+      "failedBody": "Pembayaran ini tidak selesai{status}. Tidak ada pesanan dibuat dan tidak ada uang berpindah — pilih metode lain atau coba lagi.",
+      "failedStatus": " (status: {status})",
+      "complete": "Selesaikan pesanan saya",
+      "backToCart": "Kembali ke keranjang",
+      "myOrders": "Pesanan saya"
+    },
+    "status": {
+      "notFulfilled": "Belum dipenuhi",
+      "partiallyFulfilled": "Dipenuhi sebagian",
+      "fulfilled": "Dipenuhi",
+      "partiallyShipped": "Dikirim sebagian",
+      "shipped": "Dikirim",
+      "partiallyDelivered": "Terkirim sebagian",
+      "delivered": "Terkirim",
+      "canceled": "Dibatalkan",
+      "requiresAction": "Butuh tindakan",
+      "notPaid": "Belum dibayar",
+      "awaiting": "Menunggu",
+      "authorized": "Diotorisasi",
+      "partiallyAuthorized": "Diotorisasi sebagian",
+      "captured": "Diterima",
+      "partiallyCaptured": "Diterima sebagian",
+      "refunded": "Dikembalikan",
+      "partiallyRefunded": "Dikembalikan sebagian"
+    }
+  },
+  "auth": {
+    "signInForPrice": "Masuk untuk harga",
+    "unlockPrices": "Masuk untuk membuka harga member dan checkout.",
+    "gateTitle": "Harus masuk",
+    "gateBody": "Harga dan checkout khusus member Nanofield. Masuk atau buat akun terverifikasi untuk lanjut.",
+    "signIn": "Masuk",
+    "keepBrowsing": "Lanjut belanja",
+    "fromPrice": "Mulai "
+  },
+  "support": {
+    "contact": {
+      "eyebrow": "Bantuan",
+      "title": "Hubungi kami",
+      "subtitle": "Ada pertanyaan soal stok, nomor part, pesanan, atau retur? Hubungi via WhatsApp — untuk pertanyaan pesanan, siapkan ID Pesanan agar kami bisa membantu lebih cepat.",
+      "chatTitle": "Chat dengan support",
+      "chatBody": "Cara tercepat menghubungi kami untuk cek stok, status pesanan, dan permintaan retur.",
+      "chatCta": "Chat di WhatsApp",
+      "emailTitle": "Email kami",
+      "emailBody": "Cocok untuk penjelasan panjang dengan beberapa lampiran.",
+      "visitTitle": "Kunjungi toko",
+      "mapsCta": "Buka di Maps",
+      "backFaq": "Kembali ke FAQ"
+    },
+    "faq": {
+      "eyebrow": "Bantuan",
+      "title": "Pertanyaan umum",
+      "subtitle": "Semua soal pesanan Anda di satu tempat — pelacakan, pembayaran, pengiriman, retur, dan cara menghubungi manusia saat dibutuhkan.",
+      "stillTitle": "Masih butuh bantuan?",
+      "stillBody": "Tidak menemukan jawaban? Hubungi support langsung, atau baca cara kerja retur dan penukaran langkah demi langkah.",
+      "contactCta": "Masih buntu? Hubungi kami",
+      "returnsCta": "Baca proses retur",
+      "sections": [
+        {
+          "heading": "Pesanan & pelacakan",
+          "items": [
+            {
+              "q": "Di mana ID Pesanan saya?",
+              "a": "Buka Akun → Pesanan. Setiap kartu pesanan menampilkan ID Pesanan di atas dengan nomor tampil di bawahnya. Halaman detail mengulanginya tepat di bawah pesan konfirmasi, di samping kode QR yang bisa dipindai untuk membuka pesanan yang sama."
+            },
+            {
+              "q": "Apa arti status pesanan?",
+              "a": "Disiapkan berarti kami menyiapkan part Anda, Dikemas berarti paket diserahkan ke kurir, Dikirim berarti sedang di jalan dengan kurir, dan Terkirim berarti sudah tiba. Pembayaran punya status sendiri di sampingnya: Menunggu pembayaran, Diotorisasi, atau Lunas."
+            },
+            {
+              "q": "Nomor pelacakan (AWB) tidak muncul. Kenapa?",
+              "a": "Nomor pelacakan dicatat manual dengan kurir setelah serah terima, jadi ada jeda singkat antara status Dikirim dan AWB muncul. Jika masih belum muncul, kirim ID Pesanan via WhatsApp dan kami carikan."
+            },
+            {
+              "q": "Apakah perlu akun untuk membeli?",
+              "a": "Ya — harga dan checkout khusus member. Buat akun, verifikasi email lewat tautan yang kami kirim, lalu masuk. Tamu tetap bisa menjelajahi seluruh katalog, mencari part, dan membaca datasheet."
+            },
+            {
+              "q": "Pesanan saya memakai email lain. Di mana?",
+              "a": "Gulir ke formulir transfer pesanan di bawah halaman Pesanan dan tempel ID Pesanan dari konfirmasi Anda. Itu menautkan pesanan ke akun Anda agar bisa diikuti di sana."
+            }
+          ]
+        },
+        {
+          "heading": "Pembayaran",
+          "items": [
+            {
+              "q": "Bagaimana cara membayar?",
+              "a": "Checkout mendukung QRIS, GoPay, dan transfer bank via Midtrans. Pesanan Anda terkonfirmasi setelah pembayaran tertangkap — halaman pesanan menampilkan status live."
+            },
+            {
+              "q": "Apa beda Diotorisasi dan Lunas?",
+              "a": "Diotorisasi berarti metode pembayaran menyetujui jumlahnya tapi uang belum tertangkap. Lunas (tertangkap) berarti pembayaran masuk dan pesanan lanjut ke persiapan."
+            },
+            {
+              "q": "Pembayaran macet di Menunggu pembayaran. Apa yang harus dilakukan?",
+              "a": "Selesaikan pembayaran di e-wallet atau aplikasi bank dulu — transaksi Midtrans yang menunggu kedaluwarsa otomatis. Jika sudah bayar tapi status tidak bergerak, hubungi support dengan ID Pesanan dan bukti pembayaran."
+            }
+          ]
+        },
+        {
+          "heading": "Pengiriman",
+          "items": [
+            {
+              "q": "Kurir apa yang dipakai, dan berapa biayanya?",
+              "a": "Opsi dan biaya kurir dihitung saat checkout dari berat paket dan tujuan Anda, dengan J&T Express dan JNE di antara layanan yang tersedia."
+            },
+            {
+              "q": "Bisakah mengganti alamat kirim setelah memesan?",
+              "a": "Hanya sebelum pesanan dikemas. Segera hubungi support dengan ID Pesanan — setelah paket diserahkan ke kurir, alamat tidak bisa diubah lagi."
+            }
+          ]
+        },
+        {
+          "heading": "Pengembalian & penukaran",
+          "items": [
+            {
+              "q": "Bagaimana cara meminta retur atau tukar?",
+              "a": "Hubungi support via WhatsApp, telepon, email, atau kunjungi toko, dengan ID Pesanan, barang, alasan, dan foto barang serta kemasan. Setiap kasus dilacak di sistem kami dari permintaan hingga refund atau penggantian."
+            },
+            {
+              "q": "Bagaimana jika barang tiba rusak atau salah?",
+              "a": "Simpan semua kemasan dan foto saat unboxing, lalu laporkan segera. Kasus rusak dan salah barang difile sebagai klaim agar kami bisa memprioritaskan refund atau pengiriman pengganti."
+            },
+            {
+              "q": "Bagaimana cara kerja refund?",
+              "a": "Setelah barang retur diterima dan diperiksa, refund kembali ke metode pembayaran awal yang dipakai saat checkout."
+            }
+          ]
+        },
+        {
+          "heading": "Part & stok",
+          "items": [
+            {
+              "q": "Bagaimana cara menemukan nomor part yang tepat?",
+              "a": "Cari katalog per nomor part atau spesifikasi — banyak listing menyertakan datasheet. Jika ragu, kirim tanda pada part lama atau model peralatan via WhatsApp dan kami bantu mencocokkannya."
+            },
+            {
+              "q": "Barang yang dibutuhkan stok habis. Bisa diadakan?",
+              "a": "Sering bisa. Tanya support dengan nomor part dan jumlah persis — kami rutin mengadakan komponen dan bisa memberi tahu lead time-nya."
+            },
+            {
+              "q": "Apakah ada toko fisik?",
+              "a": "Ada — kunjungi kami di {address}. Untuk arah, gunakan tautan Maps di footer atau halaman kontak."
+            }
+          ]
+        }
+      ]
+    },
+    "returns": {
+      "eyebrow": "Bantuan",
+      "title": "Pengembalian & Penukaran",
+      "subtitle": "Berubah pikiran, menerima part yang salah, atau barang rusak? Setiap permintaan ditangani sebagai kasus terlacak di sistem kami — refund, penggantian, atau klaim — dan ditinjau tim support. Anda butuh ID Pesanan untuk mulai.",
+      "steps": [
+        {
+          "title": "1. Kirim permintaan",
+          "body": "Hubungi support lewat kanal mana pun di bawah dengan ID Pesanan, barang yang ingin dikembalikan atau ditukar, alasan, dan foto barang serta kemasan."
+        },
+        {
+          "title": "2. Tinjauan & persetujuan",
+          "body": "Tim kami meninjau setiap permintaan terhadap catatan pesanan dan mengonfirmasi apakah disetujui, beserta instruksi pengiriman retur."
+        },
+        {
+          "title": "3. Kirim barang kembali",
+          "body": "Kemas barang dengan aman dan kirim ke alamat yang diberikan support. Simpan resi kurir sampai kasus ditutup."
+        },
+        {
+          "title": "4. Penyelesaian",
+          "body": "Setelah barang retur diterima dan diperiksa, kami menerbitkan refund ke metode pembayaran awal atau mengirim pengganti Anda."
+        }
+      ],
+      "conditionsTitle": "Perlu diketahui",
+      "conditions": [
+        "Barang sebaiknya belum dipakai dan dalam kemasan aslinya, kecuali tiba dalam keadaan rusak atau berbeda dari yang dipesan.",
+        "Laporkan barang rusak, cacat, atau salah sesegera mungkin setelah diterima, dengan foto unboxing.",
+        "Refund kembali ke metode pembayaran awal yang dipakai saat checkout.",
+        "Ongkir untuk retur yang disetujui dikonfirmasi per kasus dengan support."
+      ],
+      "channelsTitle": "Ke mana mengirim permintaan",
+      "waBody": "Tercepat untuk permintaan retur — foto terkirim instan.",
+      "waCta": "Chat di WhatsApp",
+      "waPrefill": "Halo Nanofield, saya mau request return/exchange untuk order ID: ",
+      "emailBody": "Cocok untuk penjelasan panjang dengan beberapa lampiran.",
+      "emailSubject": "Permintaan retur",
+      "visitTitle": "Kunjungi toko",
+      "visitBody": "Bawa barang beserta kemasannya ke {address}.",
+      "storeDetails": "Detail toko",
+      "orderIdTitle": "Butuh ID Pesanan dulu?",
+      "orderIdBody": "Setiap permintaan dimulai darinya — ambil dari daftar pesanan Anda, lalu kembali ke sini untuk menghubungi kami.",
+      "orderIdCta": "Cari ID Pesanan Anda"
+    }
+  },
+  "search": {
+    "label": "Cari",
+    "dialogLabel": "Pencarian situs",
+    "searching": "Mencari…",
+    "productsFound": "{count} produk",
+    "noProducts": "Tidak ada produk ditemukan",
+    "pages": "Halaman",
+    "seeAll": "Lihat semua {count} hasil",
+    "membersOnly": "Khusus member",
+    "pagesList": {
+      "home": "Beranda",
+      "store": "Katalog",
+      "cart": "Keranjang",
+      "checkout": "Checkout",
+      "account": "Akun",
+      "orders": "Pesanan",
+      "notifications": "Notifikasi",
+      "addresses": "Alamat",
+      "profile": "Profil",
+      "faq": "FAQ",
+      "contact": "Hubungi kami",
+      "returns": "Pengembalian & Penukaran"
+    }
+  },
+  "meta": {
+    "siteTitle": "Nanofield | Komponen Elektronik Presisi",
+    "siteDesc": "Toko mandiri utama Indonesia untuk komponen elektronik, IC, transistor, dan suku cadang peralatan.",
+    "homeTitle": "Nanofield | Komponen Elektronik Presisi",
+    "homeDesc": "Cari per nomor part IC, jelajahi datasheet, dan cek stok real-time — 900+ komponen elektronik dan suku cadang peralatan.",
+    "storeTitle": "Katalog Produk",
+    "storeDesc": "Jelajahi katalog 900+ komponen elektronik, IC, transistor, dan suku cadang peralatan. Cari per nomor part, filter per spesifikasi.",
+    "cartTitle": "Keranjang",
+    "cartDesc": "Lihat keranjang Anda",
+    "checkoutTitle": "Checkout",
+    "checkoutDesc": "Masukkan alamat pengiriman dan detail pembayaran untuk memesan.",
+    "loginTitle": "Masuk",
+    "loginDesc": "Masuk ke akun Nanofield Anda.",
+    "accountTitle": "Akun",
+    "accountDesc": "Ringkasan aktivitas akun Anda.",
+    "profileTitle": "Profil",
+    "profileDesc": "Lihat dan ubah profil Nanofield Anda.",
+    "addressesTitle": "Alamat",
+    "addressesDesc": "Lihat alamat Anda",
+    "ordersTitle": "Pesanan",
+    "ordersDesc": "Ringkasan pesanan Anda sebelumnya.",
+    "notificationsTitle": "Notifikasi",
+    "notificationsDesc": "Update pesanan dan pengumuman toko.",
+    "verifyTitle": "Verifikasi email Anda",
+    "verifyDesc": "Verifikasi alamat email untuk menyelesaikan pendaftaran.",
+    "contactTitle": "Hubungi kami",
+    "contactDesc": "Hubungi dukungan pelanggan Nanofield.",
+    "faqTitle": "FAQ",
+    "faqDesc": "Jawaban soal pesanan, pembayaran, pengiriman, retur, dan menghubungi support Nanofield.",
+    "returnsTitle": "Pengembalian & Penukaran",
+    "returnsDesc": "Cara kerja retur, penukaran, dan klaim barang rusak di Nanofield."
+  },
+  "errors": {
+    "generic": "Terjadi kesalahan. Silakan coba lagi.",
+    "notFoundTitle": "Halaman tidak ditemukan",
+    "notFoundBody": "Halaman yang Anda coba akses tidak ada. Mungkin telah dipindah, dihapus, atau Anda mengikuti tautan rusak.",
+    "forbiddenTitle": "Akses ditolak",
+    "forbiddenBody": "Anda tidak punya izin melihat halaman ini. Coba masuk dengan akun lain, atau hubungi support jika menurut Anda ini kesalahan.",
+    "frontpage": "Ke halaman depan",
+    "errorTitle": "Terjadi kesalahan",
+    "errorBody": "Terjadi kesalahan tak terduga saat memuat halaman ini. Silakan coba lagi, dan hubungi support jika masalah berlanjut.",
+    "retry": "Coba lagi",
+    "cartNotFound": "Keranjang yang Anda coba akses tidak ada. Hapus cookie dan coba lagi."
+  }
+}

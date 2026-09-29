@@ -2,6 +2,7 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { GridViewIcon, ListViewIcon } from "@hugeicons/core-free-icons"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 export type ViewMode = "grid" | "list"
@@ -13,13 +14,16 @@ export default function ViewToggle({
   view: ViewMode
   setQueryParams: (name: string, value: string) => void
 }) {
+  const t = useTranslations("store")
   return (
     <div className="flex flex-col gap-3">
-      <span className="txt-compact-small-plus text-ui-fg-subtle">View</span>
+      <span className="txt-compact-small-plus text-ui-fg-subtle">
+        {t("view")}
+      </span>
       <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-muted p-1">
         <button
           type="button"
-          aria-label="Grid view"
+          aria-label={t("gridView")}
           aria-pressed={view === "grid"}
           onClick={() => setQueryParams("view", "grid")}
           className={cn(
@@ -37,7 +41,7 @@ export default function ViewToggle({
         </button>
         <button
           type="button"
-          aria-label="List view"
+          aria-label={t("listView")}
           aria-pressed={view === "list"}
           onClick={() => setQueryParams("view", "list")}
           className={cn(

@@ -10,6 +10,7 @@ import LineItemPrice from "@modules/common/components/line-item-price"
 import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 type ItemProps = {
@@ -20,6 +21,7 @@ type ItemProps = {
 
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations("product")
 
   // Real cap from the variant: + grays out exactly at available stock.
   // Backorderable variants (or unknown quantity) keep the old cap of 10.
@@ -90,6 +92,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             item={item}
             style="tight"
             currencyCode={currencyCode}
+            originalLabel={t("original")}
           />
         </Table.Cell>
       )}
@@ -114,6 +117,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             item={item}
             style="tight"
             currencyCode={currencyCode}
+            originalLabel={t("original")}
           />
         </span>
       </Table.Cell>

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { Heading } from "@modules/common/components/ui"
 
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
@@ -6,7 +7,8 @@ import CartTotals from "@modules/common/components/cart-totals"
 import Divider from "@modules/common/components/divider"
 import { HttpTypes } from "@medusajs/types"
 
-const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
+const CheckoutSummary = async ({ cart }: { cart: HttpTypes.StoreCart }) => {
+  const t = await getTranslations("checkout")
   return (
     <div className="sticky top-0 flex flex-col-reverse small:flex-col gap-y-8 py-8 small:py-0 ">
       <div className="w-full bg-card border border-border rounded-2xl p-6 flex flex-col">
@@ -15,7 +17,7 @@ const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
           level="h2"
           className="flex flex-row text-3xl-regular items-baseline"
         >
-          In your Cart
+          {t("inCart")}
         </Heading>
         <Divider className="my-6" />
         <CartTotals totals={cart} />

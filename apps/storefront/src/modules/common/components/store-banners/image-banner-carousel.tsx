@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import type { StoreBanner } from "@lib/data/banners"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -21,6 +22,7 @@ export default function ImageBannerCarousel({
 }) {
   const [index, setIndex] = useState(0)
   const [hovered, setHovered] = useState(false)
+  const t = useTranslations("common")
 
   if (!banners.length) return null
 
@@ -74,7 +76,7 @@ export default function ImageBannerCarousel({
         <>
           <button
             onClick={prev}
-            aria-label="Previous banner"
+            aria-label={t("previousBanner")}
             className={`${btnBase} left-3 ${hovered ? "opacity-100" : "opacity-0"}`}
           >
             <svg
@@ -92,7 +94,7 @@ export default function ImageBannerCarousel({
           </button>
           <button
             onClick={next}
-            aria-label="Next banner"
+            aria-label={t("nextBanner")}
             className={`${btnBase} right-3 ${hovered ? "opacity-100" : "opacity-0"}`}
           >
             <svg
@@ -115,7 +117,10 @@ export default function ImageBannerCarousel({
               <button
                 key={i}
                 onClick={() => setIndex(i)}
-                aria-label={`Banner ${i + 1}`}
+                aria-label={t("bannerCount", {
+                  current: i + 1,
+                  total: banners.length,
+                })}
                 className={`h-1.5 rounded-full transition-all duration-200 ${
                   i === index
                     ? "w-4 bg-white"

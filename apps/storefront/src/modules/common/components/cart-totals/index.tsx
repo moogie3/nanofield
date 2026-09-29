@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { convertToLocale } from "@lib/util/money"
 import React from "react"
 
@@ -39,6 +40,8 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals, forceTbd = false }) => 
     forceTbd ||
     (Array.isArray(shipping_methods) ? shipping_methods.length === 0 : false)
 
+  const t = useTranslations("cart.totals")
+
   // While shipping is TBD the total must not smuggle a stale shipping
   // amount in either: items minus discount only.
   const displayTotal =
@@ -50,16 +53,16 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals, forceTbd = false }) => 
     <div>
       <div className="flex flex-col gap-y-2 txt-medium text-ui-fg-subtle ">
         <div className="flex items-center justify-between">
-          <span>Subtotal (excl. shipping and taxes)</span>
+          <span>{t("subtotal")}</span>
           <span data-testid="cart-subtotal" data-value={item_subtotal || 0}>
             {convertToLocale({ amount: item_subtotal ?? 0, currency_code })}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Shipping</span>
+          <span>{t("shipping")}</span>
           {showTbd ? (
             <span data-testid="cart-shipping" data-value={0}>
-              TBD
+              {t("tbd")}
             </span>
           ) : (
             <span data-testid="cart-shipping" data-value={shipping_subtotal || 0}>
@@ -69,7 +72,7 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals, forceTbd = false }) => 
         </div>
         {!!discount_subtotal && (
           <div className="flex items-center justify-between">
-            <span>Discount</span>
+            <span>{t("discount")}</span>
             <span
               className="text-ui-fg-interactive"
               data-testid="cart-discount"
@@ -84,7 +87,7 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals, forceTbd = false }) => 
           </div>
         )}
         <div className="flex justify-between">
-          <span className="flex gap-x-1 items-center ">Taxes</span>
+          <span className="flex gap-x-1 items-center ">{t("taxes")}</span>
           <span data-testid="cart-taxes" data-value={tax_total || 0}>
             {convertToLocale({ amount: tax_total ?? 0, currency_code })}
           </span>
@@ -92,7 +95,7 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals, forceTbd = false }) => 
       </div>
       <div className="h-px w-full border-b border-border my-4" />
       <div className="flex items-center justify-between text-ui-fg-base mb-2 txt-medium pr-1">
-        <span>Total</span>
+        <span>{t("total")}</span>
         <span
           className="txt-xlarge-plus"
           data-testid="cart-total"

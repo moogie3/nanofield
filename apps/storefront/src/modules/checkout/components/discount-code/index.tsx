@@ -7,6 +7,7 @@ import {
   Label,
   Text,
 } from "@modules/common/components/ui"
+import { useTranslations } from "next-intl"
 import React from "react"
 
 import { applyPromotions } from "@lib/data/cart"
@@ -25,6 +26,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   const [isOpen, setIsOpen] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
   const router = useRouter()
+  const t = useTranslations("checkout.discount")
 
   const { promotions = [] } = cart
   const removePromotionCode = async (code: string) => {
@@ -77,7 +79,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
               className="txt-medium text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
               data-testid="add-discount-button"
             >
-              Add Promotion Code(s)
+              {t("addLabel")}
             </button>
 
             {/* <Tooltip content="You can add multiple promotion codes">
@@ -100,7 +102,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                   variant="secondary"
                   data-testid="discount-apply-button"
                 >
-                  Apply
+                  {t("apply")}
                 </SubmitButton>
               </div>
 
@@ -116,7 +118,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
           <div className="w-full flex items-center">
             <div className="flex flex-col w-full">
               <Heading className="txt-medium mb-2">
-                Promotion(s) applied:
+                {t("applied")}
               </Heading>
 
               {promotions.map((promotion) => {
@@ -172,7 +174,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                       >
                         <Trash size={14} />
                         <span className="sr-only">
-                          Remove discount code from order
+                          {t("removePromo")}
                         </span>
                       </button>
                     )}

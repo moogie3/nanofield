@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { useParams, useRouter } from "next/navigation"
 
 // Catalog search box. Submits to /store?q= — ranking happens server-side
@@ -15,15 +16,16 @@ const SearchField = ({
 }) => {
   const [value, setValue] = useState(initialValue)
   const router = useRouter()
-  const { countryCode } = useParams()
+  const { locale, countryCode } = useParams()
+  const t = useTranslations("common")
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     const q = value.trim()
     router.push(
       q
-        ? `/${countryCode}/store?q=${encodeURIComponent(q)}`
-        : `/${countryCode}/store`
+        ? `/${locale}/${countryCode}/store?q=${encodeURIComponent(q)}`
+        : `/${locale}/${countryCode}/store`
     )
   }
 
@@ -61,8 +63,8 @@ const SearchField = ({
             type="search"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Search part number, IC, specs…"
-            aria-label="Search products"
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("search")}
             className={
               hero
                 ? "h-12 w-full rounded-full border border-border bg-card/90 pl-11 pr-4 text-base text-foreground shadow-lg backdrop-blur placeholder:text-muted-foreground focus:border-primary focus:outline-none"
@@ -78,7 +80,7 @@ const SearchField = ({
               : "h-10 shrink-0 rounded-full bg-primary px-4 text-xs font-bold uppercase tracking-widest text-primary-foreground transition-colors hover:opacity-90"
           }
         >
-          Search
+          {t("search")}
         </button>
       </div>
     </form>

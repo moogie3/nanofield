@@ -1,6 +1,7 @@
 "use client"
 
 import { placeOrder } from "@lib/data/cart"
+import { useTranslations } from "next-intl"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { Button, Heading } from "@modules/common/components/ui"
 import { useParams, useRouter } from "next/navigation"
@@ -21,7 +22,8 @@ const MidtransReturn = ({
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const router = useRouter()
-  const { countryCode } = useParams()
+  const { locale, countryCode } = useParams()
+  const t = useTranslations("order.midtrans")
 
   const settled = !!transactionStatus && SETTLED.has(transactionStatus)
 
@@ -41,35 +43,31 @@ const MidtransReturn = ({
       <div className="content-container flex flex-col items-center gap-y-6 max-w-2xl">
         <div className="flex flex-col gap-4 w-full bg-card border border-border rounded-2xl p-10">
           <Heading level="h1" className="text-3xl">
-            {settled ? "Payment received" : "Payment status"}
+            {settled ? t("received") : t("status")}
           </Heading>
           <p className="txt-medium text-ui-fg-subtle">
             {settled ? (
               <>
-                Midtrans confirms transaction{" "}
-                <span className="font-mono">{midtransOrderId}</span> as{" "}
-                {transactionStatus}. Complete your order below — your items
-                are still reserved in your cart.
+                {t("settledBody", {
+                  id: midtransOrderId ?? "",
+                  status: transactionStatus ?? "",
+                })}
               </>
             ) : transactionStatus === "pending" ? (
               <>
-                Your payment is still pending
-                {midtransOrderId && (
-                  <>
-                    {" "}
-                    (transaction{" "}
-                    <span className="font-mono">{midtransOrderId}</span>)
-                  </>
-                )}
-                . Finish it in your e-wallet or bank app then complete the
-                order — unpaid carts expire automatically.
+                {t("pendingBody", {
+                  txn: midtransOrderId
+                    ? t("pendingTxn", { id: midtransOrderId })
+                    : "",
+                })}
               </>
             ) : (
               <>
-                This payment did not complete
-                {transactionStatus && <> (status: {transactionStatus})</>}.
-                No order was placed and no money moved — pick another method
-                or retry.
+                {t("failedBody", {
+                  status: transactionStatus
+                    ? t("failedStatus", { status: transactionStatus })
+                    : "",
+                })}
               </>
             )}
           </p>
@@ -81,7 +79,7 @@ const MidtransReturn = ({
                 size="large"
                 data-testid="midtrans-complete-order-button"
               >
-                Complete my order
+                {t("complete")}
               </Button>
               <ErrorMessage
                 error={errorMessage}
@@ -92,16 +90,18 @@ const MidtransReturn = ({
             <div className="flex gap-x-4">
               <Button
                 size="large"
-                onClick={() => router.push(`/${countryCode}/cart`)}
+                onClick={() => router.push(`/${locale}/${countryCode}/cart`)}
               >
-                Back to cart
+                {t("backToCart")}
               </Button>
               <Button
                 size="large"
                 variant="secondary"
-                onClick={() => router.push(`/${countryCode}/account/orders`)}
+                onClick={() =>
+                  router.push(`/${locale}/${countryCode}/account/orders`)
+                }
               >
-                My orders
+                {t("myOrders")}
               </Button>
             </div>
           )}

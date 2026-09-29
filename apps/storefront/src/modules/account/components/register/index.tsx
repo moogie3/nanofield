@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
+import { useTranslations } from "next-intl"
 import Input from "@modules/common/components/input"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -15,17 +16,16 @@ type Props = {
 
 const Register = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(signup, null)
+  const t = useTranslations("account.register")
 
   return (
     <div
       className="max-w-sm flex flex-col items-center"
       data-testid="register-page"
     >
-      <h1 className="text-large-semi uppercase mb-6">
-        Create your Nanofield account
-      </h1>
+      <h1 className="text-large-semi uppercase mb-6">{t("title")}</h1>
       <p className="text-center text-base-regular text-ui-fg-base mb-4">
-        Join Nanofield for live prices, checkout, and order tracking.
+        {t("subtitle")}
       </p>
       {message?.state === "verification_required" ? (
         <div className="w-full flex flex-col items-center gap-y-6">
@@ -37,7 +37,7 @@ const Register = ({ setCurrentView }: Props) => {
             onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
             className="text-small-semi text-primary hover:underline"
           >
-            Back to sign in
+            {t("backToSignIn")}
           </button>
         </div>
       ) : (
@@ -45,21 +45,21 @@ const Register = ({ setCurrentView }: Props) => {
           <form className="w-full flex flex-col" action={formAction}>
         <div className="flex flex-col w-full gap-y-2">
           <Input
-            label="First name"
+            label={t("firstName")}
             name="first_name"
             required
             autoComplete="given-name"
             data-testid="first-name-input"
           />
           <Input
-            label="Last name"
+            label={t("lastName")}
             name="last_name"
             required
             autoComplete="family-name"
             data-testid="last-name-input"
           />
           <Input
-            label="Email"
+            label={t("email")}
             name="email"
             required
             type="email"
@@ -67,14 +67,14 @@ const Register = ({ setCurrentView }: Props) => {
             data-testid="email-input"
           />
           <Input
-            label="Phone"
+            label={t("phone")}
             name="phone"
             type="tel"
             autoComplete="tel"
             data-testid="phone-input"
           />
           <Input
-            label="Password"
+            label={t("password")}
             name="password"
             required
             type="password"
@@ -87,33 +87,33 @@ const Register = ({ setCurrentView }: Props) => {
           data-testid="register-error"
         />
         <span className="text-center text-ui-fg-base text-small-regular mt-6">
-          By creating an account, you agree to Nanofield&apos;s{" "}
+          {t("agreePrefix")}{" "}
           <LocalizedClientLink
             href="/content/privacy-policy"
             className="underline"
           >
-            Privacy Policy
+            {t("privacy")}
           </LocalizedClientLink>{" "}
-          and{" "}
+          {t("and")}{" "}
           <LocalizedClientLink
             href="/content/terms-of-use"
             className="underline"
           >
-            Terms of Use
+            {t("terms")}
           </LocalizedClientLink>
           .
         </span>
         <SubmitButton className="w-full mt-6" data-testid="register-button">
-          Join
+          {t("join")}
         </SubmitButton>
       </form>
       <span className="text-center text-ui-fg-base text-small-regular mt-6">
-        Already a member?{" "}
+        {t("alreadyMember")}{" "}
         <button
           onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
           className="underline"
         >
-          Sign in
+          {t("signIn")}
         </button>
         .
       </span>
