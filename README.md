@@ -4,6 +4,10 @@ Nanofield is a standalone ecommerce store for semiconductors, electronic compone
 
 Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, a support/error page system (contact, returns, FAQ, branded error screens), a customer notification bell (order/return/broadcast feed with history page) plus return emails, storefront global announcement strips + image banner carousel with a Customer Notifications admin page, a Store Sender admin page for shipping labels, nightly feed retention, weight-gated cargo options, a free in-store pickup option, and Resend/Mailtrap customer email.
 
+<!-- To (re)record the admin login GIF below: log in at http://localhost:9000/app, capture ~10s, save as docs/images/backend-login.gif -->
+
+![Nanofield admin — login and branded dashboard](docs/images/backend-login.gif)
+
 Project docs (all in `docs/`):
 
 - `docs/whole.md` — whole-project state: architecture, what is built, conventions, gotchas
@@ -94,7 +98,7 @@ Without the publishable key, storefront API calls fail with a publishable-key er
 npm run storefront:dev
 ```
 
-Open `http://localhost:8000/dk/store`. Or run everything at once from the root with `npm run dev`.
+Open `http://localhost:8000/id/id/store` (`/en/id/store` is the same store in English). Or run everything at once from the root with `npm run dev`.
 
 ### 6. Load catalog data (pick one)
 

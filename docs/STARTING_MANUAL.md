@@ -6,6 +6,67 @@
 
 ---
 
+## Topic index — what to configure where
+
+**Build-vs-buy rule (audited Sep 29, 2026): custom code exists only where Medusa core has no equivalent — engines stay core, project layers sit on top.** Core reused as-is: RBAC engine (Owner/Staff are tier data + policies, not a second engine), notification module (`feed`/email are channels/providers), fulfillment provider interface (RajaOngkir quotes live beside the retained manual provider used for pickup), returns/claims/exchanges/promotions/price-lists/gift-cards flows (driven through admin drawers or dormant — never reimplemented), Translations + Workflows admin pages, CSV product import (the Shopee Excel pipeline is a different source, not a replacement). Custom with no core equivalent: `audit-log`, `banner`, `sender-profile`, `midtrans-payment`, `rajaongkir` service catalog + `rajaongkir-fulfillment` quotes (catalog-vs-provider split, not a duplication), `mailtrap`/`resend` email providers, retention + tracking jobs, bulk-products, receipt, datasheet auto-link, all subscribers. Removed Sep 30 (dead scaffolding, verified zero references, both endpoints 404 after removal): `api/admin/custom` (hardcoded debug order id), `api/store/custom` (bare 200 stub).
+
+### Setup flow — follow in order on a fresh clone
+
+1. Machine prerequisites → [Part A](#part-a--machine-prerequisites)
+2. Backend environment variables → [Part B](#part-b--backend-environment-appsbackendenv)
+3. Database migration + administrator user → [Part C](#part-c--migration-of-the-database-and-creation-of-the-administrator-user)
+4. Medusa concepts in setup order (§1–§20) → [Part D](#part-d--medusa-features-in-setup-order-definition-and-purpose-of-each)
+5. Definition of Ready gates → [Part E](#part-e--definition-of-ready-fresh-clone-and-production)
+6. Administration setup (F0 script, then F1–F11) → [Part F](#part-f--administration-setup-in-dependency-order)
+7. Storefront start + ID/EN check → [Part G](#part-g--storefront-environment-and-start)
+8. End-to-end checkout verification → [Part H](#part-h--checkout-verification-end-to-end-approximately-15-minutes)
+9. Verification on any machine → [Part I](#part-i--verification-on-any-machine-universal-no-per-machine-notes)
+
+### Topic lookup — when adjusting X, read Y
+
+- **API keys** (publishable vs secret) → [D.2](#2-api-keys--secret-versus-publishable), setup [F1](#f1-publishable-api-key-storefront-access), reference [J.3](#j3-settings-menus-gear-icon)
+- **Audit log** (who changed what; retention) → [J.1](#j1-project-specific-pages-pinned-navigation)
+- **Auth pages** (login, invite, reset) → [J.4](#j4-authentication-pages); users setup → [D.1](#1-users-and-authentication-medusa-user-authuseremailpass)
+- **Banners & announcements** (bell, strips, carousel) → [J.1](#j1-project-specific-pages-pinned-navigation)
+- **Cart → order composition** → [D.20](#20-cart-to-order-composition-of-all-units-at-checkout); live test → [Part H](#part-h--checkout-verification-end-to-end-approximately-15-minutes)
+- **Categories** (taxonomy for the storefront filter) → [D.18](#18-products-variants-categories-and-publication), reference [J.2](#j2-commerce-menus-sidebar)
+- **Collections / options / gift cards** → [J.2](#j2-commerce-menus-sidebar) (gift cards unused)
+- **Currency** (IDR before any Indonesia region) → [D.4](#4-store-and-currencies), setup [F2](#f2-store-currency-addition-of-idr-before-any-indonesia-region), reference [J.3](#j3-settings-menus-gear-icon)
+- **Customers, addresses, sessions** → [D.19](#19-customers-addresses-and-sessions), reference [J.2](#j2-commerce-menus-sidebar)
+- **Draft orders** (assisted sales) → [J.2](#j2-commerce-menus-sidebar)
+- **Emails** (Resend prod / Mailtrap dev, templates) → [Dormant](#dormant-by-decision-to-be-understood-not-configured), env → [Part B](#part-b--backend-environment-appsbackendenv)
+- **Environment keys** (every backend + storefront variable) → backend table [Part B](#part-b--backend-environment-appsbackendenv) (incl. MFA secret, sender block, retention jobs, RBAC flag + Owner email), storefront block [Part G](#part-g--storefront-environment-and-start) (incl. cargo threshold, public base URL)
+- **Fulfillment providers** (manual + RajaOngkir) → [D.10](#10-fulfillment-providers), links → [D.11](#11-location-to-provider-links), setup [F6](#f6-links-channel-to-location-and-location-to-providers), toggles → [J.3](#j3-settings-menus-gear-icon)
+- **Fulfillment sets, service zones, geo zones** → [D.12](#12-fulfillment-sets-service-zones-and-geo-zones), setup [F7](#f7-fulfillment-set-and-indonesia-service-zone), reference [J.3](#j3-settings-menus-gear-icon)
+- **Inventory, levels, reservations** → [D.17](#17-inventory-items-levels-and-reservations), placement [F10](#f10-inventory-levels-belong-at-pasar-jambi), reference [J.2](#j2-commerce-menus-sidebar)
+- **Locations** (stock/shipping; never delete one holding inventory) → [D.8](#8-stock-locations-with-address), channel link → [D.9](#9-location-to-sales-channel-link), setup [F5](#f5-stock-location-pasar-jambi-a-location-holding-inventory-must-never-be-deleted)–[F6](#f6-links-channel-to-location-and-location-to-providers), reference [J.3](#j3-settings-menus-gear-icon)
+- **Notifications & bell** (feed channel, retention) → [Dormant](#dormant-by-decision-to-be-understood-not-configured), reference [J.1](#j1-project-specific-pages-pinned-navigation)
+- **Orders** (fulfill, ship, returns, exchanges, claims, refunds, transfers, receipt) → [J.2](#j2-commerce-menus-sidebar)
+- **Payment providers** (system vs Midtrans) → [D.6](#6-payment-providers-assigned-to-a-region), setup [F3](#f3-payments-retention-of-the-system-provider-until-midtrans-is-delivered)
+- **Price lists** (dormant B2B reserve) → [J.2](#j2-commerce-menus-sidebar)
+- **Products, variants, publication** (+ bulk tools, datasheet widget) → [D.18](#18-products-variants-categories-and-publication), import [F11](#f11-products-authentic-catalog-through-the-importer-or-demonstration-seed-for-verification-only), reference [J.2](#j2-commerce-menus-sidebar), widgets → [J.6](#j6-project-injected-widgets-where-custom-interface-appears-inside-built-in-pages)
+- **Promotions & campaigns** (dormant, no codes issued) → [Dormant](#dormant-by-decision-to-be-understood-not-configured), reference [J.2](#j2-commerce-menus-sidebar)
+- **RajaOngkir services catalog** (enable/disable courier services) → [D.16](#16-rajaongkir-shipping-services-catalog-project-layer-not-medusa-core), reference [J.1](#j1-project-specific-pages-pinned-navigation)
+- **Regions** (Indonesia live, Europe scaffolding) → [D.5](#5-regions), setup [F4](#f4-region-creation-of-indonesia-with-tax-region), reference [J.3](#j3-settings-menus-gear-icon)
+- **Return & refund reasons** (define before the first return) → [J.3](#j3-settings-menus-gear-icon)
+- **Sales channels** (single Default channel) → [D.3](#3-sales-channels), reference [J.3](#j3-settings-menus-gear-icon)
+- **Sender profile** (Pengirim on labels) → [J.1](#j1-project-specific-pages-pinned-navigation)
+- **Sitemap & robots** (automatic per-locale sitemap) → no operator action; driven by `NEXT_PUBLIC_BASE_URL` in [Part G](#part-g--storefront-environment-and-start)
+- **Shopee import** (preview → execute) → [Gate 1](#gate-1--pre-import-execute-is-forbidden-until-every-row-passes), reference [J.1](#j1-project-specific-pages-pinned-navigation)
+- **Shipping options** (incl. JNE REG / J&T EZ / City Courier / pickup) → [D.15](#15-shipping-options), setup [F9](#f9-shipping-options-jne-reg-jt-ez-and-jne-city-courier-calculated-pickup-manual-optional), reference [J.3](#j3-settings-menus-gear-icon)
+- **Shipping profiles & option types** → [D.13](#13-shipping-profiles)–[D.14](#14-shipping-option-types), setup [F8](#f8-shipping-option-type-standard), reference [J.3](#j3-settings-menus-gear-icon)
+- **Store settings, currencies, tags/types** → [D.4](#4-store-and-currencies), reference [J.3](#j3-settings-menus-gear-icon)
+- **Storefront locales** (ID/EN URLs, toggle) → [Part G](#part-g--storefront-environment-and-start); URL system: `ARCHITECTURE.md` §8
+- **Tax** (regions, rates, overrides) → [D.7](#7-tax-regions), setup [F4](#f4-region-creation-of-indonesia-with-tax-region), reference [J.3](#j3-settings-menus-gear-icon)
+- **Translations admin** (store content locales — not the storefront UI translation) → [J.3](#j3-settings-menus-gear-icon)
+- **Users, roles & team tiers** (Owner/Staff, invite, user-role widget) → [D.1](#1-users-and-authentication-medusa-user-authuseremailpass), reference [J.3](#j3-settings-menus-gear-icon), widget → [J.6](#j6-project-injected-widgets-where-custom-interface-appears-inside-built-in-pages), entry points → [J.4](#j4-authentication-pages)
+- **Workflows executions** (observational) → [J.3](#j3-settings-menus-gear-icon)
+- **Ready gates & sign-off** → [Part E](#part-e--definition-of-ready-fresh-clone-and-production) ([Gate 1](#gate-1--pre-import-execute-is-forbidden-until-every-row-passes), [Gate 2](#gate-2--pre-go-live-launch-is-forbidden-until-the-part-h-verification-passes), [production values](#production-substitutions-same-gates-changed-values))
+- **Recorded incidents & prohibitions** → [Part K](#part-k--lessons-learned-recorded-incidents)
+- **Page conventions** (lists, details, forms, drawers) → [J.5](#j5-page-anatomy-conventions-applicable-throughout)
+
+---
+
 ## Part A — Machine prerequisites
 
 | Requirement | Version / notes |
@@ -33,26 +94,30 @@ Configure at minimum the following variables (the full list with comments is fou
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | `postgres://<user>:<password>@localhost:5432/nanofield` |
+| `DATABASE_URL` | `postgres://<user>:<password>@localhost:5432/nanofield` (`DB_NAME=nanofield` selects the database when the URL carries none) |
 | `JWT_SECRET` / `COOKIE_SECRET` | Long random strings (the template development defaults are not safe to share) |
+| `AUTH_MFA_ENCRYPTION_KEY` | Managed MFA secret — generate once per environment (`openssl rand -hex 32`), never reuse across environments, never leave empty in production |
 | `STOREFRONT_URL` | `http://localhost:8000` |
 | `REVALIDATE_SECRET` | Long random string — **it must be identical** in the storefront's `.env.local` (it authorizes instant catalog cache invalidation) |
 | `RAJAONGKIR_API_KEY` | **SHIPPING COST (Cek Ongkir) key** from the Komerce Collaborator dashboard → Developer → Settings → Api Key. Use the **sandbox key first** for testing; replace it with the live key at go-live. **Without this key, every quotation silently returns the flat fallback (Rp 20.000) — checkout appears functional while all prices are placeholders that do not reflect carrier rates.** |
 | `RAJAONGKIR_BASE_URL` | Sandbox base URL for testing, `https://rajaongkir.komerce.id/api/v1` for live operation |
-| `RAJAONGKIR_ORIGIN_ID` | `19363` (Pasar Jambi, Kota Jambi 36133). Pinned numeric subdistrict identifier — it is not to be left empty in production (an empty value causes slow text resolution of `RAJAONGKIR_ORIGIN` at boot) |
+| `RAJAONGKIR_ORIGIN_ID` | `19363` (Pasar Jambi, Kota Jambi 36133). Pinned numeric subdistrict identifier — it is not to be left empty in production (an empty value falls back to resolving `RAJAONGKIR_ORIGIN` text through destination search at boot, which is slow) |
 | `RAJAONGKIR_DEFAULT_WEIGHT_G` | `500` (per-item fallback applied when a variant has no recorded weight) |
 | `RAJAONGKIR_FALLBACK_AMOUNT` | `20000` (flat quotation returned when the API fails — checkout is never blocked) |
 | `MIDTRANS_SERVER_KEY` / `MIDTRANS_CLIENT_KEY` | Sandbox keys from the Midtrans dashboard → Settings → Access Keys (server key authorizes status reads/refunds; client key is served to the storefront Snap flow) |
 | `MIDTRANS_IS_PRODUCTION` | `false` for testing; flip to `true` only at go-live together with the live keys. Register `{BACKEND_URL}/hooks/payment/midtrans` as the notification URL in the Midtrans dashboard per environment |
-| `STORE_NAME` / `STORE_PHONE` / `STORE_ADDRESS_1` / `STORE_CITY` / `STORE_PROVINCE` / `STORE_COUNTRY_CODE` | Sender block printed as Pengirim on every shipping label (`GET /admin/orders/[id]/receipt`). No admin UI edits these yet — change them here |
+| `STORE_NAME` / `STORE_PHONE` / `STORE_ADDRESS_1` / `STORE_CITY` / `STORE_PROVINCE` / `STORE_COUNTRY_CODE` / `STORE_EMAIL` | Sender block printed as Pengirim on every shipping label (`GET /admin/orders/[id]/receipt`); the `/app/sender-profile` page overrides them once saved, these remain the unsaved fallback. No other admin UI edits these — change them here |
 | `TRACKING_SYNC_ENABLED` / `TRACKING_SYNC_CRON` / `TRACKING_SYNC_MAX_PER_RUN` / `TRACKING_SYNC_MIN_AGE_HOURS` | Auto-delivery sync job (`tracking-sync`, defaults `true` / every 6h / 5 per run / 6h min age). Shares the 100 hits/day RajaOngkir quota with checkout quotes — keep the cap small |
 | `FEED_RETENTION_DAYS` / `FEED_RETENTION_CRON` | Feed cleanup job (`notification-retention`, defaults 90 days / daily 03:00, `0` disables). Deletes old `feed` rows (admin + customer bell) oldest-first, 2000/run cap |
 | `RESEND_API_KEY` / `RESEND_FROM` | Production customer email (verified sender required). When set, Resend is the active email provider; leave `RESEND_API_KEY` empty to fall through to Mailtrap |
 | `MAILTRAP_HOST` / `MAILTRAP_PORT` / `MAILTRAP_USER` / `MAILTRAP_PASS` / `MAILTRAP_FROM` | Development customer email via Mailtrap sandbox SMTP credentials (sandbox inbox → SMTP Settings). Active only when `MAILTRAP_USER` is set and `RESEND_API_KEY` is empty |
+| `AUDIT_RETENTION_DAYS` / `AUDIT_RETENTION_CRON` | Audit-log cleanup job (`audit-retention`, defaults 90 days / daily 03:30, `0` disables — unbounded growth is not recommended). Prunes admin-mutation rows oldest-first |
+| `MEDUSA_FF_RBAC` | `true` — master switch for the RBAC engine behind the Owner/Staff tiers. Off means every admin can do everything, including reading the audit log |
+| `AUDIT_OWNER_EMAIL` | The admin account that automatically holds the Owner role (audit-log access); every other admin gets Staff. Set once per environment (dev, staging, production) and restart the backend — no console script is needed |
 
 `STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` / `REDIS_URL` already default to local values in the template.
 
-**Verify:** every `RAJAONGKIR_*` key in addition to `DATABASE_URL`, `REVALIDATE_SECRET`, and `STOREFRONT_URL` is non-empty. (The backend starts normally with an empty API key — it simply never obtains live quotations, which is precisely the failure mode to avoid.)
+**Verify:** every `RAJAONGKIR_*` key in addition to `DATABASE_URL`, `REVALIDATE_SECRET`, and `STOREFRONT_URL` is non-empty; `AUDIT_OWNER_EMAIL` names the intended Owner account and `MEDUSA_FF_RBAC` is `true`. (The backend starts normally with an empty API key — it simply never obtains live quotations, which is precisely the failure mode to avoid.)
 
 ---
 
@@ -153,7 +218,7 @@ The `shipping_service` table with the `/app/rajaongkir-services` administration 
 A product (with variants and SKUs) carries specification `metadata` (`part_number`, `is_semiconductor`, `datasheet_url`, `mpn`, `no_datasheet`, `has_datasheet`, `category_path`, `spec_family`, `spec_*`, and related fields) and is organized through categories. Two gates control storefront visibility: **`status`** (published versus draft — the importer drafts zero-stock items automatically) and **sales-channel availability**. If either gate is closed, the product is invisible and no error is reported. Catalog-consistency rules (full contract in `docs/catalog-consistency-phases.md`): the single `Variation` option holds seller values normalized at import (trim/collapse, case preserved — never rename the option title); each product carries exactly one canonical category from the checked-in allowlist (`category-map.ts`, `*Others` buckets kept); variant labels derive filterable `spec_*` facts plus a monotonic `has_datasheet` flag; an operator-set `mpn` becomes `part_number` so search and datasheet never disagree.
 
 ### 19. Customers, addresses, and sessions
-Store accounts with saved addresses (checkout reuses them; the address pages require no modification for shipping). Customer sessions expire server-side while pages continue to render — expired sessions produce 401 responses on write operations, presented as "Session expired — log out and back in."
+Store accounts with saved addresses (checkout reuses them; the address pages require no modification for shipping). Registration enforces email verification: login/register returns `verification_required` until the link is confirmed — in dev the link lands in the Mailtrap inbox, in production it goes through Resend. Until verified, the account cannot sign in. The storefront additionally gates prices and buying behind sign-in (guests see "Sign in for price" and a gate modal on any buy attempt) — **every checkout test therefore starts with a verified, signed-in customer account** (see Part H step 0). Customer sessions expire server-side while pages continue to render — expired sessions produce 401 responses on write operations, presented as "Session expired — log out and back in."
 
 ### 20. Cart to order (composition of all units at checkout)
 Checkout is the point at which every unit above converges: cart (region prices) → address (city and province feed the RajaOngkir destination lookup) → **delivery step** (location-to-channel, zone-to-geo-zone, option-to-provider-to-live-quote, summed variant weights in grams) → payment (`pp_system_default` for the present) → order with a fulfillment record stamped `{ courier, service, manual_booking: true }` (the AWB is booked manually outside the system). Any empty step in that chain traces back to exactly one Part F item.
@@ -359,7 +424,7 @@ Expected end state: all live levels at Pasar Jambi, none stranded elsewhere. Pub
 - **Slot rules (what each combination does):** the Penjualan (sales) file is mandatory — Preview and Execute both reject the run without it. Dasar and Media are optional: when omitted, existing descriptions, galleries, and category memberships are left untouched (the engine only overwrites them when the files supply replacements). A weights-only refresh is therefore run as **sales + ship** (current sales file plus the ship file): prices, stock, variants, and weights sync, while descriptions, images, and categories are preserved. An old sales file must never be used as a carrier for a new ship file — prices and stock would rewind to the old values.
 - **Options for a sales + ship run:** enable **Publish new products** so restocked drafts return to the storefront automatically (zero-stock products stay draft regardless; deliberate manual unpublishes are only overridden when this is on). Leave **Overwrite content on existing products** off — with no Dasar/Media files there is nothing to sync, and off additionally guards existing content. Re-imports never duplicate: products match by `shopee_product_id`, so the same sales file updates rows in place (new Shopee listings appear as the only creates).
 - **Demonstration verification only:** `cd apps/backend && ADMIN_EMAIL=... ADMIN_PASSWORD=... node scripts/seed-semiconductors.mjs` — twelve semiconductor SKUs, EUR/USD placeholder prices, 500 units of stock at the first location. The script is idempotent (existing handles are skipped). **Demonstration rows are to be removed before the authentic import** (handle collisions: `TRS-0051`, `IC-0399/0401`).
-- Remaining-item sweep: confirm that no `lt-XXXX` load-test, merchandise, or demonstration rows remain in the live catalog.
+- Remaining-item sweep: confirm that no `lt-XXXX` load-test, merchandise, or demonstration rows remain in the live catalog. Load-test rows are created by `scripts/seed-bulk.mjs` and removed with `CLEAN=1 node scripts/seed-bulk.mjs` (handles `lt-*`, trivially distinguishable from the real catalog).
 
 ---
 
@@ -372,18 +437,21 @@ NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=<key from F1>
 NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
 NEXT_PUBLIC_DEFAULT_REGION=id
 NEXT_PUBLIC_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_CARGO_MIN_WEIGHT_G=10000
 REVALIDATE_SECRET=<same value as backend>
 ```
+
+`NEXT_PUBLIC_BASE_URL` is the public origin — it feeds canonical URLs, hreflang alternates, and `sitemap.xml`, so production must set the real domain (the localhost default poisons all three). `NEXT_PUBLIC_CARGO_MIN_WEIGHT_G` (default 10000) hides JNE JTR/cargo options below that cart weight with an "unlocks above X kg" hint; merchandising only, the server still quotes if selected.
 
 ```bash
 npm run storefront:dev   # from the repository root; alternatively `npm run dev` for all applications
 ```
 
-Open `http://localhost:8000/id/id/store` (prices exist only in IDR, therefore `/dk/` regions render blank prices; the old `/id/store` form still works — it redirects). Verify both languages: `/id/id/...` renders Indonesian, `/en/id/...` English (the ID|EN toggle in the navbar flips the URL prefix while keeping the page).
+Open `http://localhost:8000/id/id/store` (prices exist only in IDR, therefore `/dk/` regions render blank prices; the old `/id/store` form still works — it redirects). Verify both languages: `/id/id/...` renders Indonesian, `/en/id/...` English (the ID|EN toggle in the navbar flips the URL prefix while keeping the page). URL locale system: `ARCHITECTURE.md` §8.
 
 **Restart rules (to be consulted before reporting stale data or anomalous URLs):**
 
-1. **After creating or modifying any region or country:** restart the storefront development server. The middleware caches the country-to-region map in memory and in the fetch cache for one hour. Switching to a country unknown to the cache redirects `/<new>` to `/<fallback>/<new>` (for example `/dk/id`), which resolves to a 404 page. After restart, navigate to `/<country>` directly.
+1. **After creating or modifying any region or country:** restart the storefront development server. The middleware caches the country-to-region map in memory and in the fetch cache for one hour. Switching to a country unknown to the cache redirects `/<locale>/<new>` to `/<locale>/<fallback>/<new>` (for example `/id/xx`), which resolves to a 404 page. After restart, navigate to `/<locale>/<country>` directly.
 2. After modifying environment variables: restart.
 3. After deleting products or categories in administration: product changes invalidate automatically through `POST /api/catalog/revalidate` (which requires `STOREFRONT_URL` and a matching `REVALIDATE_SECRET`); category changes take effect within the five-minute ISR window — alternatively, restart. Account order pages (list and details) refresh on a 60-second window: shipment and payment changes made in administration appear there within a minute, no restart needed.
 
@@ -391,7 +459,8 @@ Open `http://localhost:8000/id/id/store` (prices exist only in IDR, therefore `/
 
 ## Part H — Checkout verification (end-to-end, approximately 15 minutes)
 
-1. Storefront → `/id/store` → add any in-stock item → cart.
+0. **Customer account first (the price gate blocks guests):** register at `/id/id/account`, confirm the verification link (Mailtrap inbox in dev), and sign in. Without this step there are no visible prices and no buy button — only "Sign in for price" CTAs and the gate modal. Reuse this account for all future verifications.
+1. Storefront → `/id/id/store` → add any in-stock item → cart (locale first, country second; `/en/id/store` is the same store in English).
 2. Check out with a **Jakarta address** (for example Menteng) and confirm that **live quotations** appear: JNE REG ≈ Rp 26.000 and J&T EZ ≈ Rp 22.000 at 1 kg (reference lane, September 8). Then repeat with an **intra-Jambi address**: JNE City Courier ≈ Rp 10.000 and J&T EZ ≈ Rp 8.000 at 500 g. Both lanes are required — a single lane cannot distinguish a live quote from the fallback.
 3. **Fallback check:** when every option quotes exactly Rp 20.000, the RajaOngkir key is absent or invalid (Part B) — correct the key, restart the backend, and retry. A *single* option at Rp 20.000 while the others are live is normal: that service does not exist on the lane (JNE REG has no intra-city service, JNE CTC has no inter-city service) and the fallback marks it unavailable. Exact-service options never borrow another service's price.
 4. Place the test order; confirm that the fulfillment record is stamped `{ courier, service, manual_booking: true }` (the AWB is booked manually outside the system).
@@ -415,9 +484,9 @@ DRY_RUN=1 ADMIN_EMAIL=... ADMIN_PASSWORD=... node scripts/seed-nanofield-shippin
 
 ## Part J — Backend administration reference (every menu, page, tab, and form)
 
-The administration is served at `http://localhost:9000/app`. Section I.1 lists the project-specific pages (pinned above the standard menu); Sections I.2–I.5 document the built-in Medusa v2.19 administration, verified against the shipped route inventory; Section I.6 documents the injected widgets. Paths are given as `/app/<path>` throughout.
+The administration is served at `http://localhost:9000/app`. Section J.1 lists the project-specific pages (pinned above the standard menu); Sections J.2–J.5 document the built-in Medusa v2.19 administration, verified against the shipped route inventory; Section J.6 documents the injected widgets. Paths are given as `/app/<path>` throughout.
 
-### I.1. Project-specific pages (pinned navigation)
+### J.1. Project-specific pages (pinned navigation)
 
 | Sidebar label | Path | Purpose and contents |
 |---|---|---|
@@ -426,19 +495,20 @@ The administration is served at `http://localhost:9000/app`. Section I.1 lists t
 | Shipping Services | `/app/rajaongkir-services` | Live catalog of quotable courier services. Table columns: code, courier, service code, label, cheapest-match flag, enabled state. Actions: enable/disable toggles (built-ins `jne-reg` and `jnt-eco` can only be disabled, never deleted); creation and deletion of custom services. The F9 JNE City Courier option additionally requires `jne-ctc` to be enabled here, since option validation rejects disabled service identifiers. Changes apply to checkout immediately without deployment. Purpose: day-to-day control of which courier services are offered. |
 | Customer Notifications | `/app/announcements` | Bell broadcasts plus storefront banners, in four sections. **Broadcast** form (title/required, description, storefront-path link, optional "banner until" date): posts one feed record to every logged-in customer bell (visible on the next 60s poll; also lands in the admin bell). **Image Banner Carousel** form (title, link, JPEG/PNG/WebP file ≤5MB, shown-through date): publishes the fixed homepage/store banner (files land in the backend `/static` volume; only the relative path is stored). **Global Announcement Strip** form: text strip with no bell involved. **Live Announcement Strips** list: every row shows a live preview (image thumb or strip mock) with Publish/Unpublish toggle and dates — unpublish hides immediately, expired rows stay as history, nothing is ever deleted (though Reannounce deletes and clones to reset view states). **Past broadcasts** list: inline Edit (applies going forward only) and confirm-gated Delete (bell record only; banner twins are separate rows). Every mutation toasts success; failures show inline. Purpose: all customer-facing messaging from one page. |
 | Store Sender | `/app/sender-profile` | Pengirim block printed on every shipping label (name, phone, street, city, province, country code). Saving updates the next printed label immediately; until saved once, labels fall back to the `STORE_*` env values. Purpose: sender edits without deploys or env changes. |
+| Audit Log | `/app/audit-log` | Owner-only mutation log: who changed what and when on admin writes (actor, action, entity, timestamp). Backed by the `audit-log` module (`GET /admin/audit-logs`, gated on the `audit-log-read` policy); a nightly retention job (`audit-retention.ts`, `AUDIT_RETENTION_DAYS` default 90) prunes old rows. Staff without the Owner role are denied at the API. Purpose: tamper-evident accountability for team actions. |
 | Notification bell (top bar drawer) | — | Project notification center fed by the `feed` channel of the local notification provider. It records itemized completions and failures (Shopee import, bulk stock/delete, order placement/cancellation/shipment/auto-delivery, returns requested/received plus claims/exchanges, team membership changes, product-category changes) with title and summary line. Amounts render as `Rp 190.000` (never raw decimals). Semantics: order/import history persists indefinitely with pagination; bell *broadcasts* (Customer Notifications page) support Edit, confirm-gated Delete, and Reannounce, while customer-addressed rows are append-only; the drawer itself is stock Medusa behavior (a DOM-sweep customization that hid read rows was reverted in Sep 2026 after it froze the admin — do not re-add drawer DOM manipulation); unread means newer than the last drawer opening (blue dot on the bell); a bottom-right toast announces arrivals newer than the last visit (polls every 60 seconds). Deliberately silent: routine product events (covered by import summaries) and order updates. Purpose: operational awareness without log inspection. |
 
-### I.2. Commerce menus (sidebar)
+### J.2. Commerce menus (sidebar)
 
 **Orders** (`/app/orders`)
 - *List page:* searchable, filterable, exportable order table. Purpose: locating orders by status, region, or customer.
-- *Detail page* (`/app/orders/:id`): summary header; items table; payment and totals; shipping address and billing address forms (editable through dedicated edit drawers); email edit; timeline of events; metadata editor. The project injects an **Order Receipt** widget (Section I.6): once the payment is captured it offers a **Print** button that opens the thermal shipping label (`GET /admin/orders/[id]/receipt` — Penerima address + Pengirim sender block from the `STORE_*` env vars + tracking QR; print with margins None on 80mm rolls). Action drawers: **Create Fulfillment** (allocate items to a location and provider), **Create Shipment** (dispatch with tracking data), **Create Return** / **Receive Return** (return flow with reason selection), **Create Exchange**, **Create Claim**, **Create Refund** (with refund-reason selection), **Edit Order** (add/remove items before fulfillment), **Request Transfer** (move the order to another customer). Purpose: the complete post-purchase operational lifecycle.
+- *Detail page* (`/app/orders/:id`): summary header; items table; payment and totals; shipping address and billing address forms (editable through dedicated edit drawers); email edit; timeline of events; metadata editor. The project injects an **Order Receipt** widget (Section J.6): once the payment is captured it offers a **Print** button that opens the thermal shipping label (`GET /admin/orders/[id]/receipt` — Penerima address + Pengirim sender block from the `STORE_*` env vars + tracking QR; print with margins None on 80mm rolls). Action drawers: **Create Fulfillment** (allocate items to a location and provider), **Create Shipment** (dispatch with tracking data), **Create Return** / **Receive Return** (return flow with reason selection), **Create Exchange**, **Create Claim**, **Create Refund** (with refund-reason selection), **Edit Order** (add/remove items before fulfillment), **Request Transfer** (move the order to another customer). Purpose: the complete post-purchase operational lifecycle.
 
 **Draft Orders** (`/app/draft-orders`)
 - Manual order composition: add items and quantities, attach a customer, set shipping method and address, register payment, then convert to a standard order. Purpose: telephone, WhatsApp, and other assisted sales that do not pass through the storefront.
 
 **Products** (`/app/products`)
-- *List page:* product table with search, category filters, and export; creation entry point. The project injects the bulk stock/delete toolbar here (Section I.6).
+- *List page:* product table with search, category filters, and export; creation entry point. The project injects the bulk stock/delete toolbar here (Section J.6).
 - *Creation form:* title, handle, description, media uploads, options (for example Size, Color) with values, variants (SKU, option combination, prices per currency, inventory), organization (categories, collections, tags, type), sales-channel assignment, shipping-profile assignment, metadata. Purpose: the single form that defines everything a product needs to be sellable.
 - *Detail page tabs:* General/Attributes (editable fields), Media (gallery management), Prices (per-currency variant pricing), Organization (categories, tags, type, collections), Sales Channels (availability gates), Inventory/Stock (levels per location), Variants (per-variant detail, edit, media, metadata, inventory-item linkage), Metadata (key-value editor, including the Nanofield specification fields). Purpose: lifecycle management of one product.
 - *Import/Export:* CSV product import and product export actions. Purpose: bulk catalog movement outside the Shopee pipeline.
@@ -476,7 +546,7 @@ The administration is served at `http://localhost:9000/app`. Section I.1 lists t
 **Price Lists** (`/app/price-lists`)
 - Create/edit/detail views (sale versus override type, validity dates, customer-group scoping), price add/edit forms per variant, configuration view. Purpose: scheduled or segmented pricing. Dormant at Nanofield (B2B reserve).
 
-### I.3. Settings menus (gear icon)
+### J.3. Settings menus (gear icon)
 
 **Store** (`/app/settings/store`)
 - Detail and edit forms: store name, default sales channel, default currency and region. **Currencies tab** (add/remove supported currencies — the F2 step). **Locales tab** (add content locales — backend store locales; unrelated to the storefront's ID/EN UI translation, which is URL-driven and needs no configuration here). Metadata editor. Purpose: shop identity and monetary foundation.
@@ -530,6 +600,7 @@ The administration is served at `http://localhost:9000/app`. Section I.1 lists t
 
 **Users** (`/app/settings/users`)**, Roles** (`/app/settings/roles`)**, Profile** (`/app/settings/profile`)
 - User list, invitation form (email with role assignment), detail/edit views, metadata editor. Role create/edit views with the permission matrix and user assignment; own-profile detail view. Purpose: team administration and least-privilege access control.
+- Project tiers on top of the core RBAC engine (no engine duplication — roles and policies are data): every admin holds exactly one tier role — **Owner** (the `AUDIT_OWNER_EMAIL` account; full access including the audit log) or **Staff** (policy-less; explicitly denied). `team-activity` auto-assigns the tier on invite acceptance so nobody is role-less (core `hasPermission` fail-opens for role-less users, which is why Staff denial must be explicit rather than absent). The **user-role widget** (`user.details.before`, Section J.6) lets Owners view and change tiers post-hoc; Staff see nothing (403). Bootstrap and retention are covered by the `audit-log` module. Accounts created before the loader existed are backfilled with `scripts/setup-audit-tiers.ts` (manual backfill only — idempotent, normally not needed). Purpose: two-tier team governance with an audit trail.
 
 **Return Reasons** (`/app/settings/return-reasons`) **and Refund Reasons** (`/app/settings/refund-reasons`)
 - *List pages:* reason tables (code, label, applied counts). Purpose: confirming the vocabularies available to operators; empty lists force free-text handling at the moment of the return.
@@ -545,21 +616,22 @@ The administration is served at `http://localhost:9000/app`. Section I.1 lists t
 - *Execution detail:* step-by-step trace with per-step state, inputs, outputs, and error payloads; compensation/rollback information where the workflow defines it. Purpose: pinpointing the exact failed step and its cause without code inspection.
 - *Scope note:* this area is strictly observational — executions are inspected here, never edited or re-triggered. Retries and corrections are performed through the originating feature (for example re-running an import Execute).
 
-### I.4. Authentication pages
+### J.4. Authentication pages
 Login form (email and password, project-branded backdrop), invitation acceptance, and password reset. Purpose: access control entry points; no configuration is performed here.
 
-### I.5. Page anatomy conventions (applicable throughout)
+### J.5. Page anatomy conventions (applicable throughout)
 - **List pages** provide search, filters, pagination, and row navigation to detail pages; destructive actions request confirmation.
 - **Detail pages** are organized into sections and tabs; each section carries its own edit form or drawer, so changes are scoped and reviewable.
 - **Forms** validate inline and report server errors with HTTP status and message; failed submissions never partially apply.
 - **Drawers and modals** (fulfillment, returns, refunds, stock adjustment, bulk tools) always present a preview or summary before the confirming action.
 
-### I.6. Project-injected widgets (where custom interface appears inside built-in pages)
+### J.6. Project-injected widgets (where custom interface appears inside built-in pages)
 | Widget | Injection zone | Location and function |
 |---|---|---|
 | Datasheet editor | `product.details.side` | Product detail sidebar: semiconductor toggle, datasheet URL field, and MPN field (see `whole.md` for the display rule). Saving an MPN into an empty part number also fills `part_number`, so search and datasheet never disagree; manual values always win over importer-derived ones. |
 | Bulk stock and delete tools | `product.list.before` | Product list toolbar: two-button bar opening Set-stock and Delete drawers with search, cross-page selection, preview, and parallel execution (see `whole.md`). |
 | Order receipt | `order.details.side.before` | Order detail sidebar: Print button + tracking-QR preview, visible only once the payment is captured; opens the thermal shipping label in a print frame (see `whole.md`). |
+| User role | `user.details.before` | User detail top: current tier badge (Owner/Staff) + role picker with save. Owners only — Staff get a 403 and see nothing. Lets Owners change tiers after invitation (see Users above). |
 | Branding | topbar, sidebar, login | Nanofield visual identity (badge, avatar, login circuit backdrop, copy adjustments). Decorative and textual only; no operational function. |
 
 ---
