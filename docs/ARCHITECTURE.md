@@ -216,6 +216,12 @@ Middleware region map: in-memory + fetch cache, 1-hour TTL
 
 Nothing dashed is required for launch; nothing solid may be skipped before it.
 
+## 9. Storefront structure — how the app is put together (Oct 1)
+
+Routes nest as `app/[locale]/[countryCode]/(main|checkout)`: locale is UI language (ID/EN via `next-intl`, see §8), countryCode is region/currency. All internal links go through `LocalizedClientLink` (prepends both segments — never hand-build a `/${countryCode}` URL); server-side redirects use `localizeServerPath()` (reads the middleware-synced `NEXT_LOCALE` cookie).
+
+Data lives in `lib/data/*` server actions (force-cache + tag revalidation via `getCacheOptions`/`getCacheTag` per domain). Translations: `getTranslations` in server components, `useTranslations` in client components — never hooks in shared modules (they render in both trees; pass labels as props, e.g. `LineItemPrice.originalLabel`). Error boundaries (`not-found`/`error`) use header-read messages (`getRequestMessages`), never requestLocale (layouts don't run there). Middleware does exactly two jobs: locale validate/redirect and region resolve. Dictionaries live in `src/messages/{en,id}.json` (one namespace per domain); per-locale SEO (hreflang/canonicals, titles, `sitemap.xml`, `robots.txt`) is built from the same routing table.
+
 ## 8. Storefront locales — ID/EN (Sep 29)
 
 URLs are `/{locale}/{countryCode}/…` (`next-intl`, `localePrefix: "always"`, Indonesian default): language and region vary independently (`/en/id/` = English UI, IDR prices). Dictionaries live in `apps/storefront/src/messages/{en,id}.json`; the ID|EN toggle swaps the URL prefix and syncs the backend cart locale best-effort. SEO surfaces are per-locale (hreflang + canonicals, translated titles, `sitemap.xml`, `robots.txt`).

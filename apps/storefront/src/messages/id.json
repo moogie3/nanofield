@@ -153,6 +153,10 @@
     "original": "Awal: ",
     "prevImage": "Gambar sebelumnya",
     "nextImage": "Gambar berikutnya",
+    "viewDatasheet": "Lihat datasheet ↗",
+    "findDatasheetShort": "Cari datasheet ↗",
+    "relatedTitle": "Produk terkait",
+    "relatedSubtitle": "Anda mungkin juga ingin melihat produk ini.",
     "selectOptions": "Pilih Opsi",
     "goToImage": "Ke gambar {index}",
     "productImageAlt": "Gambar produk {current} dari {total}"

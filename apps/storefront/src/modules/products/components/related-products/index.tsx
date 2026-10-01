@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { listProducts } from "@lib/data/products"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getRegion } from "@lib/data/regions"
@@ -48,15 +49,16 @@ export default async function RelatedProducts({
   }
 
   const customer = await retrieveCustomer().catch(() => null)
+  const t = await getTranslations("product")
 
   return (
     <div className="product-page-constraint">
       <div className="flex flex-col items-center text-center mb-16">
         <span className="text-base-regular text-muted-foreground mb-6">
-          Related products
+          {t("relatedTitle")}
         </span>
         <p className="text-2xl-regular text-ui-fg-base max-w-lg">
-          You might also want to check out these products.
+          {t("relatedSubtitle")}
         </p>
       </div>
 

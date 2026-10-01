@@ -153,6 +153,10 @@
     "original": "Original: ",
     "prevImage": "Previous image",
     "nextImage": "Next image",
+    "viewDatasheet": "View datasheet ↗",
+    "findDatasheetShort": "Find datasheet ↗",
+    "relatedTitle": "Related products",
+    "relatedSubtitle": "You might also want to check out these products.",
     "selectOptions": "Select Options",
     "goToImage": "Go to image {index}",
     "productImageAlt": "Product image {current} of {total}"

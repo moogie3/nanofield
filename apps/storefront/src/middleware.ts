@@ -210,9 +210,13 @@ export async function middleware(request: NextRequest) {
     return localizedNext(request, locale, cacheId, cacheIdCookie)
   }
 
-  // if the url doesn't have the country, redirect to it (locale preserved)
+  // if the url doesn't have the country, redirect to it (locale preserved).
+  // Everything from segments[1] on is preserved as page path: segments[1]
+  // holds either the country (handled above) or the first page segment of a
+  // country-less URL (e.g. /id/verify-account from emails). Dropping it here
+  // used to strand shoppers on the homepage with an orphaned ?token=.
   const restAfterCountry =
-    segments.length > 2 ? `/${segments.slice(2).join("/")}` : ""
+    segments.length > 1 ? `/${segments.slice(1).join("/")}` : ""
   const queryString = request.nextUrl.search || ""
   const redirectUrl = `${request.nextUrl.origin}/${locale}/${country}${restAfterCountry}${queryString}`
 

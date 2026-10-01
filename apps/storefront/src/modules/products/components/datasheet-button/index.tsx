@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { getDatasheetInfo } from "@lib/util/product-datasheet"
 import { HttpTypes } from "@medusajs/types"
 
@@ -7,7 +8,7 @@ import { HttpTypes } from "@medusajs/types"
  * (see `getDatasheetInfo`) — server-safe. Labels honestly: direct PDF
  * vs. identifier search.
  */
-export default function DatasheetButton({
+export default async function DatasheetButton({
   product,
 }: {
   product: HttpTypes.StoreProduct
@@ -18,6 +19,8 @@ export default function DatasheetButton({
     return null
   }
 
+  const t = await getTranslations("product")
+
   return (
     <a
       href={info.href}
@@ -25,7 +28,7 @@ export default function DatasheetButton({
       rel="noreferrer"
       className="flex h-10 w-full items-center justify-center rounded-md border border-border text-sm font-medium transition-colors hover:border-primary hover:text-primary"
     >
-      {info.isDirect ? "View datasheet ↗" : "Find datasheet ↗"}
+      {info.isDirect ? t("viewDatasheet") : t("findDatasheetShort")}
     </a>
   )
 }

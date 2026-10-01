@@ -33,9 +33,12 @@ export default async function authVerificationHandler({
     /\/$/,
     ""
   )
-  // Country prefix is cosmetic here (token confirm is country-independent);
-  // "id" matches the storefront default region.
-  const verifyUrl = `${base}/id/verify-account?token=${encodeURIComponent(data.code)}`
+  // Full locale + country prefix, both load-bearing: the storefront
+  // middleware reads segments[1] as the country slot, so a country-less
+  // /id/verify-account link used to redirect to the homepage with an
+  // orphaned ?token= instead of verifying. "id" matches the default region
+  // (token confirm itself is country-independent).
+  const verifyUrl = `${base}/id/id/verify-account?token=${encodeURIComponent(data.code)}`
   try {
     const logger = container.resolve(
       ContainerRegistrationKeys.LOGGER
