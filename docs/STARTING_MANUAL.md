@@ -541,6 +541,7 @@ The administration is served at `http://localhost:9000/app`. Section J.1 lists t
 
 **Customers** (`/app/customers`)
 - List and creation form; detail page with information editing, address book management (add/edit), group membership, order history, and metadata editor. Purpose: account administration and support.
+- The project injects a **Delete customer** danger zone on the detail page (Section J.6): core ships the `DELETE /admin/customers/:id` API but no dashboard button, so this widget is that button — confirm-gated, Owner-gated by core RBAC (Staff get a 403 toast). Deleting removes the record and its sign-in; orders and notification history stay, and the email can register again.
 
 **Customer Groups** (`/app/customer-groups`)
 - Create/edit forms, customer membership management, metadata editor. Purpose: segmentation for tiered pricing. Dormant at Nanofield (B2B reserve).
@@ -636,6 +637,7 @@ Login form (email and password, project-branded backdrop), invitation acceptance
 | Datasheet editor | `product.details.side` | Product detail sidebar: semiconductor toggle, datasheet URL field, and MPN field (see `whole.md` for the display rule). Saving an MPN into an empty part number also fills `part_number`, so search and datasheet never disagree; manual values always win over importer-derived ones. |
 | Bulk stock and delete tools | `product.list.before` | Product list toolbar: two-button bar opening Set-stock and Delete drawers with search, cross-page selection, preview, and parallel execution (see `whole.md`). |
 | Order receipt | `order.details.side.before` | Order detail sidebar: Print button + tracking-QR preview, visible only once the payment is captured; opens the thermal shipping label in a print frame (see `whole.md`). |
+| Customer delete | `customer.details.after` | Customer detail danger zone: confirm-gated Delete button calling core `DELETE /admin/customers/:id` (record + sign-in removed; orders and history kept; email re-registerable). Core RBAC gates it — Staff see a 403 toast. |
 | User role | `user.details.before` | User detail top: current tier badge (Owner/Staff) + role picker with save. Owners only — Staff get a 403 and see nothing. Lets Owners change tiers after invitation (see Users above). |
 | Branding | topbar, sidebar, login | Nanofield visual identity (badge, avatar, login circuit backdrop, copy adjustments). Decorative and textual only; no operational function. |
 
