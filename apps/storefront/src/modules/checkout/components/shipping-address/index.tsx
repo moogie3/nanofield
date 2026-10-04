@@ -4,7 +4,7 @@ import { Container } from "@modules/common/components/ui"
 import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
 import mapKeys from "lodash/mapKeys"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import AddressSelect from "../address-select"
 import CountrySelect from "../country-select"
 
@@ -34,6 +34,14 @@ const ShippingAddress = ({
 
   const tAddr = useTranslations("checkout.address")
   const tForm = useTranslations("checkout.form")
+
+  const cartId = cart?.id ?? null
+  // Once the shopper types or picks a saved address, background cart
+  // refreshes must not overwrite their input: the cart's shipping_address
+  // stays empty until this step is submitted, so a blind re-sync wipes
+  // the form seconds after it was filled.
+  const [isDirty, setIsDirty] = useState(false)
+  const lastSyncedCartId = useRef<string | null>(null)
 
   const countriesInRegion = useMemo(
     () => cart?.region?.countries?.map((c) => c.iso_2),
@@ -77,6 +85,15 @@ const ShippingAddress = ({
   }
 
   useEffect(() => {
+    const isNewCart = cartId !== lastSyncedCartId.current
+    lastSyncedCartId.current = cartId
+    // Same cart the shopper already edited: leave their input alone.
+    if (!isNewCart && isDirty) {
+      return
+    }
+    if (isNewCart) {
+      setIsDirty(false)
+    }
     // Ensure cart is not null and has a shipping_address before setting form data
     if (cart && cart.shipping_address) {
       setFormAddress(cart?.shipping_address, cart?.email)
@@ -85,17 +102,27 @@ const ShippingAddress = ({
     if (cart && !cart.email && customer?.email) {
       setFormAddress(undefined, customer.email)
     }
-  }, [cart]) // Add cart as a dependency
+  }, [cart, cartId, customer?.email, isDirty])
+
+  const handleSelectAddress = (
+    address?: HttpTypes.StoreCartAddress,
+    email?: string
+  ) => {
+    setIsDirty(true)
+    setFormAddress(address, email)
+  }
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLInputElement | HTMLSelectElement
     >
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    setIsDirty(true)
+    setFormData((prevState: Record<string, string>) => ({
+      ...prevState,
+      [name]: value,
+    }))
   }
 
   return (
@@ -112,7 +139,7 @@ const ShippingAddress = ({
                 key.replace("shipping_address.", "")
               ) as unknown as HttpTypes.StoreCartAddress
             }
-            onSelect={setFormAddress}
+            onSelect={handleSelectAddress}
           />
         </Container>
       )}

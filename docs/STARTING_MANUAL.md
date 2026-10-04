@@ -138,15 +138,17 @@ npx medusa user -e admin@test.com -p <choose-a-password>
    - **Europe** region (EUR; countries gb/de/dk/se/fr/es/it; payment provider `pp_system_default`) with tax regions for those seven countries
    - **European Warehouse** stock location (Copenhagen/DK) with a link to the `manual_manual` provider, the "European Warehouse delivery" fulfillment set, the Europe service zone, Standard/Express flat manual shipping options, and the channel-to-location link
    - Four demonstration merchandise products (t-shirt/sweatshirt/sweatpants/shorts) with inventory levels
+3. The project migration script `src/migration-scripts/link-midtrans-idr-regions.ts` (tracked in `script_migrations`, executed **once**). Region-to-payment-provider links are database rows that `git pull` never carries over, so this script links `pp_midtrans_midtrans` to every IDR region automatically (Midtrans settles in IDR, hence non-IDR regions are left manual-only). It is a no-op where the link already exists.
 
 > Note: `npm run backend:seed` (repository root) runs the Nanofield shipping setup script (`apps/backend/scripts/seed-nanofield-shipping.mjs`, backend running, `ADMIN_EMAIL`/`ADMIN_PASSWORD` in environment); the Europe/DK scaffolding itself is seeded exclusively through `db:migrate` above. The Europe/DK scaffolding serves only as a starting point; Parts D and F replace it with the Indonesia configuration. The Europe region is to be retained (it is harmless, and the storefront default-region fallback requires at least one region to exist).
 
-**Verify:** `script_migrations` contains `initial-data-seed`, and administration login succeeds at `http://localhost:9000/app`.
+**Verify:** `script_migrations` contains `initial-data-seed` and `link-midtrans-idr-regions`, and administration login succeeds at `http://localhost:9000/app`.
 
 **Migration discipline (applies to every machine, including this one):**
 - A fresh clone needs no special migration command — the `db:migrate` above replays the entire chain in order, including later additions (e.g. the audit-log read indexes). Production deploys run the same command before start (see `DEPLOY.md`).
 - `medusa develop` additionally applies pending module migrations on boot, so a restart alone picks up new migration files — but explicit `db:migrate` remains the verifiable step (it lists what ran).
 - Never edit, rewrite, or delete a migration that has run anywhere: the migrator tracks filenames (see `mikro_orm_migrations`), so editing changes nothing on existing databases while silently diverging fresh ones. Model changes: `npx medusa db:generate <module>` from `apps/backend`, then review the generated file. Raw-SQL needs with no model change (e.g. extra indexes): hand-write a new timestamped file in the owning module's `migrations/` dir, mirroring the existing `addSql` pattern.
+- If `db:migrate` fails re-running `initial-data-seed` with `Countries with codes ... are already assigned to a region`, the script's effects exist but its `script_migrations` record is missing (seeded database, restored backup). Do not edit the seed — record it as complete (`INSERT INTO script_migrations (script_name, finished_at) VALUES ('initial-data-seed.ts', NOW())`) and re-run `db:migrate`. Recorded incident (October 4): this exact failure blocked every later script migration from running.
 
 ```bash
 npm run backend:dev   # from the repository root; await the "Medusa is ready" message
@@ -175,7 +177,7 @@ The Store is the singleton record holding the shop name, the default channel, an
 A region is the combination of a currency, a set of countries, and payment providers. It drives the country segment of the storefront URL (`/id/id/...`, `/en/dk/...` — locale first, country second), price selection, and checkout eligibility. At Nanofield, **Indonesia** (IDR, `id`) is the live region, while **Europe** (EUR) is starter scaffolding that is retained rather than deleted. The importer creates a missing Indonesia/IDR region automatically and reuses an existing matching one, so manual creation and import runs never produce duplicates. **Consequence of absence:** the middleware has no country to route toward; carts cannot resolve prices.
 
 ### 6. Payment providers assigned to a region
-Each region declares which payment methods it accepts. The Indonesia region accepts **Midtrans** (`pp_midtrans_midtrans`, Snap checkout: QRIS, GoPay, bank transfer; signed webhook drives authorize/capture/refund), while regions without it keep **`pp_system_default`** (the built-in manual/system provider). **Consequence of absence:** region creation is rejected and checkout cannot complete payment.
+Each region declares which payment methods it accepts. The Indonesia region accepts **Midtrans** (`pp_midtrans_midtrans`, Snap checkout: QRIS, GoPay, bank transfer; signed webhook drives authorize/capture/refund), while regions without it keep **`pp_system_default`** (the built-in manual/system provider). These links are database rows (`region_payment_provider`), not code — pulling the repository never transfers them, so a region moved to a new machine offers only manual payment until Midtrans is linked. The `link-midtrans-idr-regions` migration script (Part C) performs the link automatically for every IDR region at `db:migrate` time; a region created *afterwards* still needs Midtrans ticked manually under Settings → Regions. **Consequence of absence:** region creation is rejected and checkout cannot complete payment.
 
 ### 7. Tax regions
 Per-country tax configuration (`tp_system` denotes the system tax provider). Cart totals compute tax through these records. **Consequence of absence:** total and tax computation fails for checkouts in that country. The seed creates the seven European rows; the `id` row is created in F4 (or by the F0 script).
@@ -226,7 +228,7 @@ A product (with variants and SKUs) carries specification `metadata` (`part_numbe
 Store accounts with saved addresses (checkout reuses them; the address pages require no modification for shipping). Registration enforces email verification: login/register returns `verification_required` until the link is confirmed — in dev the link lands in the Mailtrap inbox, in production it goes through Resend. Until verified, the account cannot sign in. The storefront additionally gates prices and buying behind sign-in (guests see "Sign in for price" and a gate modal on any buy attempt) — **every checkout test therefore starts with a verified, signed-in customer account** (see Part H step 0). Customer sessions expire server-side while pages continue to render — expired sessions produce 401 responses on write operations, presented as "Session expired — log out and back in."
 
 ### 20. Cart to order (composition of all units at checkout)
-Checkout is the point at which every unit above converges: cart (region prices) → address (city and province feed the RajaOngkir destination lookup) → **delivery step** (location-to-channel, zone-to-geo-zone, option-to-provider-to-live-quote, summed variant weights in grams) → payment (`pp_system_default` for the present) → order with a fulfillment record stamped `{ courier, service, manual_booking: true }` (the AWB is booked manually outside the system). Any empty step in that chain traces back to exactly one Part F item.
+Checkout is the point at which every unit above converges: cart (region prices) → address (city and province feed the RajaOngkir destination lookup) → **delivery step** (location-to-channel, zone-to-geo-zone, option-to-provider-to-live-quote, summed variant weights in grams) → payment (Midtrans for the Indonesia region, `pp_system_default` elsewhere) → order with a fulfillment record stamped `{ courier, service, manual_booking: true }` (the AWB is booked manually outside the system). Any empty step in that chain traces back to exactly one Part F item.
 
 ### Dormant by decision (to be understood, not configured)
 - **Returns, claims, and exchanges:** complete Medusa flows, unused until post-sale operations require them.
@@ -246,7 +248,7 @@ No import and no launch proceed past this section until its gates pass. The mode
 |---|---|---|---|
 | G1.1 | Publishable key linked to Default Sales Channel (F1) | Key-to-channel row exists | `publishable_api_key_sales_channel` |
 | G1.2 | Store supports IDR (F2) | `idr` in supported currencies (manual configuration preferred; the importer adds it as fallback) | `store_currency` |
-| G1.3 | Indonesia/IDR region with `pp_system_default` (F4) | Region present (manual configuration preferred; the importer creates a matching one as fallback); storefront restarted afterwards | `region`, `region_payment_provider`, then Part G restart rule 1 |
+| G1.3 | Indonesia/IDR region with `pp_midtrans_midtrans` + `pp_system_default` (F4) | Region present (manual configuration preferred; the importer creates a matching one as fallback, the Part C migration script adds the Midtrans link); storefront restarted afterwards | `region`, `region_payment_provider`, then Part G restart rule 1 |
 | G1.4 | Channel linked to Pasar Jambi (F6) | **Mandatory with no fallback.** Without it, stock resolution falls back to the global first location and every level lands at the wrong warehouse | `sales_channel_stock_location` |
 | G1.5 | **Preview sign-off (formal).** A Preview run is executed and its log is inspected. Execute is forbidden until the log simultaneously shows: `location=` resolving to Pasar Jambi, the Stok column resolving to genuine stock figures, and the weight badge reporting a detected Berat header. The Preview log line is the authoritative evidence that Gate 1 holds; a passing Preview with any other location is a failed gate, not a warning. | Signed-off Preview log | Importer job report |
 
@@ -284,7 +286,7 @@ No repository document specifies the production hosting target: `whole.md` (Next
 
 The following steps are to be performed **in this exact order**. Each item states the reason it must precede the next.
 
-**Manual setup is the primary path; importer automation is only a safety net.** The Shopee importer automatically adds a missing IDR currency and creates a missing Indonesia/IDR region (with `pp_system_default`), and it reuses an existing region when one already matches (currency `idr` containing country `id`) — therefore manual configuration and the importer do not produce duplicates. The importer does *not* create tax regions, channel links, fulfillment geography, option types, options, or provider links, and it places stock at the channel's first location (falling back to the global first location when the channel has none). Configuring the backend manually first is what guarantees stock lands at Pasar Jambi rather than at whatever location happens to be first.
+**Manual setup is the primary path; importer automation is only a safety net.** The Shopee importer automatically adds a missing IDR currency and creates a missing Indonesia/IDR region (with `pp_system_default`), and it reuses an existing region when one already matches (currency `idr` containing country `id`) — therefore manual configuration and the importer do not produce duplicates. The `link-midtrans-idr-regions` migration script adds the Midtrans link to that region at the next `db:migrate`. The importer does *not* create tax regions, channel links, fulfillment geography, option types, options, or provider links, and it places stock at the channel's first location (falling back to the global first location when the channel has none). Configuring the backend manually first is what guarantees stock lands at Pasar Jambi rather than at whatever location happens to be first.
 
 ### F0. Automated setup script (covers F2–F9, recommended after a fresh clone)
 
@@ -314,9 +316,9 @@ Navigate to Settings → Store → Currencies and add **IDR**. A region's curren
 
 **Verify:** `store_currency` contains `eur`, `usd`, and `idr`.
 
-### F3. Payments: retention of the system provider (until Midtrans is delivered)
+### F3. Payments: Midtrans on Indonesia, system provider retained everywhere
 
-The Midtrans integration (Phase 2) has not been built. Every region requires at least one payment provider, therefore **`pp_system_default`** is to remain on both regions. It must not be removed until the Midtrans provider is live and verified.
+The Midtrans provider (`pp_midtrans_midtrans`, module `src/modules/midtrans-payment`) is live: every IDR region must offer it alongside **`pp_system_default`**. The system provider is to remain on both regions regardless — every region requires at least one payment provider, and manual payment stays as the fallback. A region showing only manual payment means its Midtrans link is missing (database state, see D6): tick Midtrans under Settings → Regions, or run `db:migrate` so the `link-midtrans-idr-regions` script restores it.
 
 ### F4. Region: creation of Indonesia (with tax region)
 
@@ -327,11 +329,11 @@ Navigate to Settings → Regions and create the region with the following values
 | Name | `Indonesia` |
 | Currency | `IDR` |
 | Countries | Indonesia (`id`) |
-| Payment providers | `System default` (`pp_system_default`) |
+| Payment providers | `System default` (`pp_system_default`) **and** `Midtrans` (`pp_midtrans_midtrans`) |
 
 Then create the **tax region** for `id` (provider `tp_system`) — without it, cart total and tax computation fails for Indonesian checkouts. (The seven European tax regions originate from the seed.)
 
-**Verify:** `region` contains `Indonesia|idr`; `region_payment_provider` maps it to `pp_system_default`; `tax_region` contains an `id` row. **Then restart the storefront development server** (see Part G — the middleware caches the region map for one hour; a newly created region is invisible to routing until restart).
+**Verify:** `region` contains `Indonesia|idr`; `region_payment_provider` maps it to both `pp_system_default` and `pp_midtrans_midtrans` (the Midtrans row is added automatically by the Part C migration script; tick it manually under Settings → Regions if the region was created after migrating); `tax_region` contains an `id` row. **Then restart the storefront development server** (see Part G — the middleware caches the region map for one hour; a newly created region is invisible to routing until restart).
 
 ### F5. Stock location: Pasar Jambi (a location holding inventory must never be deleted)
 
