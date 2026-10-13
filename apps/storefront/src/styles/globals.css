@@ -328,6 +328,20 @@
     animation: hero-pop 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  @keyframes float-soft {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2.5px);
+    }
+  }
+
+  .animate-float-soft {
+    animation: float-soft 4s ease-in-out infinite;
+  }
+
   .bg-blueprint-tile {
     background-image:
       linear-gradient(to right, var(--border) 1px, transparent 1px),
@@ -338,42 +352,21 @@
   .nav-wordmark {
     position: relative;
     overflow: hidden;
-    letter-spacing: 0.02em;
-    transition: letter-spacing 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    letter-spacing: 0;
+    transition:
+      letter-spacing 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      text-shadow 0.3s ease;
   }
 
   .nav-wordmark:hover {
     letter-spacing: 0.22em;
   }
 
-  .nav-wordmark::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      105deg,
-      transparent 42%,
-      rgba(255, 255, 255, 0.55) 50%,
-      transparent 58%
-    );
-    transform: translateX(-130%);
-    pointer-events: none;
-  }
-
-  .nav-wordmark:hover::after {
-    animation: wordmark-sheen 0.9s ease;
-  }
-
-  @keyframes wordmark-sheen {
-    to {
-      transform: translateX(130%);
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .animate-hero-sweep,
     .animate-hero-scanline,
     .animate-hero-pop,
+    .animate-float-soft,
     .animate-hero-drift,
     .animate-hero-spin-slow,
     .hero-via {
@@ -387,10 +380,8 @@
     }
     .nav-wordmark,
     .nav-wordmark:hover {
-      letter-spacing: 0.02em;
-    }
-    .nav-wordmark:hover::after {
-      animation: none;
+      letter-spacing: 0;
+      text-shadow: none;
     }
   }
 }

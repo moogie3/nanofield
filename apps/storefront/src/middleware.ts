@@ -44,29 +44,33 @@ async function getRegionMap(cacheId: string) {
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
     // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
-    const response = await fetch(`${BACKEND_URL}/store/regions`, {
-      method: "GET",
-      headers: {
-        "x-publishable-api-key": PUBLISHABLE_API_KEY!,
-      },
-      next: {
-        revalidate: 3600,
-        tags: [`regions-${cacheId}`],
-      },
-      cache: "force-cache",
-    })
+    // Never throw here: a backend outage should fall back to the cached /
+    // default region so the request still redirects (e.g. /id -> /id/id)
+    // instead of crashing the middleware with "fetch failed".
+    try {
+      const response = await fetch(`${BACKEND_URL}/store/regions`, {
+        method: "GET",
+        headers: {
+          "x-publishable-api-key": PUBLISHABLE_API_KEY!,
+        },
+        next: {
+          revalidate: 3600,
+          tags: [`regions-${cacheId}`],
+        },
+        cache: "force-cache",
+      })
 
-    if (!response.ok) {
-      throw new Error(`Backend returned ${response.status}`)
-    }
+      if (!response.ok) {
+        throw new Error(`Backend returned ${response.status}`)
+      }
 
-    const json = await response.json()
+      const json = await response.json()
 
-    const { regions } = json
+      const { regions } = json
 
-    if (!regions?.length) {
-      return new Map<string, HttpTypes.StoreRegion>()
-    }
+      if (!regions?.length) {
+        return regionMap
+      }
 
     // Create a map of country codes to regions.
     // Rebuild from scratch so removed countries don't linger, and
@@ -82,7 +86,13 @@ async function getRegionMap(cacheId: string) {
     })
 
     regionMapCache.regionMap = freshMap
-    regionMapCache.regionMapUpdated = Date.now()
+      regionMapCache.regionMapUpdated = Date.now()
+    } catch {
+      // Backend down / wrong publishable key / empty regions: keep serving
+      // from cache (possibly empty). getCountryCode falls back to
+      // DEFAULT_REGION, so the user still gets a redirect like /id -> /id/id
+      // and sees the page-level error instead of a middleware crash.
+    }
   }
 
   return regionMapCache.regionMap

@@ -23,6 +23,16 @@ const LocalizedClientLink = ({
 }) => {
   const { locale, countryCode } = useParams()
 
+  // 404/error boundaries render outside the [locale] tree, so params can be
+  // empty. Fall back to the plain href instead of /undefined/undefined/...
+  if (typeof locale !== "string" || typeof countryCode !== "string") {
+    return (
+      <Link href={href} {...props}>
+        {children}
+      </Link>
+    )
+  }
+
   return (
     <Link href={`/${locale}/${countryCode}${href}`} {...props}>
       {children}

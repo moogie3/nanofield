@@ -106,6 +106,7 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-sans)", "sans-serif"],
         heading: ["var(--font-heading)", "sans-serif"],
+        brand: ["var(--font-brand)", "sans-serif"],
       },
       keyframes: {
         ring: {

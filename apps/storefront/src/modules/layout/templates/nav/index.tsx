@@ -7,6 +7,7 @@ import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import { getTranslations } from "next-intl/server"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { NanofieldMark } from "@modules/common/components/nanofield-logo"
 import CartButton from "@modules/layout/components/cart-button"
 import LocaleToggle from "@modules/layout/components/locale-toggle"
 import NotificationButton from "@modules/layout/components/notification-button"
@@ -51,10 +52,21 @@ export default async function Nav() {
         <div className="flex items-center h-full">
           <LocalizedClientLink
             href="/"
-            className="nav-wordmark hover:text-ui-fg-base uppercase font-heading font-bold text-primary text-2xl"
+            className="nav-wordmark group hover:text-ui-fg-base font-brand text-2xl font-semibold text-foreground"
             data-testid="nav-store-link"
           >
-            Nanofield
+            <span className="flex items-center">
+              <NanofieldMark className="h-8 w-auto opacity-40 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:transition-none" />
+              {/* Wordmark unfurls from the mark on hover/focus: the 0fr->1fr
+                  grid track animates to the exact text width while the
+                  nav-wordmark letter-spacing + sheen fire the whoosh. Text
+                  stays mounted (opacity only) so readers/SEO still see it. */}
+              <span className="grid grid-cols-[0fr] transition-[grid-template-columns] duration-500 ease-out group-focus-visible:grid-cols-[1fr] group-hover:grid-cols-[1fr] motion-reduce:transition-none">
+                <span className="overflow-hidden whitespace-nowrap opacity-0 transition-opacity duration-300 group-focus-visible:opacity-100 group-hover:opacity-100 group-hover:delay-150 motion-reduce:transition-none">
+                  <span className="ml-2 inline-block">Nanofield</span>
+                </span>
+              </span>
+            </span>
           </LocalizedClientLink>
         </div>
 

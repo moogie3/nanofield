@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import SearchField from "@modules/store/components/search-field"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -913,10 +914,29 @@ const Hero = () => {
           {t("badge")}
         </p>
         <h1
-          className="animate-hero-rise font-heading text-5xl font-bold tracking-tight text-foreground small:text-7xl"
-          style={{ animationDelay: "90ms" }}
+          className="animate-hero-rise flex justify-center"
+          style={{ animationDelay: "45ms" }}
         >
-          NANO<span className="text-primary">FIELD</span>
+          {/* Full brand lockup artwork (public/nanofield-lockup-*.png, cropped
+              from nanofield.png). The black-text original is invisible in dark
+              mode, so the white-text variant swaps in via the dark: class —
+              blob colors are identical in both. alt keeps the h1 accessible. */}
+          <Image
+            src="/nanofield-lockup-light.png"
+            alt="Nanofield"
+            width={938}
+            height={464}
+            priority
+            className="h-auto w-[min(400px,72vw)] dark:hidden"
+          />
+          <Image
+            src="/nanofield-lockup-dark.png"
+            alt="Nanofield"
+            width={938}
+            height={464}
+            priority
+            className="hidden h-auto w-[min(400px,72vw)] dark:block"
+          />
         </h1>
         <p
           className="animate-hero-rise text-base-regular max-w-2xl text-ui-fg-subtle small:text-large-regular"

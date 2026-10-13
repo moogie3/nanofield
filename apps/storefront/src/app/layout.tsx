@@ -3,7 +3,7 @@ import { isLocale } from "@lib/util/locale-path"
 import { Metadata } from "next"
 import { headers } from "next/headers"
 import "styles/globals.css"
-import { Outfit, Manrope } from "next/font/google"
+import { Outfit, Manrope, Nunito } from "next/font/google"
 import { cn } from "@/lib/utils"
 import ConsoleSilencer from "@modules/common/components/console-silencer"
 import { ThemeProvider } from "../components/theme-provider"
@@ -15,6 +15,15 @@ const manropeHeading = Manrope({
 })
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" })
+
+// Brand wordmark face: rounded geometric sans matching public/nanofield.png.
+// Loaded as a separate variable so only the logo uses it (headings stay
+// Manrope, body stays Outfit).
+const brand = Nunito({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-brand",
+})
 
 export async function generateMetadata(): Promise<Metadata> {
   // Root layout cannot read route params — locale arrives via the
@@ -45,7 +54,7 @@ export default async function RootLayout(props: {
     <html
       lang={lang}
       suppressHydrationWarning
-      className={cn("font-sans", outfit.variable, manropeHeading.variable)}
+      className={cn("font-sans", outfit.variable, manropeHeading.variable, brand.variable)}
     >
       <body className="bg-background text-foreground">
         <ConsoleSilencer />
