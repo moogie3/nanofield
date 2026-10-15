@@ -229,9 +229,31 @@
     stroke-linejoin: round;
   }
 
+  /* Reference-designator + value + net labels on the hero schematic
+     (NF-CTRL v1). Small Manrope semibold, trace color, static (no blink). */
+  .hero-ref {
+    font-family: var(--font-heading), sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    fill: currentColor;
+    opacity: 0.8;
+  }
+
+  /* IC / block titles on the hero schematic — one notch larger and bold
+     so each block reads at a glance (U1, U7 MCU, ADS1115, IR2104, U6…). */
+  .hero-ic {
+    font-family: var(--font-heading), sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    fill: currentColor;
+    opacity: 0.9;
+  }
+
   .hero-via {
-    fill: #00e676;
-    filter: drop-shadow(0 0 7px #00e676);
+    fill: var(--hero-via);
+    filter: drop-shadow(0 0 6px var(--hero-via-glow));
     animation: hero-via-blink 2.8s ease-in-out infinite;
   }
 
@@ -254,27 +276,16 @@
   }
 
   /* Traveling signal pulse: overlay path with normalized length
-     (pathLength=100) so one dash traverses the full net per cycle. */
+     (pathLength=100) so one dash traverses the full net per cycle.
+     dashoffset animates 200→100 so the leading edge enters from the
+     path start and exits at the end — one clean pass per loop. */
   @keyframes hero-pulse-flow {
     from {
-      stroke-dashoffset: 100;
+      stroke-dashoffset: 200;
     }
     to {
-      stroke-dashoffset: 0;
+      stroke-dashoffset: 100;
     }
-  }
-
-  /* Pulse signal color, deliberately one notch above the etched traces
-     and the primary brand teal in both themes — the pulse must read as
-     signal, not as another trace. */
-  :root {
-    --hero-pulse: #06b6d4;
-    --hero-pulse-glow: rgba(6, 182, 212, 0.55);
-  }
-
-  .dark {
-    --hero-pulse: #5eead4;
-    --hero-pulse-glow: rgba(94, 234, 212, 0.7);
   }
 
   .hero-pulse,
@@ -285,19 +296,19 @@
     stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-dasharray: 14 86;
-    filter: drop-shadow(0 0 6px var(--hero-pulse-glow));
-    animation: hero-pulse-flow 6s linear infinite;
+    stroke-dasharray: 8 92;
+    filter: drop-shadow(0 0 5px var(--hero-pulse-glow));
+    animation: hero-pulse-flow 5s linear infinite;
   }
 
   .hero-pulse-2 {
-    animation-duration: 8.5s;
-    stroke-dasharray: 10 90;
+    animation-duration: 8s;
+    stroke-dasharray: 6 94;
   }
 
   .hero-pulse-3 {
-    animation-duration: 11s;
-    stroke-dasharray: 18 82;
+    animation-duration: 12s;
+    stroke-dasharray: 10 90;
   }
 
   @keyframes hero-scanline {
@@ -340,6 +351,19 @@
 
   .animate-float-soft {
     animation: float-soft 4s ease-in-out infinite;
+  }
+
+  /* IC pin-function labels rendered inside the IC body.
+     Hidden in light mode (too cramped on white) — shown in dark mode
+     where the lower opacity schematic gives enough breathing room.
+     Using visibility rather than display so SVG layout is unaffected. */
+  .hero-pin-label {
+    font-size: 8px;
+    visibility: hidden;
+  }
+
+  .dark .hero-pin-label {
+    visibility: visible;
   }
 
   .bg-blueprint-tile {
@@ -424,6 +448,12 @@
     /* Hero circuit trace color: slate-blue in light mode (PCB silkscreen ink),
        teal in dark mode (existing green-glow aesthetic). */
     --hero-trace: oklch(0.55 0.12 250);
+    /* Signal pulse: indigo in light mode, contrasts on white PCB */
+    --hero-pulse: oklch(0.48 0.22 270);
+    --hero-pulse-glow: oklch(0.48 0.22 270 / 50%);
+    /* Junction dot: teal — distinct from pulse, classic PCB via look */
+    --hero-via: oklch(0.52 0.18 180);
+    --hero-via-glow: oklch(0.52 0.18 180 / 60%);
   }
   .dark {
     --background: oklch(0.148 0.004 228.8);
@@ -459,6 +489,12 @@
     --sidebar-ring: oklch(0.56 0.021 213.5);
     /* Dark mode: keep existing teal glow for the circuit traces */
     --hero-trace: oklch(0.65 0.12 180);
+    /* Signal pulse: vivid indigo in dark mode too */
+    --hero-pulse: oklch(0.72 0.22 270);
+    --hero-pulse-glow: oklch(0.72 0.22 270 / 65%);
+    /* Junction dot: bright teal glow — original look */
+    --hero-via: oklch(0.80 0.16 175);
+    --hero-via-glow: oklch(0.80 0.16 175 / 72%);
   }
 
   .theme {

@@ -185,18 +185,22 @@ const SYMBOLS: {
 ]
 
 // ---------------------------------------------------------------------------
-// HeroSchematic — one unified schematic scene filling the 1440×700 canvas.
+// HeroSchematic — "NF-CTRL v1", 12V DC motor-control board. Same blocks and
+// positions as before; this revision only re-routes wiring so that no trace
+// crosses an IC body, another trace, or a pin stub:
 //
-// Layout (absolute SVG coords):
-//   PWR block    top-left    ~(60,60)
-//   MCU block    centre      ~(540,220) — large IC, 10 pins/side
-//   ADC block    top-right   ~(1050,80)
-//   MOTOR block  bot-right   ~(1100,430)
-//   COMMS block  bot-left    ~(140,440)
-//   Passive net  mid-canvas  connecting all blocks
-//
-// All nets are horizontal or vertical; junction dots mark T-junctions.
-// Semiconductor symbols (diode, LED, MOSFET, transistor, relay) sit inline.
+//   - Every wire now lands on a real pin tip (ADC top pins were 6px off, the
+//     MCU decoupling/crystal drops were off-pin, U5 VM came off the body edge).
+//   - MCU: top = VDD x4 / OSCI / OSCO / VDDA, bottom = GND / BOOT0 / NRST.
+//     Ground symbols and the old ALRT + VBUS wires no longer run inside the body.
+//   - Side buses use nested fan-out lanes (SPI x=772/792/812, PWM x=876/896,
+//     UART x=372/392, SWD x=762/772) so lanes never cross each other.
+//   - Long rails that used to cut through other blocks (5V to K1 / U5 / divider,
+//     3V3 to ADC) are now short local "5V" / "3V3" flags or a clean feed.
+//   - Half-bridge (Q2/Q3/D8/M1) redrawn as one PHASE column with real
+//     MOSFET terminals; R6/R7 divider and NTC chain moved clear of the SPI lanes.
+// Pulse overlay paths below follow the new traces exactly.
+// Not SPICE-simulated; checked geometrically (no crossings / body intrusions).
 // ---------------------------------------------------------------------------
 
 // ── Inline component helpers ──
@@ -322,85 +326,278 @@ const HeroSchematic = () => (
   <g>
 
     {/* ════════════════════════════════════════════════════════
-        POWER MANAGEMENT BLOCK  (top-left, ~60,50)
+        POWER MANAGEMENT BLOCK  (top-left)
         ════════════════════════════════════════════════════════ */}
 
-    {/* VIN connector */}
+    {/* VIN connector J1 */}
     <path className="hero-tr" d="M20 80 H60" />
     <rect className="hero-tr" x="60" y="60" width="36" height="40" rx="2" />
     <path className="hero-tr" d="M62 72 H84 M62 80 H84 M62 88 H84" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="38" y="68">12V</text>
+    </g>
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="78" y="50">J1 12V IN</text>
+    </g>
 
-    {/* VIN → fuse → diode → regulator */}
+    {/* VIN → F1 fuse → D1 Schottky → U1 regulator */}
     <path className="hero-tr" d="M96 80 H118" />
-    {/* fuse */}
     <rect className="hero-tr" x="118" y="72" width="22" height="16" rx="2" />
     <path className="hero-tr" d="M122 80 H136" />
+    <circle className="hero-via" cx="140" cy="80" r="3" />
     <path className="hero-tr" d="M140 80 H162" />
-    {/* schottky diode */}
     <g transform="translate(174,80)"><InlineDiode /></g>
-    <path className="hero-tr" d="M186 80 H210" />
+    <path className="hero-tr" d="M186 80 H194" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="122" y="64">F1 1.5A</text>
+      <text x="180" y="64">D1 SS34</text>
+    </g>
 
-    {/* LDO regulator IC */}
-    <IcBlock x={210} y={58} w={60} h={46} pinsLeft={2} pinsRight={2} pinsTop={1} pinsBottom={1} pinLen={16} />
-    {/* decoupling cap on VIN */}
-    <path className="hero-tr" d="M228 58 V42" />
-    <g transform="translate(228,36) rotate(90)"><InlineCap /></g>
-    <path className="hero-tr" d="M228 30 V18 H260 V8" />
-    <circle className="hero-via" cx="228" cy="42" r="3" />
-    {/* GND symbols */}
-    <path className="hero-tr" d="M228 104 V116 M216 116 H240 M219 121 H237 M222 126 H234" />
+    {/* C1 bulk on VIN */}
+    <path className="hero-tr" d="M150 80 V94" />
+    <circle className="hero-via" cx="150" cy="80" r="3" />
+    <g transform="translate(150,106) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M150 118 V126 M138 126 H162 M141 131 H159 M144 136 H156" />
+    {/* C2 100n on U1 VIN */}
+    <path className="hero-tr" d="M190 80 V92" />
+    <circle className="hero-via" cx="190" cy="80" r="3" />
+    <g transform="translate(190,104) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M190 116 V124 M178 124 H202 M181 129 H199 M184 134 H196" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="150" y="148">C1 470u</text>
+      <text x="212" y="150">C2 100n</text>
+    </g>
 
-    {/* VOUT → power rail bus line at y=38 */}
-    <path className="hero-tr" d="M270 80 H310 V38 H700" />
+    {/* U1 5V LDO — VIN left, VOUT right, GND bottom (3 real pins only) */}
+    <IcBlock x={210} y={58} w={60} h={44} pinsLeft={1} pinsRight={1} pinsBottom={1} pinLen={16} />
+    <path className="hero-tr" d="M240 118 V130 M228 130 H252 M231 135 H249 M234 140 H246" />
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="240" y="53">U1 AMS1117-5V</text>
+    </g>
+
+    {/* U1 VOUT → 5V node (310,80): rail up, C3 down, U2 VIN right */}
+    <path className="hero-tr" d="M286 80 H324" />
     <circle className="hero-via" cx="310" cy="80" r="3" />
-    {/* cap on VOUT */}
-    <path className="hero-tr" d="M310 80 V98" />
+    <path className="hero-tr" d="M310 80 V38 H640" />
+    {/* C3 22u on 5V */}
+    <path className="hero-tr" d="M310 80 V92" />
     <g transform="translate(310,104) rotate(90)"><InlineCap /></g>
     <path className="hero-tr" d="M310 116 V128 M298 128 H322 M301 133 H319 M304 138 H316" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="618" y="28">5V</text>
+      <text x="310" y="150">C3 22u</text>
+    </g>
 
-    {/* ─ Zener clamp from rail ─ */}
-    <path className="hero-tr" d="M400 38 V58" />
-    <g transform="translate(400,68) rotate(90)"><InlineZener /></g>
-    <path className="hero-tr" d="M400 80 V92 M388 92 H412 M391 97 H409 M394 102 H406" />
-    <circle className="hero-via" cx="400" cy="38" r="3" />
+    {/* ─ D6 TVS clamp across 5V ─ */}
+    <path className="hero-tr" d="M456 38 V48" />
+    <g transform="translate(456,60) rotate(90)"><InlineZener /></g>
+    <path className="hero-tr" d="M456 72 V84 M446 84 H466 M448 89 H464 M451 94 H461" />
+    <circle className="hero-via" cx="456" cy="38" r="3" />
+    <g className="hero-ref" textAnchor="start">
+      <text x="470" y="66">D6 TVS15V</text>
+    </g>
 
-    {/* ─ LED power indicator ─ */}
-    <path className="hero-tr" d="M470 38 V56" />
-    <g transform="translate(470,68) rotate(90)"><InlineLed /></g>
-    <path className="hero-tr" d="M470 80 H490 V92 M478 92 H502 M481 97 H499 M484 102 H496" />
-    <circle className="hero-via" cx="470" cy="38" r="3" />
+    {/* ─ D4 green power LED on 5V with R1 bias ─ */}
+    <path className="hero-tr" d="M560 38 V48" />
+    <g transform="translate(560,62) rotate(90)"><InlineRes /></g>
+    <g transform="translate(560,88) rotate(90)"><InlineLed /></g>
+    <path className="hero-tr" d="M560 100 V108 M548 108 H572 M551 113 H569 M554 118 H566" />
+    <circle className="hero-via" cx="560" cy="38" r="3" />
+    <g className="hero-ref" textAnchor="end">
+      <text x="546" y="52">R1 1k</text>
+      <text x="546" y="92">D4 GRN</text>
+    </g>
+
+    {/* U2 3V3 LDO fed from the 5V node */}
+    <IcBlock x={340} y={58} w={60} h={44} pinsLeft={1} pinsRight={1} pinsBottom={1} pinLen={16} />
+    <path className="hero-tr" d="M370 118 V130 M358 130 H382 M361 135 H379 M364 140 H376" />
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="380" y="53">U2 AMS1117-3V3</text>
+    </g>
+
+    {/* U2 VOUT → 3V3 rail (y=128) feeding MCU VDD pins 555/580/605/630 */}
+    <path className="hero-tr" d="M416 80 H436 V128 H630 V138" />
+    <path className="hero-tr" d="M555 128 V138 M580 128 V138 M605 128 V138" />
+    <circle className="hero-via" cx="555" cy="128" r="3" />
+    <circle className="hero-via" cx="580" cy="128" r="3" />
+    <circle className="hero-via" cx="605" cy="128" r="3" />
+    {/* C5 22u + C10/C11 100n, hung from the rail left of the MCU */}
+    <path className="hero-tr" d="M456 128 V140" />
+    <circle className="hero-via" cx="456" cy="128" r="3" />
+    <g transform="translate(456,152) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M456 164 V170 M447 170 H465 M450 175 H462 M453 180 H459" />
+    <path className="hero-tr" d="M480 128 V140" />
+    <circle className="hero-via" cx="480" cy="128" r="3" />
+    <g transform="translate(480,152) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M480 164 V170 M471 170 H489 M474 175 H486 M477 180 H483" />
+    <path className="hero-tr" d="M504 128 V140" />
+    <circle className="hero-via" cx="504" cy="128" r="3" />
+    <g transform="translate(504,152) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M504 164 V170 M495 170 H513 M498 175 H510 M501 180 H507" />
+    <g className="hero-ref" textAnchor="end">
+      <text x="440" y="150">C5 22u</text>
+    </g>
+    <g className="hero-ref" textAnchor="middle">
+      <text x="492" y="120">C10-C11 100n</text>
+      <text x="598" y="120">3V3</text>
+    </g>
 
     {/* ════════════════════════════════════════════════════════
         MCU BLOCK  (centre, 530,160 — 200×260)
+        top pins: 555/580/605/630 VDD · 655 OSCI · 680 OSCO · 705 VDDA
         ════════════════════════════════════════════════════════ */}
 
     <IcBlock x={530} y={160} w={200} h={260}
       pinsTop={7} pinsBottom={7} pinsLeft={9} pinsRight={9} pinLen={22} />
-
-    {/* pin-1 marker */}
     <circle className="hero-via" cx="530" cy="160" r="4" />
 
-    {/* decoupling caps on VCC pins (top) */}
-    {[566, 594, 622, 650, 678, 706].map((px, i) => (
-      <g key={`mcu-dc${i}`}>
-        <path className="hero-tr" d={`M${px} 160 V142`} />
-        <g transform={`translate(${px},134) rotate(90)`}><InlineCap /></g>
-        <path className="hero-tr" d={`M${px} 126 V116`} />
-        <circle className="hero-via" cx={px} cy="116" r="3" />
-        <path className="hero-tr" d={`M${px} 116 V${100 - (i % 2) * 10}`} />
-      </g>
-    ))}
+    {/* Crystal Y1 on OSCI/OSCO (655/680) with load caps either side */}
+    <path className="hero-tr" d="M655 138 V84 M680 138 V84" />
+    <path className="hero-tr" d="M655 84 H661 M661 77 V91 M674 77 V91 M674 84 H680" />
+    <path className="hero-tr" d="M663 79 H672 V89 H663 Z" />
+    {/* C14 on OSCI */}
+    <path className="hero-tr" d="M655 104 H642 V112" />
+    <circle className="hero-via" cx="655" cy="104" r="3" />
+    <g transform="translate(642,124) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M642 136 V142 M636 142 H648 M638 147 H646 M640 152 H644" />
+    {/* C15 on OSCO */}
+    <path className="hero-tr" d="M680 104 H693 V112" />
+    <circle className="hero-via" cx="680" cy="104" r="3" />
+    <g transform="translate(693,124) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M693 136 V142 M687 142 H699 M689 147 H697 M691 152 H695" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="667" y="56">Y1 8MHz</text>
+      <text x="662" y="69">C14/C15 22p</text>
+    </g>
 
-    {/* VBUS rail connection at y=38 → MCU top-left */}
-    <path className="hero-tr" d="M700 38 H730 V116" />
-    <circle className="hero-via" cx="700" cy="38" r="3" />
-    {/* GND rail at y=490 → MCU bottom-left */}
-    <path className="hero-tr" d="M566 420 V450 H300 V490" />
-    <path className="hero-tr" d="M288 490 H312 M291 495 H309 M294 500 H306" />
-    <circle className="hero-via" cx="566" cy="420" r="3" />
+    {/* VDDA (705) → 3V3 feed up and across to the ADC VCC pin */}
+    <path className="hero-tr" d="M705 138 V50 H946 V60" />
+    <circle className="hero-via" cx="705" cy="138" r="3" />
+    <circle className="hero-via" cx="946" cy="60" r="3" />
+    {/* C16 100n on the ADC feed */}
+    <path className="hero-tr" d="M800 50 V54" />
+    <circle className="hero-via" cx="800" cy="50" r="3" />
+    <g transform="translate(800,66) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M800 78 V84 M788 84 H812 M791 89 H809 M794 94 H806" />
+    <g className="hero-ref" textAnchor="start">
+      <text x="814" y="70">C16 100n</text>
+    </g>
+    <g className="hero-ref" textAnchor="middle">
+      <text x="744" y="44">3V3</text>
+    </g>
 
-    {/* MCU left pins → COMMS block (traced below) */}
-    {/* MCU right pins → ADC / MOTOR (traced below) */}
+    {/* ── Bottom pins: GND 555 · BOOT0 580 · NRST 630 ── */}
+    {/* MCU GND */}
+    <path className="hero-tr" d="M555 442 V452 M547 452 H563 M550 457 H560 M553 462 H557" />
+    {/* BOOT0 strap: R9 10k to ground */}
+    <path className="hero-tr" d="M580 442 V454" />
+    <g transform="translate(580,468) rotate(90)"><InlineRes /></g>
+    <path className="hero-tr" d="M580 482 V520" />
+    {/* NRST node (630,462): C8 down, S1 left, R3 pull-up right */}
+    <path className="hero-tr" d="M630 442 V466" />
+    <circle className="hero-via" cx="630" cy="462" r="3" />
+    <g transform="translate(630,478) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M630 490 V520" />
+    <path className="hero-tr" d="M630 462 H606 V470" />
+    <rect className="hero-tr" x="598" y="470" width="16" height="10" rx="1" />
+    <path className="hero-tr" d="M606 480 V520" />
+    <path className="hero-tr" d="M630 462 H646" />
+    <g transform="translate(660,462)"><InlineRes /></g>
+    <path className="hero-tr" d="M674 462 H692 V470" />
+    {/* local ground rail + symbol */}
+    <path className="hero-tr" d="M580 520 H630" />
+    <circle className="hero-via" cx="580" cy="520" r="3" />
+    <circle className="hero-via" cx="606" cy="520" r="3" />
+    <circle className="hero-via" cx="630" cy="520" r="3" />
+    <path className="hero-tr" d="M606 520 V526 M594 526 H618 M597 531 H615 M600 536 H612" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="664" y="478">R3 10k</text>
+      <text x="698" y="482">3V3</text>
+    </g>
+    <g className="hero-ref" textAnchor="end">
+      <text x="624" y="456">NRST</text>
+      <text x="574" y="500">R9 10k</text>
+    </g>
+    <g className="hero-ref" textAnchor="start">
+      <text x="638" y="502">C8 100n</text>
+      <text x="612" y="506">S1</text>
+    </g>
+
+    {/* ── MCU pin legends (inside the IC body, dark mode only) ── */}
+    <g className="hero-ref hero-pin-label" textAnchor="start">
+      <text x="538" y="190">PA9/TX</text>
+      <text x="538" y="216">PA10/RX</text>
+      <text x="538" y="242">NC</text>
+      <text x="538" y="268">NC</text>
+      <text x="538" y="294">PC13/RLY</text>
+      <text x="538" y="320">PB6/SCL</text>
+      <text x="538" y="346">PB7/SDA</text>
+      <text x="538" y="372">PA2/TXD</text>
+      <text x="538" y="398">PA3/RXD</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="end">
+      <text x="722" y="190">SCK</text>
+      <text x="722" y="216">MISO</text>
+      <text x="722" y="242">MOSI</text>
+      <text x="722" y="268">ALRT</text>
+      <text x="722" y="294">PWM_HI</text>
+      <text x="722" y="320">PWM_LO</text>
+      <text x="722" y="346">SWDIO</text>
+      <text x="722" y="372">SWCLK</text>
+      <text x="722" y="398">NC</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="middle">
+      <text x="555" y="172">VDD</text>
+      <text x="580" y="172">VDD</text>
+      <text x="605" y="172">VDD</text>
+      <text x="630" y="172">VDD</text>
+      <text x="655" y="172">XI</text>
+      <text x="680" y="172">XO</text>
+      <text x="705" y="172">VDA</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="middle">
+      <text x="555" y="418">GND</text>
+      <text x="580" y="418">B0</text>
+      <text x="630" y="418">NRST</text>
+    </g>
+    {/* MCU refdes — always visible */}
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="630" y="294">STM32F103</text>
+    </g>
+
+    {/* ── MCU LEFT SIDE ── */}
+    {/* RLY drive → R5 → Q1 base (routed above the relay block) */}
+    <path className="hero-tr" d="M508 290 H490 V224 H130 V248" />
+    <circle className="hero-via" cx="508" cy="290" r="3" />
+    {/* I2C: SCL (316) and SDA (342) each fan left, then up into a 4k7 pull-up */}
+    <path className="hero-tr" d="M508 316 H470 V304" />
+    <path className="hero-tr" d="M508 342 H400 V304" />
+    <circle className="hero-via" cx="508" cy="316" r="3" />
+    <circle className="hero-via" cx="508" cy="342" r="3" />
+    <g transform="translate(470,290) rotate(90)"><InlineRes /></g>
+    <g transform="translate(400,290) rotate(90)"><InlineRes /></g>
+    <path className="hero-tr" d="M470 276 V268 M400 276 V268" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="470" y="262">3V3</text>
+      <text x="400" y="262">3V3</text>
+      <text x="452" y="336">SDA</text>
+      <text x="490" y="310">SCL</text>
+    </g>
+    <g className="hero-ref" textAnchor="end">
+      <text x="392" y="294">R14 4k7</text>
+      <text x="462" y="294">R15 4k7</text>
+    </g>
+    {/* UART: RO → TXD (368), DI ← RXD (394); lanes nested so they never cross */}
+    <path className="hero-tr" d="M318 425 H372 V368 H508" />
+    <path className="hero-tr" d="M318 475 H392 V394 H508" />
+    <circle className="hero-via" cx="508" cy="368" r="3" />
+    <circle className="hero-via" cx="508" cy="394" r="3" />
+    <circle className="hero-via" cx="318" cy="425" r="3" />
+    <circle className="hero-via" cx="318" cy="475" r="3" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="440" y="362">TXD</text>
+      <text x="450" y="388">RXD</text>
+    </g>
 
     {/* ════════════════════════════════════════════════════════
         ADC / SENSOR BLOCK  (top-right, 920,80 — 130×100)
@@ -409,233 +606,404 @@ const HeroSchematic = () => (
     <IcBlock x={920} y={80} w={130} h={100}
       pinsTop={4} pinsBottom={4} pinsLeft={3} pinsRight={3} pinLen={20} />
     <circle className="hero-via" cx="920" cy="80" r="4" />
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="985" y="140">ADS1115</text>
+    </g>
+    <g className="hero-ref hero-ic" textAnchor="end">
+      <text x="908" y="196">U4 SENSE</text>
+    </g>
+    {/* ADC pin legends — dark mode only */}
+    <g className="hero-ref hero-pin-label" textAnchor="start">
+      <text x="928" y="109">SCK</text>
+      <text x="928" y="134">MISO</text>
+      <text x="928" y="159">MOSI</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="end">
+      <text x="1042" y="109">NC</text>
+      <text x="1042" y="134">AIN1</text>
+      <text x="1042" y="159">NC</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="middle">
+      <text x="946" y="92">VCC</text>
+      <text x="972" y="92">GND</text>
+      <text x="998" y="92">NC</text>
+      <text x="1024" y="92">AIN0</text>
+      <text x="946" y="174">ALRT</text>
+      <text x="972" y="174">AGND</text>
+      <text x="998" y="174">NC</text>
+      <text x="1024" y="174">AIN2</text>
+    </g>
+    {/* GND (top pin 972) */}
+    <path className="hero-tr" d="M972 60 V48 M960 48 H984 M963 43 H981 M966 38 H978" />
 
-    {/* ADC VCC ← power rail */}
-    <path className="hero-tr" d="M700 38 H800 V60 H920 V80" />
-    <circle className="hero-via" cx="800" cy="60" r="3" />
-    {/* decoupling cap */}
-    <path className="hero-tr" d="M800 60 V78" />
-    <g transform="translate(800,84) rotate(90)"><InlineCap /></g>
-    <path className="hero-tr" d="M800 96 V110 M788 110 H812 M791 115 H809 M794 120 H806" />
+    {/* SPI to the MCU: three nested lanes (x=772/792/812) — no crossings */}
+    <path className="hero-tr" d="M752 186 H772 V105 H900" />
+    <path className="hero-tr" d="M752 212 H792 V130 H900" />
+    <path className="hero-tr" d="M752 238 H812 V155 H900" />
+    <circle className="hero-via" cx="752" cy="186" r="3" />
+    <circle className="hero-via" cx="752" cy="212" r="3" />
+    <circle className="hero-via" cx="752" cy="238" r="3" />
+    <circle className="hero-via" cx="900" cy="105" r="3" />
+    <circle className="hero-via" cx="900" cy="130" r="3" />
+    <circle className="hero-via" cx="900" cy="155" r="3" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="886" y="99">SCK</text>
+      <text x="886" y="124">MISO</text>
+      <text x="886" y="149">MOSI</text>
+    </g>
 
-    {/* ADC output → MCU right pin bus (y=200→260) */}
-    <path className="hero-tr" d="M1050 100 H1090 V200 H752" />
-    <path className="hero-tr" d="M1050 120 H1080 V230 H752" />
-    <path className="hero-tr" d="M1050 140 H1070 V260 H752" />
-    <circle className="hero-via" cx="1090" cy="200" r="3" />
-    <circle className="hero-via" cx="1080" cy="230" r="3" />
-    <circle className="hero-via" cx="1070" cy="260" r="3" />
+    {/* ALRT: MCU right pin 264 → ADC bottom pin 946 (comes in from below) */}
+    <path className="hero-tr" d="M752 264 H860 V226 H946 V200" />
+    <circle className="hero-via" cx="752" cy="264" r="3" />
+    <circle className="hero-via" cx="946" cy="200" r="3" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="904" y="220">ALRT</text>
+    </g>
+    {/* AGND (bottom pin 972) */}
+    <path className="hero-tr" d="M972 200 V212 M960 212 H984 M963 217 H981 M966 222 H978" />
+    {/* NC (bottom pin 998) */}
+    <g className="hero-ref" textAnchor="middle">
+      <text x="998" y="222">NC</text>
+    </g>
 
-    {/* ADC sensor inputs ← right side (analog signals) */}
-    <path className="hero-tr" d="M1050 160 H1100 V60 H1200" />
-    <circle className="hero-via" cx="1100" cy="60" r="3" />
-    {/* sensor resistor divider */}
-    <path className="hero-tr" d="M1200 60 H1220" />
+    {/* NTC thermistor on AIN2 (bottom pin 1024): R8 10k pull-up to 5V, RT1 to GND */}
+    <path className="hero-tr" d="M1024 200 V222" />
+    <circle className="hero-via" cx="1024" cy="212" r="3" />
+    <path className="hero-tr" d="M1024 212 H1038" />
+    <g transform="translate(1052,212)"><InlineRes /></g>
+    <path className="hero-tr" d="M1066 212 H1076 V204" />
+    <g transform="translate(1024,236) rotate(90)"><InlineRes /></g>
+    <path className="hero-tr" d="M1024 250 V262 M1012 262 H1036 M1015 267 H1033 M1018 272 H1030" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="1076" y="198">5V</text>
+      <text x="1056" y="230">R8 10k</text>
+    </g>
+    <g className="hero-ref" textAnchor="start">
+      <text x="1036" y="246">RT1 NTC</text>
+    </g>
+
+    {/* 5V monitor on the right: R6/R7 divider into AIN1 (right pin 130) */}
+    <path className="hero-tr" d="M1100 90 V98" />
+    <g transform="translate(1100,112) rotate(90)"><InlineRes /></g>
+    <path className="hero-tr" d="M1070 130 H1100" />
+    <circle className="hero-via" cx="1100" cy="130" r="3" />
+    <path className="hero-tr" d="M1100 126 V132" />
+    <g transform="translate(1100,146) rotate(90)"><InlineRes /></g>
+    <path className="hero-tr" d="M1100 160 V170 M1088 170 H1112 M1091 175 H1109 M1094 180 H1106" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="1100" y="84">5V</text>
+    </g>
+    <g className="hero-ref" textAnchor="start">
+      <text x="1114" y="112">R6 10k</text>
+      <text x="1114" y="150">R7 2k</text>
+    </g>
+
+    {/* AIN0 analog input ← J5, R10 + C17 anti-alias front-end */}
+    <path className="hero-tr" d="M1024 60 H1220" />
     <g transform="translate(1234,60)"><InlineRes /></g>
-    <path className="hero-tr" d="M1248 60 H1280 V30 H1440" />
-    <path className="hero-tr" d="M1234 60 V80" />
-    <g transform="translate(1234,92) rotate(90)"><InlineCap /></g>
-    <path className="hero-tr" d="M1234 104 V116 M1222 116 H1246 M1225 121 H1243 M1228 126 H1240" />
-    <circle className="hero-via" cx="1234" cy="60" r="3" />
+    <path className="hero-tr" d="M1248 60 H1280 V30 H1400" />
+    <rect className="hero-tr" x="1400" y="18" width="40" height="24" rx="2" />
+    <circle className="hero-via" cx="1200" cy="60" r="3" />
+    <path className="hero-tr" d="M1200 60 V72" />
+    <g transform="translate(1200,84) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M1200 96 V104 M1188 104 H1212 M1191 109 H1209 M1194 114 H1206" />
+    <circle className="hero-via" cx="1280" cy="30" r="3" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="1234" y="48">R10 10k</text>
+      <text x="1420" y="12" className="hero-ic">J5</text>
+      <text x="1340" y="52">AIN0</text>
+    </g>
+    <g className="hero-ref" textAnchor="start">
+      <text x="1212" y="92">C17 100n</text>
+    </g>
 
     {/* ════════════════════════════════════════════════════════
         MOTOR DRIVER BLOCK  (bottom-right, 960,400 — 160×140)
         ════════════════════════════════════════════════════════ */}
 
     <IcBlock x={960} y={400} w={160} h={140}
-      pinsTop={5} pinsBottom={5} pinsLeft={4} pinsRight={4} pinLen={20} />
+      pinsTop={4} pinsBottom={4} pinsLeft={4} pinsRight={4} pinLen={20} />
     <circle className="hero-via" cx="960" cy="400" r="4" />
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="1040" y="370">U5 GATE DRV</text>
+    </g>
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="1040" y="476">IR2104</text>
+    </g>
+    {/* U5 IR2104 pin legends — dark mode only */}
+    <g className="hero-ref hero-pin-label" textAnchor="start">
+      <text x="968" y="432">VCC</text>
+      <text x="968" y="460">IN</text>
+      <text x="968" y="488">SD</text>
+      <text x="968" y="516">VSS</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="end">
+      <text x="1112" y="432">HO</text>
+      <text x="1112" y="460">VB</text>
+      <text x="1112" y="488">VS</text>
+      <text x="1112" y="516">LO</text>
+    </g>
 
-    {/* PWM control ← MCU right pins */}
-    <path className="hero-tr" d="M752 290 H820 V380 H960 V400" />
-    <path className="hero-tr" d="M752 320 H840 V390 H950" />
-    <circle className="hero-via" cx="820" cy="380" r="3" />
-    <circle className="hero-via" cx="840" cy="390" r="3" />
+    {/* left pins: VCC (5V flag) · IN ← PWM1 · SD ← PWM2 · VSS → PGND */}
+    <path className="hero-tr" d="M940 428 H920 V402" />
+    <g className="hero-ref" textAnchor="middle"><text x="920" y="396">5V</text></g>
+    <path className="hero-tr" d="M940 512 H916 V550 M904 550 H928 M907 555 H925 M910 560 H922" />
 
-    {/* Motor driver VCC ← power rail */}
-    <path className="hero-tr" d="M996 400 V360 H880 V38" />
-    <circle className="hero-via" cx="880" cy="38" r="3" />
-    <circle className="hero-via" cx="880" cy="360" r="3" />
-    {/* bootstrap cap */}
-    <path className="hero-tr" d="M880 360 H900" />
-    <g transform="translate(914,360) rotate(90)"><InlineCap /></g>
-    <path className="hero-tr" d="M880 360 V380 M868 380 H892" />
+    {/* PWM from the MCU: PWM1 (pin 290) outer lane x=896, PWM2 (pin 316) inner lane x=876 */}
+    <path className="hero-tr" d="M752 290 H896 V456 H940" />
+    <path className="hero-tr" d="M752 316 H876 V484 H940" />
+    <circle className="hero-via" cx="752" cy="290" r="3" />
+    <circle className="hero-via" cx="752" cy="316" r="3" />
+    <circle className="hero-via" cx="940" cy="456" r="3" />
+    <circle className="hero-via" cx="940" cy="484" r="3" />
+    <g className="hero-ref" textAnchor="start">
+      <text x="760" y="284">PWM1</text>
+      <text x="760" y="310">PWM2</text>
+    </g>
 
-    {/* MOSFET high-side output */}
-    <path className="hero-tr" d="M1120 400 V360" />
-    <g transform="translate(1120,346) rotate(-90)"><InlineMosfet /></g>
-    <path className="hero-tr" d="M1120 330 V310 H1200 V280" />
-    <circle className="hero-via" cx="1200" cy="280" r="3" />
-    {/* freewheeling diode across motor */}
-    <path className="hero-tr" d="M1200 280 H1260" />
-    <g transform="translate(1274,280)"><InlineDiode /></g>
-    <path className="hero-tr" d="M1286 280 H1340 V420 H1200" />
-    <circle className="hero-via" cx="1340" cy="420" r="3" />
+    {/* right pins: HO → R11 → Q2 gate · VB/VS bootstrap C18 · LO → Q3 gate */}
+    <path className="hero-tr" d="M1140 428 H1150 V330 H1172" />
+    <g transform="translate(1186,330)"><InlineRes /></g>
+    <path className="hero-tr" d="M1200 330 H1208" />
+    <g className="hero-ref" textAnchor="middle"><text x="1186" y="316">R11 10R</text></g>
 
-    {/* Motor output connector */}
-    <path className="hero-tr" d="M1120 540 V560" />
-    <rect className="hero-tr" x="1080" y="560" width="80" height="50" rx="2" />
-    <path className="hero-tr" d="M1090 572 H1150 M1090 582 H1150 M1090 592 H1150" />
+    <path className="hero-tr" d="M1140 456 H1160 V458" />
+    <g transform="translate(1160,470) rotate(90)"><InlineCap /></g>
+    <path className="hero-tr" d="M1160 482 V484" />
+    <circle className="hero-via" cx="1160" cy="484" r="3" />
+    <g className="hero-ref" textAnchor="middle"><text x="1190" y="498">C18 100n</text></g>
 
-    {/* MOSFET low-side */}
-    <path className="hero-tr" d="M1140 540 V520" />
-    <g transform="translate(1140,508) rotate(-90)"><InlineMosfet /></g>
-    <path className="hero-tr" d="M1140 494 V480 H1060 V540" />
-    <circle className="hero-via" cx="1060" cy="480" r="3" />
+    <path className="hero-tr" d="M1140 484 H1228" />
+    <path className="hero-tr" d="M1140 512 H1180 V548 H1208" />
 
-    {/* bootstrap + gate resistors */}
-    <path className="hero-tr" d="M960 420 H930 V380 H880" />
-    <path className="hero-tr" d="M930 420 H910" />
-    <g transform="translate(896,420)"><InlineRes /></g>
-    <path className="hero-tr" d="M882 420 H860 V460 H820" />
-    <circle className="hero-via" cx="860" cy="460" r="3" />
+    {/* Q2 high-side / Q3 low-side half bridge on the PHASE column (x=1228) */}
+    <g transform="translate(1220,330)"><InlineMosfet /></g>
+    <path className="hero-tr" d="M1228 316 V300" />
+    <g className="hero-ref" textAnchor="middle"><text x="1228" y="294">5V</text></g>
+    <path className="hero-tr" d="M1228 344 V534" />
+    <circle className="hero-via" cx="1228" cy="380" r="3" />
+    <circle className="hero-via" cx="1228" cy="420" r="3" />
+    <circle className="hero-via" cx="1228" cy="484" r="3" />
+    <g transform="translate(1220,548)"><InlineMosfet /></g>
+    <path className="hero-tr" d="M1228 562 V574 M1216 574 H1240 M1219 579 H1237 M1222 584 H1234" />
+    <g className="hero-ref" textAnchor="start">
+      <text x="1244" y="336">Q2</text>
+      <text x="1244" y="556">Q3</text>
+    </g>
+    <g className="hero-ref" textAnchor="middle"><text x="1228" y="602">PGND</text></g>
+    <g className="hero-ref" textAnchor="end"><text x="1222" y="450">PHASE</text></g>
+
+    {/* M1 fan connector: PHASE tap on the left, PGND pin down to its own bar */}
+    <rect className="hero-tr" x="1290" y="356" width="80" height="52" rx="2" />
+    <path className="hero-tr" d="M1298 368 H1362 M1298 380 H1362 M1298 392 H1362" />
+    <path className="hero-tr" d="M1228 380 H1290" />
+    <circle className="hero-via" cx="1290" cy="380" r="3" />
+    <path className="hero-tr" d="M1330 408 V470 M1318 470 H1342 M1321 475 H1339 M1324 480 H1336" />
+    <g className="hero-ref hero-ic" textAnchor="middle"><text x="1330" y="346">M1 FAN</text></g>
+    <g className="hero-ref" textAnchor="middle"><text x="1330" y="496">PGND</text></g>
+
+    {/* D8 freewheeling diode: cathode on PHASE, anode to PGND */}
+    <path className="hero-tr" d="M1228 420 H1260" />
+    <g transform="translate(1260,432) rotate(-90)"><InlineDiode /></g>
+    <path className="hero-tr" d="M1260 444 V470 M1248 470 H1272 M1251 475 H1269 M1254 480 H1266" />
+    <g className="hero-ref" textAnchor="middle"><text x="1272" y="498">D8 1N5819</text></g>
 
     {/* ════════════════════════════════════════════════════════
-        COMMS BLOCK  (bottom-left, 60,430 — 140×100)
+        SWD DEBUG HEADER J2 (right of the MCU)
         ════════════════════════════════════════════════════════ */}
 
-    <IcBlock x={60} y={430} w={140} h={100}
+    <rect className="hero-tr" x="790" y="392" width="20" height="56" rx="2" />
+    <path className="hero-tr" d="M782 404 H790 M782 422 H790 M782 440 H790" />
+    <path className="hero-tr" d="M752 342 H772 V404 H782" />
+    <path className="hero-tr" d="M752 368 H762 V422 H782" />
+    <circle className="hero-via" cx="752" cy="342" r="3" />
+    <circle className="hero-via" cx="752" cy="368" r="3" />
+    <path className="hero-tr" d="M782 440 H774 V452 M762 452 H786 M765 457 H783 M768 462 H780" />
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="806" y="386">J2 SWD</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="start">
+      <text x="814" y="408">SWDIO</text>
+      <text x="814" y="426">SWCLK</text>
+      <text x="814" y="444">GND</text>
+    </g>
+
+    {/* ════════════════════════════════════════════════════════
+        COMMS BLOCK  (mid-left, 160,400 — 140×100)
+        ════════════════════════════════════════════════════════ */}
+
+    <IcBlock x={160} y={400} w={140} h={100}
       pinsTop={4} pinsBottom={4} pinsLeft={3} pinsRight={3} pinLen={18} />
-    <circle className="hero-via" cx="60" cy="430" r="4" />
+    <circle className="hero-via" cx="160" cy="400" r="4" />
 
-    {/* UART ← MCU left pins */}
-    <path className="hero-tr" d="M530 290 H460 V412" />
-    <path className="hero-tr" d="M530 320 H440 V412" />
-    <circle className="hero-via" cx="460" cy="290" r="3" />
-    <circle className="hero-via" cx="440" cy="320" r="3" />
+    {/* U6 RS-485 transceiver — pin legends (dark mode only) */}
+    <g className="hero-ref hero-pin-label" textAnchor="start">
+      <text x="168" y="429">A</text>
+      <text x="168" y="454">B</text>
+      <text x="168" y="479">GND</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="end">
+      <text x="292" y="429">RO</text>
+      <text x="292" y="454">RE/DE</text>
+      <text x="292" y="479">DI</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="middle">
+      <text x="188" y="412">NC</text>
+      <text x="216" y="412">NC</text>
+      <text x="244" y="412">VCC</text>
+      <text x="272" y="412">NC</text>
+    </g>
+    {/* RE/DE tied high through a 5V flag */}
+    <path className="hero-tr" d="M318 450 H338 V458" />
+    <g className="hero-ref" textAnchor="middle"><text x="338" y="469">5V</text></g>
+    {/* VCC ← 5V flag */}
+    <path className="hero-tr" d="M244 382 V360" />
+    <g className="hero-ref" textAnchor="middle"><text x="244" y="354">5V</text></g>
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="218" y="456">U6 MAX485</text>
+    </g>
 
-    {/* TX/RX traces */}
-    <path className="hero-tr" d="M200 450 H260 L290 420 H420 V390 H530" />
-    <circle className="hero-via" cx="420" cy="390" r="3" />
-    <path className="hero-tr" d="M200 470 H270 L300 440 H430 V360 H530" />
-    <circle className="hero-via" cx="430" cy="360" r="3" />
-
-    {/* RS-485 termination resistor */}
-    <path className="hero-tr" d="M20 450 H40" />
-    <g transform="translate(50,450) rotate(90)"><InlineRes /></g>
-    <path className="hero-tr" d="M50 462 V480 M38 480 H62 M41 485 H59 M44 490 H56" />
-
-    {/* I2C bus ← MCU left pins */}
-    <path className="hero-tr" d="M530 350 H480 V550 H200 V530" />
-    <path className="hero-tr" d="M530 380 H490 V560 H200 V510" />
-    <circle className="hero-via" cx="480" cy="350" r="3" />
-    <circle className="hero-via" cx="490" cy="380" r="3" />
-    {/* pull-up resistors on SDA/SCL */}
-    <path className="hero-tr" d="M200 530 V510" />
-    <g transform="translate(200,500) rotate(90)"><InlineRes /></g>
-    <path className="hero-tr" d="M200 490 V478 H240 V460 H280" />
-    <circle className="hero-via" cx="200" cy="460" r="3" />
-
-    {/* NPN transistor level-shifter */}
-    <path className="hero-tr" d="M280 460 H300" />
-    <g transform="translate(314,460)"><InlineNpn /></g>
-    <path className="hero-tr" d="M328 446 V430 H380 V400 H530" />
-    <path className="hero-tr" d="M328 474 V490 M316 490 H340 M319 495 H337 M322 500 H334" />
-    <circle className="hero-via" cx="380" cy="400" r="3" />
+    {/* J4 485 connector, A/B straight into U6, R13 120R across the pair */}
+    <rect className="hero-tr" x="30" y="418" width="60" height="72" rx="2" />
+    <g className="hero-ref hero-ic" textAnchor="middle">
+      <text x="60" y="468">J4 485</text>
+    </g>
+    <g className="hero-ref hero-pin-label" textAnchor="end">
+      <text x="86" y="429">A</text>
+      <text x="86" y="454">B</text>
+    </g>
+    <path className="hero-tr" d="M90 425 H142" />
+    <path className="hero-tr" d="M90 450 H142" />
+    <g transform="translate(110,437) rotate(90)"><InlineRes /></g>
+    <circle className="hero-via" cx="142" cy="425" r="3" />
+    <circle className="hero-via" cx="142" cy="450" r="3" />
+    <circle className="hero-via" cx="110" cy="425" r="3" />
+    <circle className="hero-via" cx="110" cy="450" r="3" />
+    <path className="hero-tr" d="M142 475 H130 V486 M118 486 H142 M121 491 H139 M124 496 H136" />
+    <circle className="hero-via" cx="142" cy="475" r="3" />
+    <g className="hero-ref" textAnchor="middle">
+      <text x="110" y="412">R13 120R</text>
+    </g>
 
     {/* ════════════════════════════════════════════════════════
-        RELAY OUTPUT BLOCK  (mid-left, 60,260)
+        RELAY OUTPUT BLOCK  (mid-left)
+        R5 → Q1 base · Q1 collector ← K1 coil bottom · D7 flyback across the coil
         ════════════════════════════════════════════════════════ */}
 
-    <path className="hero-tr" d="M530 250 H490 V240 H200 V270" />
-    <circle className="hero-via" cx="490" cy="250" r="3" />
+    <g transform="translate(130,262) rotate(90)"><InlineRes /></g>
+    <path className="hero-tr" d="M130 276 V330 H184" />
+    <g transform="translate(196,330)"><InlineNpn /></g>
+    {/* K1 coil: 5V flag on top, collector of Q1 on the bottom */}
     <g transform="translate(200,294)"><InlineRelay /></g>
-    <path className="hero-tr" d="M200 316 V340 H140 V380" />
-    {/* relay contacts */}
-    <path className="hero-tr" d="M140 380 H80" />
+    <path className="hero-tr" d="M200 272 V252" />
+    <g className="hero-ref" textAnchor="middle"><text x="200" y="246">5V</text></g>
+    <circle className="hero-via" cx="200" cy="264" r="3" />
+    <circle className="hero-via" cx="200" cy="316" r="3" />
+    {/* D7 flyback across the coil (cathode to 5V side) */}
+    <path className="hero-tr" d="M200 264 H232 V278" />
+    <g transform="translate(232,290) rotate(-90)"><InlineDiode /></g>
+    <path className="hero-tr" d="M232 302 V316 H200" />
+    {/* Q1 emitter to ground */}
+    <path className="hero-tr" d="M200 338 V350 M188 350 H212 M191 355 H209 M194 360 H206" />
+    <g className="hero-ref" textAnchor="end">
+      <text x="184" y="296">K1 5V</text>
+      <text x="122" y="266">R5 1k</text>
+      <text x="180" y="352">Q1 2N2222</text>
+    </g>
+    <g className="hero-ref" textAnchor="start">
+      <text x="244" y="296">D7 1N4148</text>
+    </g>
+
+    {/* relay contacts, kept separate from the coil circuit */}
     <g transform="translate(66,380)"><InlineSwitch /></g>
-    <path className="hero-tr" d="M46 380 H20 V420" />
-    <path className="hero-tr" d="M20 420 H60 V430" />
-    <circle className="hero-via" cx="140" cy="380" r="3" />
-
-    {/* ════════════════════════════════════════════════════════
-        CRYSTAL / OSC (top-centre, feeds MCU)
-        ════════════════════════════════════════════════════════ */}
-
-    <path className="hero-tr" d="M594 160 V130" />
-    <path className="hero-tr" d="M622 160 V130" />
-    {/* crystal symbol */}
-    <path className="hero-tr" d="M594 130 H622 M602 130 V108 M614 130 V108 M598 108 H618 M598 100 H618" />
-    {/* load caps */}
-    <path className="hero-tr" d="M594 100 V88" />
-    <g transform="translate(594,82) rotate(90)"><InlineCap /></g>
-    <path className="hero-tr" d="M594 76 V64 M582 64 H606" />
-    <path className="hero-tr" d="M622 100 V88" />
-    <g transform="translate(622,82) rotate(90)"><InlineCap /></g>
-    <path className="hero-tr" d="M622 76 V64 M610 64 H634" />
-
-    {/* ════════════════════════════════════════════════════════
-        MISC JUNCTION DOTS on shared nets
-        ════════════════════════════════════════════════════════ */}
-    <circle className="hero-via" cx="200" cy="270" r="3" />
-    <circle className="hero-via" cx="200" cy="510" r="3" />
-    <circle className="hero-via" cx="950" cy="390" r="3" />
-    <circle className="hero-via" cx="1120" cy="494" r="3" />
-    <circle className="hero-via" cx="1280" cy="30" r="4" />
+    <path className="hero-tr" d="M46 380 H20 V556" />
+    <path className="hero-tr" d="M86 380 H104" />
+    <g className="hero-ref" textAnchor="start">
+      <text x="28" y="560">RLY-NO</text>
+      <text x="108" y="384">COM</text>
+    </g>
 
     {/* ── Traveling signal pulses (glow) over signature nets ── */}
-    {/* pathLength=100 normalizes each net so one dash crosses it per cycle */}
+    {/* pathLength=100 normalizes each net; dashoffset 200→100 = one clean pass */}
     <g>
-      <path className="hero-pulse" pathLength={100} d="M270 80 H310 V38 H700" />
+      {/* 5V bus: U1 VOUT → rail */}
+      <path className="hero-pulse" pathLength={100} d="M286 80 H310 V38 H640" />
+      {/* 3V3 rail: U2 → MCU VDD pins */}
+      <path
+        className="hero-pulse-3"
+        pathLength={100}
+        style={{ animationDelay: "-3s" }}
+        d="M416 80 H436 V128 H630 V138"
+      />
+      {/* SPI SCK: ADC → MCU */}
       <path
         className="hero-pulse-2"
         pathLength={100}
         style={{ animationDelay: "-2.5s" }}
-        d="M1050 100 H1090 V200 H752"
+        d="M900 105 H772 V186 H752"
       />
+      {/* PWM1: MCU → gate driver */}
       <path
         className="hero-pulse-3"
         pathLength={100}
         style={{ animationDelay: "-4s" }}
-        d="M752 290 H820 V380 H960 V400"
+        d="M752 290 H896 V456 H940"
       />
+      {/* SDA: MCU → pull-up */}
       <path
         className="hero-pulse"
         pathLength={100}
         style={{ animationDelay: "-3.2s" }}
-        d="M530 350 H480 V550 H200 V530"
+        d="M508 342 H400 V304"
       />
+      {/* TXD: U6 → MCU */}
       <path
         className="hero-pulse-2"
         pathLength={100}
         style={{ animationDelay: "-6s" }}
-        d="M200 450 H260 L290 420 H420 V390 H530"
+        d="M318 425 H372 V368 H508"
       />
+      {/* ADC VCC: 3V3 → ADC */}
       <path
         className="hero-pulse-3"
         pathLength={100}
-        style={{ animationDelay: "-1.5s" }}
-        d="M700 38 H800 V60 H920 V80"
+        style={{ animationDelay: "-4s" }}
+        d="M705 138 V50 H946 V60"
       />
+      {/* ALRT: ADC → MCU */}
       <path
         className="hero-pulse"
         pathLength={100}
         style={{ animationDelay: "-5s" }}
-        d="M996 400 V360 H880 V38"
+        d="M946 200 V226 H860 V264 H752"
       />
+      {/* SCL: MCU → pull-up */}
       <path
         className="hero-pulse-2"
         pathLength={100}
         style={{ animationDelay: "-4.5s" }}
-        d="M530 380 H490 V560 H200 V510"
+        d="M508 316 H470 V304"
       />
+      {/* RXD: MCU → U6 */}
       <path
         className="hero-pulse-3"
         pathLength={100}
         style={{ animationDelay: "-8s" }}
-        d="M200 470 H270 L300 440 H430 V360 H530"
+        d="M508 394 H392 V475 H318"
       />
+      {/* PHASE: half-bridge output column */}
       <path
         className="hero-pulse"
         pathLength={100}
         style={{ animationDelay: "-1s" }}
-        d="M1286 280 H1340 V420 H1200"
+        d="M1228 344 V380 H1290"
       />
+      {/* Relay drive: MCU → R5 → Q1 */}
       <path
         className="hero-pulse-2"
         pathLength={100}
         style={{ animationDelay: "-7s" }}
-        d="M530 250 H490 V240 H200 V270"
+        d="M508 290 H490 V224 H130 V248"
       />
     </g>
 
