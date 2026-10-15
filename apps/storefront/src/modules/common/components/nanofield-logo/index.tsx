@@ -1,5 +1,6 @@
 // Brand mark: the login avatar blobs wrapped in a thin rounded-square
-// outline. Hover choreography ("ignition draw-on", driven by the nearest
+// outline. The blobs float gently inside the static frame at all times.
+// Hover choreography ("ignition draw-on", driven by the nearest
 // `group` ancestor — the navbar link): the frame draws itself clockwise,
 // then the nodes ignite blue -> coral -> green with matching glows. All
 // CSS-only; motion-reduce users keep the static lockup.
@@ -32,28 +33,30 @@ export const NanofieldMark = ({
         pathLength={1}
         className="transition-[stroke-dashoffset] duration-500 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-hover:[stroke-dashoffset:0] motion-reduce:transition-none"
       />
-      <circle
-        cx="17"
-        cy="29"
-        r="8.5"
-        fill="#2B8DC4"
-        className="transition-all duration-300 group-hover:[filter:drop-shadow(0_0_6px_#2B8DC4)] group-hover:delay-300 motion-reduce:transition-none"
-      />
-      <circle
-        cx="28"
-        cy="29"
-        r="8.5"
-        fill="#E6654F"
-        className="transition-all duration-300 group-hover:[filter:drop-shadow(0_0_6px_#E6654F)] group-hover:delay-500 motion-reduce:transition-none"
-      />
-      <circle
-        cx="38"
-        cy="27"
-        r="9"
-        fill="#2C8869"
-        className="transition-all duration-300 group-hover:[filter:drop-shadow(0_0_6px_#2C8869)] group-hover:delay-700 motion-reduce:transition-none"
-      />
-      <circle cx="40" cy="20" r="5.5" fill="#2C8869" />
+      <g className="animate-float-soft motion-reduce:animate-none">
+        <circle
+          cx="17"
+          cy="29"
+          r="8.5"
+          fill="#2B8DC4"
+          className="transition-all duration-300 group-hover:[filter:drop-shadow(0_0_6px_#2B8DC4)] group-hover:delay-300 motion-reduce:transition-none"
+        />
+        <circle
+          cx="28"
+          cy="29"
+          r="8.5"
+          fill="#E6654F"
+          className="transition-all duration-300 group-hover:[filter:drop-shadow(0_0_6px_#E6654F)] group-hover:delay-500 motion-reduce:transition-none"
+        />
+        <circle
+          cx="38"
+          cy="27"
+          r="9"
+          fill="#2C8869"
+          className="transition-all duration-300 group-hover:[filter:drop-shadow(0_0_6px_#2C8869)] group-hover:delay-700 motion-reduce:transition-none"
+        />
+        <circle cx="40" cy="20" r="5.5" fill="#2C8869" />
+      </g>
     </svg>
   )
 }
