@@ -546,6 +546,12 @@ const STATIC_COPY: Record<string, string> = {
 // Text-anchored (labels are stable i18n keys) instead of class-anchored —
 // a Medusa upgrade that renames classes just drops the spacing, nothing
 // breaks. Only runs on /app/settings pages.
+//
+// The margin must land on the header ROW (the flex container holding the
+// label and its collapse chevron), not the label itself: Medusa's `Text`
+// renders a <p> (block-level), so a "climb to the nearest non-inline
+// ancestor" stops right at the label and pushes only it down, leaving the
+// chevron behind. Spacing the row keeps the two aligned.
 const SETTINGS_SECTIONS = ["General", "Developer", "My Account"]
 
 export const applySettingsSpacing = () => {
@@ -559,9 +565,7 @@ export const applySettingsSpacing = () => {
     return
   }
   // Collect headers in DOM order every sweep (cheap, settings-only pages):
-  // all but the first get divider spacing. The margin goes on the nearest
-  // block-level ancestor — vertical margins are ignored on inline boxes,
-  // which is why marking the label span itself rendered nothing.
+  // all but the first get divider spacing.
   const found: HTMLElement[] = []
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
   let node: Text | null
@@ -576,7 +580,6 @@ export const applySettingsSpacing = () => {
     }
     // Keep the mark inside the sidebar: the header must sit near submenu
     // links, so a content heading that shares a label can never match.
-    // Then climb to the nearest block-level box so the margin applies.
     let box: HTMLElement | null = header
     let nearLinks = false
     let depth = 0
@@ -590,18 +593,13 @@ export const applySettingsSpacing = () => {
     if (!nearLinks || !box) {
       continue
     }
-    let target: HTMLElement | null = header
-    depth = 0
-    while (
-      target &&
-      target !== box.parentElement &&
-      depth++ < 6 &&
-      ["INLINE", "CONTENTS"].includes(
-        (getComputedStyle(target).display || "").toUpperCase()
-      )
-    ) {
-      target = target.parentElement
-    }
+    // The margin goes on the header ROW — the flex container that also
+    // holds the collapse chevron — so the label and its chevron move
+    // together. Falls back to the label if the markup ever flattens.
+    const target: HTMLElement | null =
+      header.parentElement && header.parentElement !== box
+        ? header.parentElement
+        : header
     if (target && !found.includes(target)) {
       found.push(target)
     }

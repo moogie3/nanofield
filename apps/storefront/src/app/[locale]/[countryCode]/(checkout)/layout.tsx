@@ -1,13 +1,18 @@
+import { getStoreContact } from "@lib/data/store-contact"
+import { whatsappUrl } from "@lib/store-contact"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ContactCta from "@modules/common/components/contact-cta"
 import { Text } from "@modules/common/components/ui"
 import ChevronDown from "@modules/common/icons/chevron-down"
+import { getLocale } from "next-intl/server"
 
-export default function CheckoutLayout({
+export default async function CheckoutLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const locale = await getLocale()
+  const contact = await getStoreContact(locale)
   return (
     <div className="w-full bg-background relative small:min-h-screen">
       <div className="sticky top-0 z-50 h-16 border-b border-border relative bg-[color-mix(in_oklch,var(--background)_70%,transparent)] backdrop-blur-xl">
@@ -42,7 +47,7 @@ export default function CheckoutLayout({
       <div className="relative" data-testid="checkout-container">
         {children}
       </div>
-      <ContactCta />
+      <ContactCta whatsappHref={whatsappUrl(contact)} />
       <div className="py-4 w-full flex items-center justify-center">
         <Text className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-muted">
           Nanofield · Secure checkout

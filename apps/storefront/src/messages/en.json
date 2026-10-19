@@ -268,7 +268,7 @@
     },
     "review": {
       "title": "Review",
-      "terms": "By clicking the Place Order button, you confirm that you have read, understand and accept our Terms of Use, Terms of Sale and Returns Policy and acknowledge that you have read Nanofield's Privacy Policy."
+      "terms": "By clicking the Place Order button, you confirm that you have read, understand and accept our <termsOfUse>Terms of Use</termsOfUse>, <termsOfSale>Terms of Sale</termsOfSale> and <returnsPolicy>Returns Policy</returnsPolicy> and acknowledge that you have read Nanofield's <privacyPolicy>Privacy Policy</privacyPolicy>."
     },
     "buttons": {
       "selectMethod": "Select a payment method",

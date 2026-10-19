@@ -89,14 +89,14 @@ const Register = ({ setCurrentView }: Props) => {
         <span className="text-center text-ui-fg-base text-small-regular mt-6">
           {t("agreePrefix")}{" "}
           <LocalizedClientLink
-            href="/content/privacy-policy"
+            href="/pages/privacy-policy"
             className="underline"
           >
             {t("privacy")}
           </LocalizedClientLink>{" "}
           {t("and")}{" "}
           <LocalizedClientLink
-            href="/content/terms-of-use"
+            href="/pages/terms-of-use"
             className="underline"
           >
             {t("terms")}

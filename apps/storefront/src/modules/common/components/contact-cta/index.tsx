@@ -9,10 +9,12 @@ import { Heading, Text } from "@modules/common/components/ui"
 // "Contact us" banner rendered above the footer on storefront pages, except
 // the catalog (/store) — which funnels into product cards — and the support
 // pages themselves (/contact, /faq, /returns), which already cover it.
-// Path shape is /<locale>/<countryCode>/<page…>, hence slice(2).
+// Path shape is /<locale>/<countryCode>/<page…>, hence slice(2). The WhatsApp
+// link is resolved server-side (backend-managed number) and passed in; the
+// built-in default is a fallback for any caller that omits it.
 const HIDDEN_FIRST_SEGMENTS = ["store", "contact", "faq", "returns"]
 
-const ContactCta = () => {
+const ContactCta = ({ whatsappHref }: { whatsappHref?: string }) => {
   const pathname = usePathname()
   const t = useTranslations("support.contact")
   const rest = pathname.split("/").filter(Boolean).slice(2)
@@ -32,7 +34,7 @@ const ContactCta = () => {
           </Text>
         </div>
         <a
-          href={whatsappUrl()}
+          href={whatsappHref ?? whatsappUrl()}
           target="_blank"
           rel="noreferrer"
           className="inline-flex gap-2 items-center justify-center rounded-md font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 shrink-0"

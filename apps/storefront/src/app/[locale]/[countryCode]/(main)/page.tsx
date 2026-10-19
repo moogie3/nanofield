@@ -6,6 +6,7 @@ import Hero from "@modules/home/components/hero"
 import NewArrivals from "@modules/home/components/new-arrivals"
 import StoreBanners from "@modules/common/components/store-banners"
 import { listCollections } from "@lib/data/collections"
+import { getSiteSettings } from "@lib/data/content"
 import { getRegion } from "@lib/data/regions"
 
 export async function generateMetadata({
@@ -22,7 +23,7 @@ export default async function Home(props: {
 }) {
   const params = await props.params
 
-  const { countryCode } = params
+  const { countryCode, locale } = params
 
   const region = await getRegion(countryCode)
 
@@ -30,13 +31,21 @@ export default async function Home(props: {
     fields: "id, handle, title",
   })
 
+  const settings = await getSiteSettings(locale)
+
   if (!collections || !region) {
     return null
   }
 
   return (
     <>
-      <Hero />
+      <Hero
+        content={{
+          badge: settings["home.hero.badge"],
+          subtitle: settings["home.hero.subtitle"],
+          ctaLabel: settings["home.hero.ctaLabel"],
+        }}
+      />
       <StoreBanners />
       <NewArrivals region={region} countryCode={countryCode} />
       <div className="py-12">

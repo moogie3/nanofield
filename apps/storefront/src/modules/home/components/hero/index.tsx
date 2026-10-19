@@ -1150,7 +1150,13 @@ const DraggableSymbol = ({
   )
 }
 
-const Hero = () => {
+type HeroContent = {
+  badge?: string
+  subtitle?: string
+  ctaLabel?: string
+}
+
+const Hero = ({ content }: { content?: HeroContent }) => {
   const sectionRef = useRef<HTMLElement | null>(null)
   const glowRef = useRef<HTMLDivElement | null>(null)
   const coordRef = useRef<HTMLSpanElement | null>(null)
@@ -1279,7 +1285,7 @@ const Hero = () => {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
           </span>
-          {t("badge")}
+          {content?.badge || t("badge")}
         </p>
         <h1
           className="animate-hero-rise flex justify-center"
@@ -1310,7 +1316,7 @@ const Hero = () => {
           className="animate-hero-rise text-base-regular max-w-2xl text-ui-fg-subtle small:text-large-regular"
           style={{ animationDelay: "180ms" }}
         >
-          {t("subtitle")}
+          {content?.subtitle || t("subtitle")}
         </p>
         <div
           className="animate-hero-rise flex w-full justify-center px-4"
@@ -1328,7 +1334,7 @@ const Hero = () => {
             className="font-bold uppercase tracking-widest"
           >
             <LocalizedClientLink href="/store">
-              {t("enterCatalog")}
+              {content?.ctaLabel || t("enterCatalog")}
             </LocalizedClientLink>
           </Button>
         </div>

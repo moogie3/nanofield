@@ -31,7 +31,7 @@ export const NanofieldMark = ({
         stroke="currentColor"
         strokeWidth="3"
         pathLength={1}
-        className="transition-[stroke-dashoffset] duration-500 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-hover:[stroke-dashoffset:0] motion-reduce:transition-none"
+        className="nav-mark-frame"
       />
       <g className="animate-float-soft motion-reduce:animate-none">
         <circle

@@ -386,6 +386,27 @@
     letter-spacing: 0.22em;
   }
 
+  /* Navbar mark frame: draws itself clockwise in vivid indigo (the
+     hero signal-pulse hue) as the wrap begins, then settles into a
+     glowing green matching the hero circuit vias once the wrap
+     completes. Color/filter lag the 0.5s draw so the hue shift reads
+     as a consequence of the line arriving, not simultaneous. */
+  .nav-mark-frame {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    stroke: var(--hero-pulse);
+    transition:
+      stroke-dashoffset 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      stroke 0.35s ease 0.45s,
+      filter 0.35s ease 0.45s;
+  }
+
+  .group:hover .nav-mark-frame {
+    stroke-dashoffset: 0;
+    stroke: var(--hero-via);
+    filter: drop-shadow(0 0 6px var(--hero-via-glow));
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-hero-sweep,
     .animate-hero-scanline,
@@ -406,6 +427,15 @@
     .nav-wordmark:hover {
       letter-spacing: 0;
       text-shadow: none;
+    }
+    .nav-mark-frame {
+      transition: none;
+      stroke: currentColor;
+      filter: none;
+    }
+    .group:hover .nav-mark-frame {
+      stroke: currentColor;
+      filter: none;
     }
   }
 }

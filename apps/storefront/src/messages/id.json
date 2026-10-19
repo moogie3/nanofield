@@ -268,7 +268,7 @@
     },
     "review": {
       "title": "Ulasan",
-      "terms": "Dengan mengeklik tombol Buat Pesanan, Anda mengonfirmasi telah membaca, memahami, dan menerima Syarat Penggunaan, Syarat Penjualan, dan Kebijakan Pengembalian kami serta mengakui telah membaca Kebijakan Privasi Nanofield."
+      "terms": "Dengan mengeklik tombol Buat Pesanan, Anda mengonfirmasi telah membaca, memahami, dan menerima <termsOfUse>Syarat Penggunaan</termsOfUse>, <termsOfSale>Syarat Penjualan</termsOfSale>, dan <returnsPolicy>Kebijakan Pengembalian</returnsPolicy> kami serta mengakui telah membaca <privacyPolicy>Kebijakan Privasi</privacyPolicy> Nanofield."
     },
     "buttons": {
       "selectMethod": "Pilih metode pembayaran",

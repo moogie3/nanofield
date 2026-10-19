@@ -1,7 +1,9 @@
 import { listCategories } from "@lib/data/categories"
-import { mapsUrl, STORE_CONTACT, whatsappUrl } from "@lib/store-contact"
+import { getSiteSettings } from "@lib/data/content"
+import { getStoreContact } from "@lib/data/store-contact"
+import { mapsUrl, whatsappUrl } from "@lib/store-contact"
 import { Text, clx } from "@modules/common/components/ui"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -14,7 +16,9 @@ const HIDDEN_CATEGORY_MATCHERS = [
   "collection",
 ]
 
-// Store contact channels live in @lib/store-contact (single source of truth).
+// Store contact channels are backend-managed (admin Content page), with the
+// built-in defaults in @lib/store-contact as fallback. The tagline is a CMS
+// setting too, falling back to the i18n copy when the admin never overrides it.
 export default async function Footer() {
   const productCategories = await listCategories()
 
@@ -28,9 +32,15 @@ export default async function Footer() {
     )
     .slice(0, 6)
 
-  const whatsappLink = whatsappUrl()
-  const mapsLink = mapsUrl()
+  const locale = await getLocale()
+  const [settings, contact] = await Promise.all([
+    getSiteSettings(locale),
+    getStoreContact(locale),
+  ])
+  const whatsappLink = whatsappUrl(contact)
+  const mapsLink = mapsUrl(contact)
   const t = await getTranslations("footer")
+  const tagline = settings["footer.tagline"] || t("tagline")
 
   return (
     <footer className="relative w-full border-t border-border bg-background">
@@ -48,7 +58,7 @@ export default async function Footer() {
               Nanofield
             </LocalizedClientLink>
             <p className="text-small-regular mt-3 text-ui-fg-subtle">
-              {t("tagline")}
+              {tagline}
             </p>
             <p className="mt-4 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
@@ -141,6 +151,53 @@ export default async function Footer() {
             </div>
             <div className="flex flex-col gap-y-3">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
+                Company
+              </span>
+              <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/pages/about"
+                  >
+                    About Us
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/pages/privacy-policy"
+                  >
+                    Privacy Policy
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/pages/terms-of-use"
+                  >
+                    Terms of Use
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/pages/terms-of-sale"
+                  >
+                    Terms of Sale
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-foreground"
+                    href="/pages/shipping-policy"
+                  >
+                    Shipping Policy
+                  </LocalizedClientLink>
+                </li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-y-3">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-base">
                 {t("contact")}
               </span>
               <ul className="text-small-regular grid grid-cols-1 gap-2 text-ui-fg-subtle">
@@ -161,7 +218,7 @@ export default async function Footer() {
                     rel="noreferrer"
                     className="max-w-44 hover:text-foreground"
                   >
-                    {STORE_CONTACT.address} ↗
+                    {contact.address} ↗
                   </a>
                 </li>
               </ul>

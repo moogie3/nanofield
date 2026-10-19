@@ -2,7 +2,7 @@
 
 Nanofield is a standalone ecommerce store for semiconductors, electronic components, and appliance spare parts. B2C first, with B2B held in reserve.
 
-Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, a support/error page system (contact, returns, FAQ, branded error screens), a customer notification bell (order/return/broadcast feed with history page) plus return emails, storefront global announcement strips + image banner carousel with a Customer Notifications admin page, a Store Sender admin page for shipping labels, nightly feed retention, weight-gated cargo options, a free in-store pickup option, and Resend/Mailtrap customer email.
+Built on the [Medusa DTC Starter](https://github.com/medusajs/dtc-starter) (Medusa v2 backend + Next.js storefront, Turborepo monorepo). Custom work on top includes a Shopee Excel importer with admin UI, a full admin branding suite, datasheet-backed product pages, a schematic-themed storefront, Midtrans Snap payments with signed webhooks, live RajaOngkir courier quoting, thermal shipping-label printing from captured orders, a support/error page system (contact, returns, FAQ, branded error screens), an admin Content page (per-locale settings for contact/hero/footer copy, structured forms for returns/FAQ/contact, custom pages under `/pages/<slug>` — every field falls back to shipped copy when empty), a customer notification bell (order/return/broadcast feed with history page) plus return emails, storefront global announcement strips + image banner carousel with a Customer Notifications admin page, a Store Sender admin page for shipping labels, nightly feed retention, weight-gated cargo options, a free in-store pickup option, and Resend/Mailtrap customer email.
 
 <!-- Admin login GIF lives at docs/image/backendlogin.gif -->
 
@@ -69,6 +69,8 @@ npx medusa db:migrate
 npx medusa user -e admin@test.com -p <choose-a-password>
 cd ../..
 ```
+
+Re-run `npx medusa db:migrate` after any `git pull` that brings new migration files — it is idempotent and applies only what is missing (a dev `medusa develop` boot applies pending module migrations too). Production needs no manual step: the container runs `db:migrate && start` on every deploy (`DEPLOY.md`). Never edit or delete a migration that may have already run — add a new one.
 
 ### 3. Start the backend
 

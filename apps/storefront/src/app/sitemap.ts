@@ -5,6 +5,7 @@ import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
 import { listProducts } from "@lib/data/products"
 import { listRegions } from "@lib/data/regions"
+import { getContentPages } from "@lib/data/content"
 
 // Regenerated at most daily — the URL set only changes on catalog edits.
 export const revalidate = 86400
@@ -85,6 +86,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   )
 
   const urls: MetadataRoute.Sitemap = []
+  // Admin-authored pages (Content -> Pages), resolved per locale; empty when the
+  // backend is unreachable so the static/catalog URLs still publish.
+  const pagesByLocale = new Map<
+    string,
+    Awaited<ReturnType<typeof getContentPages>>
+  >()
+  await Promise.all(
+    locales.map(async (locale) => {
+      pagesByLocale.set(locale, await getContentPages(locale))
+    })
+  )
+
   for (const locale of locales) {
     for (const cc of countryCodes) {
       for (const path of STATIC_PATHS) {
@@ -93,6 +106,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: now,
           changeFrequency: path === "" ? "daily" : "weekly",
           priority: path === "" ? 1 : 0.7,
+        })
+      }
+      for (const page of pagesByLocale.get(locale) ?? []) {
+        urls.push({
+          url: `${base}/${locale}/${cc}/pages/${page.slug}`,
+          lastModified: page.updated_at ? new Date(page.updated_at) : now,
+          changeFrequency: "monthly",
+          priority: 0.5,
         })
       }
       for (const handle of handlesByCountry.get(cc) ?? []) {

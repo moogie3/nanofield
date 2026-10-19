@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import { Heading, Text, clx } from "@modules/common/components/ui"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 import PaymentButton from "../payment-button"
 import { useSearchParams } from "next/navigation"
@@ -16,6 +17,7 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
   const paidByGiftcard = !!(
     (cart as unknown as Record<string, unknown>)?.gift_cards &&
     ((cart as unknown as Record<string, unknown>)?.gift_cards as unknown[])
+
       ?.length > 0 &&
     cart?.total === 0
   )
@@ -45,7 +47,40 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
           <div className="flex items-start gap-x-1 w-full mb-6">
             <div className="w-full">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                {t("terms")}
+                {t.rich("terms", {
+                  termsOfUse: (chunks) => (
+                    <LocalizedClientLink
+                      href="/pages/terms-of-use"
+                      className="underline"
+                    >
+                      {chunks}
+                    </LocalizedClientLink>
+                  ),
+                  termsOfSale: (chunks) => (
+                    <LocalizedClientLink
+                      href="/pages/terms-of-sale"
+                      className="underline"
+                    >
+                      {chunks}
+                    </LocalizedClientLink>
+                  ),
+                  returnsPolicy: (chunks) => (
+                    <LocalizedClientLink
+                      href="/returns"
+                      className="underline"
+                    >
+                      {chunks}
+                    </LocalizedClientLink>
+                  ),
+                  privacyPolicy: (chunks) => (
+                    <LocalizedClientLink
+                      href="/pages/privacy-policy"
+                      className="underline"
+                    >
+                      {chunks}
+                    </LocalizedClientLink>
+                  ),
+                })}
               </Text>
             </div>
           </div>
