@@ -133,6 +133,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/content",
     },
     {
+      resolve: "./src/modules/chat",
+    },
+    {
       resolve: "./src/modules/sender-profile",
     },
     {

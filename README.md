@@ -143,6 +143,7 @@ Administrative and utility scripts are located in `apps/backend/scripts/`. Run t
 | Symptom | Fix |
 |---|---|
 | Storefront API calls fail / empty catalog | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` missing or wrong in `apps/storefront/.env.local`; restart the storefront after changing env |
+| Chat widget won't load / never shows messages | backend not running; in production also check `STORE_CORS` includes the storefront origin (the browser opens the chat SSE stream directly) and `NEXT_PUBLIC_MEDUSA_BACKEND_URL` is HTTPS |
 | Admin shows a blank page on first load | clear the Vite dependency cache and reload |
 | Deleted products/categories still visible | wait out the 5-minute ISR window, check `REVALIDATE_SECRET` matches on both sides, or restart the storefront |
 | `tsc --noEmit` reports TS2786 across the storefront | pre-existing React-types noise; filter output to the files you touched |

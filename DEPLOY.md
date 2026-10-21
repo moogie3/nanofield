@@ -33,10 +33,20 @@ Target topology:
 | `MIDTRANS_IS_PRODUCTION` | `true` |
 | `RESEND_API_KEY` / `RESEND_FROM` | Live key + verified sender (sole active email provider) |
 | `TRACKING_SYNC_ENABLED` | `true` (keep the per-run cap small — shares the 100 hits/day RajaOngkir quota) |
+| `CHAT_RETENTION_DAYS` / `CHAT_RETENTION_CRON` | Optional — defaults 90 days / daily 03:30 (`0` disables); live-chat cleanup |
 | `STORE_NAME` / `STORE_PHONE` / `STORE_ADDRESS_1` / `STORE_CITY` / `STORE_PROVINCE` / `STORE_COUNTRY_CODE` | Sender block printed on shipping labels |
 
 Do **not** set any `MAILTRAP_*` variable in production — leaving
 `MAILTRAP_USER` empty keeps the sandbox provider dormant.
+
+**Single replica for now.** Live chat pushes replies to the storefront over
+SSE and tracks operator presence with an in-process heartbeat — both break
+silently if the backend runs more than one instance (Railway's default single
+instance is fine; do not raise replicas before moving the chat fan-out to
+Redis pub/sub). `STORE_CORS` above must stay exactly the storefront origin:
+the browser opens the chat SSE stream directly, so a missing origin shows up
+as the chat panel never connecting (other store calls run server-side and
+are unaffected by CORS).
 
 5. Deploy. The container runs `medusa db:migrate && medusa start`, so
    migrations apply themselves on every boot.
@@ -77,7 +87,8 @@ Do **not** set any `MAILTRAP_*` variable in production — leaving
 
 - Verify: storefront loads over HTTPS, cart → Snap → Midtrans sandbox-then-live
   payment captures, `/admin/orders/[id]` prints a thermal label, order
-  confirmation email arrives, `tracking-sync` logs one clean run.
+  confirmation email arrives, `tracking-sync` logs one clean run, and the
+  chat widget connects (a message round-trips to `/app/live-chat`).
 - Rollback: Railway → Deployments → redeploy previous; Vercel → Deployments →
   Promote to Production. Database migrations are forward-only — never roll back
   the database without an explicit backup restore.

@@ -77,7 +77,9 @@ export default async function ReturnsPage() {
   const emailSubject = d?.emailSubject ?? t("emailSubject")
   const visitTitle = d?.visitTitle ?? t("visitTitle")
   const visitBody = (
-    typeof d?.visitBody === "string" ? d.visitBody : t("visitBody")
+    typeof d?.visitBody === "string"
+      ? d.visitBody
+      : t("visitBody", { address: contact.address })
   ).replace("{address}", contact.address)
   const orderIdTitle = d?.orderIdTitle ?? t("orderIdTitle")
   const orderIdBody = d?.orderIdBody ?? t("orderIdBody")

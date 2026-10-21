@@ -1,6 +1,7 @@
 import { getStoreContact } from "@lib/data/store-contact"
 import { whatsappUrl } from "@lib/store-contact"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ChatWidget from "@modules/common/components/chat-widget"
 import ContactCta from "@modules/common/components/contact-cta"
 import { Text } from "@modules/common/components/ui"
 import ChevronDown from "@modules/common/icons/chevron-down"
@@ -48,6 +49,7 @@ export default async function CheckoutLayout({
         {children}
       </div>
       <ContactCta whatsappHref={whatsappUrl(contact)} />
+      <ChatWidget whatsappHref={whatsappUrl(contact)} />
       <div className="py-4 w-full flex items-center justify-center">
         <Text className="font-mono text-[11px] uppercase tracking-[0.2em] text-ui-fg-muted">
           Nanofield · Secure checkout

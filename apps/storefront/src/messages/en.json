@@ -797,5 +797,28 @@
     "errorBody": "An unexpected error occurred while loading this page. Please try again, and contact support if the problem persists.",
     "retry": "Try again",
     "cartNotFound": "The cart you tried to access does not exist. Clear your cookies and try again."
+  },
+  "chat": {
+    "title": "Live Chat",
+    "openLabel": "Open chat",
+    "closeLabel": "Close chat",
+    "online": "Online",
+    "away": "Away",
+    "agent": "Agent",
+    "unread": "{count} unread messages",
+    "whatsappCta": "WhatsApp",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "sending": "Sending...",
+    "connecting": "Connecting...",
+    "empty": "Say hello to start.",
+    "closedNotice": "Chat closed. Start a new one or use WhatsApp.",
+    "newChat": "New chat",
+    "attachLabel": "Attach image",
+    "removeImage": "Remove image",
+    "uploadError": "Couldn't upload the image. Try again.",
+    "error": "Couldn't send. Try again.",
+    "loadError": "Couldn't load the chat.",
+    "retry": "Try again"
   }
 }

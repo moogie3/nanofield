@@ -22,6 +22,9 @@ const shopeeFiles = upload.fields([
 // JSON posts pass through untouched — multer only parses multipart bodies.
 const bannerImage = upload.single("image")
 
+// Chat image upload (single `file` file, 5MB cap enforced in the route).
+const chatAttachment = upload.single("file")
+
 // Audit capture: one row per admin mutation, written AFTER the response
 // leaves (res finish hook) so the request path pays ~0ms. Fire-and-forget
 // with a catch — logging must never break the operation it records.
@@ -141,6 +144,24 @@ export default defineMiddlewares({
       matcher: "/store/notifications",
       middlewares: [authenticate("customer", ["session", "bearer"])],
     },
+    // Chat start/send/backfill: customers are attached when a session or
+    // bearer token is present, but guests must pass through — identity is
+    // optional here, the capability token (body/query) is the authz.
+    // The attachments route matches this too (auth) and additionally gets
+    // the multipart parser below.
+    {
+      matcher: "/store/chat/conversations*",
+      middlewares: [
+        authenticate("customer", ["session", "bearer"], {
+          allowUnauthenticated: true,
+        }),
+      ],
+    },
+    {
+      matcher: "/store/chat/conversations/current/attachments",
+      middlewares: [chatAttachment],
+    },
+    { matcher: "/admin/chat/attachments", middlewares: [chatAttachment] },
     { matcher: "/admin/banners", middlewares: [bannerImage] },
     // Audit log capture across all admin routes (mutations only — see
     // auditCapture). Auth context is read at res-finish, after the whole

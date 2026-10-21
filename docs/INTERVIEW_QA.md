@@ -1,6 +1,6 @@
 # Nanofield — Interview Q&A
 
-*Defensive asset: ~35 questions an interviewer (or a new teammate, or future-you) would ask about this codebase, each answered in 3–5 sentences with a file pointer and the lesson. Rule: answers stay short and anchored to paths — never paste code inline, or entries rot. Last reviewed: October 1, 2026.*
+*Defensive asset: ~35 questions an interviewer (or a new teammate, or future-you) would ask about this codebase, each answered in 3–5 sentences with a file pointer and the lesson. Rule: answers stay short and anchored to paths — never paste code inline, or entries rot. Last reviewed: October 19, 2026.*
 
 ## 1. Architecture
 
@@ -133,7 +133,7 @@ A: Every page 500'd for browsers holding a cart cookie (digest 565003953, Sep 9)
 Pointers: `docs/whole.md` (Sep 9 outage), `docs/STARTING_MANUAL.md` (Part K).
 
 **Q: Why do translations live in JSON, not the database?**
-A: UI chrome (nav, buttons, checkout steps, error screens — ~90 files, 18 namespaces) changes with code and reviews with code, so `src/messages/{en,id}.json` keeps copy diffs in the same PR. Backend-driven content (product/category/banner text) stays data by design — translating it is the deferred backend phase. Spec axis labels stay English as universal technical terms.
+A: UI chrome (nav, buttons, checkout steps, error screens — ~90 files, 18 namespaces) changes with code and reviews with code, so `src/messages/{en,id}.json` keeps copy diffs in the same PR. Catalog content (product/category/banner text) stays English by design — still the deferred phase. The exception since Oct 19: support/legal pages and storefront settings are per-locale rows in the `content` module, merged over the same JSON as the fallback (an empty edit reverts to the JSON default) — operators edit that copy, chrome stays in JSON. Spec axis labels stay English as universal technical terms.
 Pointers: `apps/storefront/src/messages/*`, `docs/ARCHITECTURE.md` (§8).
 
 ## 6. Operations
@@ -151,5 +151,5 @@ A: Both files were proven unreferenced first: git history showed scaffold/debug 
 Pointers: `docs/STARTING_MANUAL.md` (Topic index rule).
 
 **Q: What's still open?**
-A: `next build` static export crashes on `/404` (minified React #31 — proven on a clean-baseline build, pre-existing, dev unaffected). Backend content translation (product/category/banner text) is scoped but unscheduled. PSE registration and the Midtrans/RajaOngkir/Resend live-key flips are go-live items in `DEPLOY.md`.
+A: `next build` static export crashes on `/404` (minified React #31 — proven on a clean-baseline build, pre-existing, dev unaffected). Catalog text translation (product/category/banner) is scoped but unscheduled — support/legal pages and settings already ship per-locale via the content CMS (Oct 19). PSE registration and the Midtrans/RajaOngkir/Resend live-key flips are go-live items in `DEPLOY.md`. The five legal/about custom pages also need one-time authoring in Content → Pages (links are wired; missing rows 404 by design).
 Pointers: `docs/whole.md`, `DEPLOY.md`.

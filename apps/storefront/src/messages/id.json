@@ -797,5 +797,28 @@
     "errorBody": "Terjadi kesalahan tak terduga saat memuat halaman ini. Silakan coba lagi, dan hubungi support jika masalah berlanjut.",
     "retry": "Coba lagi",
     "cartNotFound": "Keranjang yang Anda coba akses tidak ada. Hapus cookie dan coba lagi."
+  },
+  "chat": {
+    "title": "Live Chat",
+    "openLabel": "Buka chat",
+    "closeLabel": "Tutup chat",
+    "online": "Online",
+    "away": "Away",
+    "agent": "Agent",
+    "unread": "{count} pesan belum dibaca",
+    "whatsappCta": "WhatsApp Admin",
+    "placeholder": "Ketik pesan...",
+    "send": "Kirim",
+    "sending": "Mengirim...",
+    "connecting": "Menghubungkan...",
+    "empty": "Sapa kami untuk memulai.",
+    "closedNotice": "Chat ditutup. Mulai chat baru atau hubungi WhatsApp admin.",
+    "newChat": "Chat baru",
+    "attachLabel": "Lampirkan gambar",
+    "removeImage": "Hapus gambar",
+    "uploadError": "Gambar gagal diunggah. Coba lagi.",
+    "error": "Pesan gagal terkirim. Coba lagi.",
+    "loadError": "Chat gagal dimuat.",
+    "retry": "Coba lagi"
   }
 }

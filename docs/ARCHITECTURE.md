@@ -158,6 +158,7 @@ Fulfillment stamped { courier, service, manual_booking: true }
        ├── Customer Notifications (custom — bell broadcasts + banner/strip/image mgmt)
        ├── Store Sender        (custom — label Pengirim block, env fallback)
        ├── Content             (custom — settings + per-locale page CMS)
+       ├── Live Chat           (custom — visitor chat inbox, SSE presence)
        │
        ├── Orders / Draft Orders      (core — lifecycle drawers)
        ├── Products (+ bulk-tools widget, datasheet widget)
@@ -181,6 +182,8 @@ Notification fan-out (one event, up to three surfaces): order/shipment/return su
 Customer auth is verification-enforced: `authVerificationsPerActor` (`customer` / `emailpass` / `email`) in `medusa-config.ts` makes login/register return `verification_required` until confirmed, and the `auth-verification` subscriber mails the verify link (`/id/verify-account?token=…`) through the active email provider. Logged-in therefore means verified — the storefront's price-on-login gate builds on this: guests see "Sign in for price" CTAs (cards, product page, mobile bar) and a sign-in gate modal on any buy attempt, while catalog content stays identical for guests, bots, and members (no cloaking, no SEO cost — no price schema exists).
 
 Admin tiers run on `MEDUSA_FF_RBAC`: an Owner role (wildcard policy + `audit-log:read`) and a policy-less Staff role, created by `scripts/setup-audit-tiers.ts` (idempotent; assigns Owner to the runner — assign Staff to every invite, since role-less users fail open). The `audit-log` module (`audit_entry` table) records every admin mutation via a wildcard middleware that writes after the response (zero request-path cost, no bodies, no GETs); `GET /admin/audit-logs` enforces `audit-log:read` and serves the `/app/audit-log` page (restricted card for staff). Bounded by the `audit-retention` job (`AUDIT_RETENTION_DAYS`, default 90).
+
+Live chat is project-side end to end (Medusa has no chat module): the `chat` module owns `chat_conversation` / `chat_message` and serves `GET/POST /store/chat/*` (presence probe, start/resume with a guest capability token in localStorage, send/backfill with a 2000-char cap and 6-msg/10s rate limit) plus `GET /store/chat/stream` — an SSE endpoint the browser opens directly, so `STORE_CORS` must list the storefront origin. Fan-out is an in-process EventEmitter and operator presence an in-process heartbeat map (`/app/live-chat` pings every 60s while the tab is visible; under 3 minutes old = the widget shows **Online**, otherwise **Away** + a WhatsApp Admin fallback; an unreachable backend hides the dot entirely). Admin replies live in the `/app/live-chat` two-pane inbox (`/admin/chat/*` routes); retention runs via the `chat-retention` job (`CHAT_RETENTION_DAYS`, default 90). Both the emitter and the presence map are single-replica by decision — horizontal scaling needs the Redis pub/sub path first.
 
 ---
 
