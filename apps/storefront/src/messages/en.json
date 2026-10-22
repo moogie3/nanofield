@@ -811,7 +811,7 @@
     "send": "Send",
     "sending": "Sending...",
     "connecting": "Connecting...",
-    "empty": "Say hello to start.",
+    "greeting": "Hi, welcome to Nanofield. Ask us about products, shipping, or your order and we will reply here.",
     "closedNotice": "Chat closed. Start a new one or use WhatsApp.",
     "newChat": "New chat",
     "attachLabel": "Attach image",

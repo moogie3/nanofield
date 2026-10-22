@@ -353,6 +353,43 @@
     animation: float-soft 4s ease-in-out infinite;
   }
 
+  /* Chat panel enters from its trigger, not from nowhere: the short rise
+     plus scale connects the bubble to the panel it opened. Runs once, on
+     open, and collapses to nothing under prefers-reduced-motion. */
+  @keyframes chat-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-chat-panel-in {
+    animation: chat-panel-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: bottom right;
+  }
+
+  /* Opening and closing swap the glyph, so the incoming one turns in to
+     confirm the state change instead of teleporting into place. One shot
+     per toggle, nothing runs while idle. */
+  @keyframes chat-icon-in {
+    from {
+      opacity: 0;
+      transform: rotate(-90deg) scale(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(0) scale(1);
+    }
+  }
+
+  .animate-chat-icon-in {
+    animation: chat-icon-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   /* IC pin-function labels rendered inside the IC body.
      Hidden in light mode (too cramped on white) — shown in dark mode
      where the lower opacity schematic gives enough breathing room.
@@ -411,6 +448,8 @@
     .animate-hero-sweep,
     .animate-hero-scanline,
     .animate-hero-pop,
+    .animate-chat-panel-in,
+    .animate-chat-icon-in,
     .animate-float-soft,
     .animate-hero-drift,
     .animate-hero-spin-slow,

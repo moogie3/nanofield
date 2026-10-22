@@ -811,7 +811,7 @@
     "send": "Kirim",
     "sending": "Mengirim...",
     "connecting": "Menghubungkan...",
-    "empty": "Sapa kami untuk memulai.",
+    "greeting": "Halo, selamat datang di Nanofield. Tanyakan soal produk, pengiriman, atau pesanan Anda, kami balas di sini.",
     "closedNotice": "Chat ditutup. Mulai chat baru atau hubungi WhatsApp admin.",
     "newChat": "Chat baru",
     "attachLabel": "Lampirkan gambar",

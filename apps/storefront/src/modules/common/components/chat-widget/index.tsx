@@ -500,7 +500,7 @@ const ChatWidget = ({ whatsappHref }: { whatsappHref?: string }) => {
               ? t("closeLabel")
               : t("openLabel")
         }
-        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 small:bottom-6 small:right-6"
+        className="group fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition duration-200 ease-out hover:-translate-y-0.5 hover:scale-105 hover:shadow-xl active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 motion-reduce:active:scale-100 small:bottom-6 small:right-6"
         data-testid="chat-bubble"
       >
         {!open && unread > 0 && (
@@ -519,6 +519,7 @@ const ChatWidget = ({ whatsappHref }: { whatsappHref?: string }) => {
             strokeWidth="2"
             strokeLinecap="round"
             aria-hidden="true"
+            className="animate-chat-icon-in transition-transform duration-200 ease-out motion-safe:group-hover:scale-110 motion-safe:group-active:scale-90"
           >
             <path d="M18 6 6 18" />
             <path d="m6 6 12 12" />
@@ -534,6 +535,7 @@ const ChatWidget = ({ whatsappHref }: { whatsappHref?: string }) => {
             strokeLinecap="round"
             strokeLinejoin="round"
             aria-hidden="true"
+            className="animate-chat-icon-in transition-transform duration-200 ease-out motion-safe:group-hover:-rotate-6 motion-safe:group-hover:scale-110 motion-safe:group-active:scale-90"
           >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
@@ -545,7 +547,7 @@ const ChatWidget = ({ whatsappHref }: { whatsappHref?: string }) => {
           id="nf-chat-panel"
           role="dialog"
           aria-labelledby="nf-chat-title"
-          className="fixed bottom-20 right-2 z-40 flex h-[min(70vh,32rem)] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lg small:bottom-24 small:right-6 small:w-96"
+          className="fixed bottom-20 right-2 z-40 flex h-[min(70vh,32rem)] w-[calc(100vw-1rem)] animate-chat-panel-in flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lg small:bottom-24 small:right-6 small:w-96"
           data-testid="chat-panel"
         >
           <div className="border-b border-border px-4 py-2.5">
@@ -633,8 +635,17 @@ const ChatWidget = ({ whatsappHref }: { whatsappHref?: string }) => {
                 </Button>
               </div>
             )}
+            {/* Greeting only while the thread is empty. It is widget-side,
+                not a stored message: no fake sender, no timestamp, and the
+                admin inbox stays untouched until the visitor writes. */}
             {state === "ready" && messages.length === 0 && (
-              <Text className="text-sm text-muted-foreground">{t("empty")}</Text>
+              <div className="flex justify-start" data-testid="chat-greeting">
+                <div className="max-w-[85%] rounded-2xl bg-muted px-3 py-2 text-foreground">
+                  <Text className="whitespace-pre-wrap break-words text-sm">
+                    {t("greeting")}
+                  </Text>
+                </div>
+              </div>
             )}
             {messages.map((m) => {
               const mine = m.sender_type === "visitor"
